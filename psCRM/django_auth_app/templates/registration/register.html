@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% load staticfiles my_filters %}
+{% block title %}SunDog | Register{% endblock title %}
+{% block extrahead %}
+    <link href="{% static "css/plugins/datapicker/datepicker3.css" %}" rel="stylesheet">
+    <link href="{% static "css/plugins/chosen/chosen.css" %}" rel="stylesheet">
+{% endblock extrahead %}
+{% block content %}
+    <div class="row text-center">
+        <div class="logo-name">
+            <h1 class="logo-name">SUNDOG</h1>
+        </div>
+    </div>
+    <div class="middle-box text-center animated fadeInDown">
+        <h3>Register to get an account.</h3>
+       {% comment %} <p>Fill out the information below to create a new account. You can update this information later from the profile page.</p>
+{% endcomment %}
+
+    </div>
+ {% comment %}   <div class="middle-box animated fadeInDown">{% endcomment %}
+    <form role="form" name="RegisterForm" action="{% url 'django_auth_app:register' %}" method="post">
+        {% csrf_token %}
+
+        {% if next %}
+            <input type="hidden" name="next" value="{{ next }}" />
+        {% endif %}
+
+        <div class="row wrapper m-l-lg m-r-lg">
+            <div class="col-lg-1"></div>
+            <div class="col-lg-5 wrapper-content m-l">
+           <h4>Account Information</h4>
+           <div class="m-t"></div>
+            <div class="form-group">
+                {{ form.username }}
+            </div>
+            <div class="form-group">
+                <div class="input-group">
+                    {{ form.password1 }}
+                    <span class="input-group-addon text-info clickeable"  data-container="body" data-toggle="popover" data-placement="top" data-content="The password must be at least 6 characters long and contain at least 1 letter, 1 number and 1 special character."><i class="fa fa-info-circle"></i></span>
+                </div>
+            </div>
+            <div class="form-group">
+                {{ form.password2 }}
+            </div>
+            <div class="form-group">
+                <div class="progress progress-striped white-bg" style="margin-bottom: 0px"><div id="progress_bar" class="progress-bar" style="width: 0%;"></div></div>
+                <cite title>Password Validator</cite>
+            </div>
+            <div class="form-group">
+                {{ form.email }}
+            </div>
+            </div>
+            <div class="col-lg-5 wrapper-content m-l">
+{% comment %}    <div class="ibox float-e-margins">
+        <div class="ibox-content">{% endcomment %}
+           <h4>Personal Information</h4>
+           <div class="m-t"></div>
+           <div class="form-group">
+               {{ form.first_name }}
+           </div>
+           <div class="form-group">
+               {{ form.middle_name }}
+           </div>
+           <div class="form-group">
+               {{ form.last_name }}
+           </div>
+           <div class="form-group">
+               {{ profile_form.phone_number }}
+           </div>
+           <div class="form-group">
+               <div class="input-group date">
+                   <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                   {{ profile_form.birthday }}
+               </div>
+           </div>
+            <div class="form-group">
+                <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-globe"></i></span>
+                    {{ profile_form.timezone }}
+                </div>
+            </div>
+       </div>
+    </div>
+            <div class="middle-box text-center" style="padding-top: 0px">
+        {% comment %}
+                <h2>Application Information</h2>
+                <div class="m-t"></div>
+                <div class="form-group">
+                    {{ profile_form.state_of_interest }}
+                </div>
+                <div class="form-group">
+                    {{ profile_form.area_of_interest }}
+                </div>
+                <div class="form-group">
+                    {{ profile_form.communities_of_interest }}
+                </div>
+                <div class="form-group">
+                    <div class="form-control" style="background: transparent; border: 0;"></div>
+                </div>
+                <div class="m-t-lg"></div>{% endcomment %}
+                <h4>Accept the Terms and Conditions</h4>
+                <div class="m-t"></div>
+                <div class="form-group">
+                    <div class="checkbox">
+                     <input type="checkbox" required=""/>
+                    <label>Read and agree to the <a href="/terms/">Terms and Conditions</a>  </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary block full-width m-b">Register</button>
+
+                <p class="text-muted text-center">Already have an account?</p>
+                <a class="btn btn-sm btn-white btn-block" href="{% url 'django_auth_app:login' %}">Login</a>
+                <p></p>
+                <br/>
+                </div>
+       {% comment %} </div>{% endcomment %}
+
+    </form>
+    {% comment %}</div>{% endcomment %}
+    <script type="text/javascript" >
+        var form_errors = {{ form_errors|jsonify }};
+    </script>
+    <script src="{% static "js/plugins/metisMenu/jquery.metisMenu.js" %}"></script>
+    <script src="{% static "js/plugins/slimscroll/jquery.slimscroll.min.js" %}"></script>
+    <script src="{% static "js/plugins/jstz-1.0.4.min.js" %}"></script>
+
+    <!-- Custom and plugin javascript -->
+    <script src="{% static "js/inspinia.js" %}"></script>
+    <!-- Data picker -->
+    <script src="{% static "js/plugins/datapicker/bootstrap-datepicker.js" %}"></script>
+
+    <!-- Chosen -->
+    <script src="{% static "js/plugins/chosen/chosen.jquery.js" %}"></script>
+    <!-- Mask -->
+    <script src="{% static "js/plugins/mask/jquery.mask.min.js" %}"></script>
+
+    <script src="{% static "js/register.js" %}"></script>
+    <script src="{% static "js/new_password.js" %}"></script>
+{% endblock content %}

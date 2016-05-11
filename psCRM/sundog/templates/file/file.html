@@ -1,0 +1,272 @@
+{% extends "app-base.html" %}
+{% load  staticfiles my_filters admin_urls avatar_tags %}
+{% block extrahead %}
+    <link href="{% static "css/plugins/dropzone/basic.css" %}" rel="stylesheet">
+    <link href="{% static "css/plugins/dropzone/dropzone.css" %}" rel="stylesheet">
+{% endblock extrahead %}
+{% block content %}
+    <!-- PATH GUIDE -->
+    <div class="row wrapper border-bottom white-bg page-heading">
+        <div class="col-lg-10">
+            <h2>File detail</h2>
+            <ol class="breadcrumb">
+                <li>
+                    <a href="{% url 'home' %}">Home</a>
+                </li>
+                <li class="active">
+                    <strong>File detail</strong>
+                </li>
+            </ol>
+        </div>
+        <div class="col-lg-2">
+
+        </div>
+    </div>
+    <!-- PAGE CONTENT -->
+    <div class="row">
+        <div class="col-lg-9">
+            <div class="wrapper wrapper-content animated fadeInUp">
+                <div class="ibox">
+                    <div class="ibox-content">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="m-b-md">
+                                    {% if perms.sundog.change_file %}<a id="edit_tag" href="{% url 'file_edit' file.file_id %}" class="btn btn-white btn-xs pull-right">Edit file</a> {% endif %}
+                                    <h2>File #{{ file.file_id }}</h2>
+                                </div>
+                                <dl class="dl-horizontal">
+                                    <dt>Status:</dt> <dd><span class="label {{ file.current_status.related_color }}">{{ file.current_status|title }}</span></dd>
+                                </dl>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-5">
+                                <dl class="dl-horizontal">
+
+                                    <dt>Created by:</dt> <dd>{% firstof file.creator_user_full_name file.creator_user_username "Anonymous user" %}</dd>
+                                    <dt>Notes:</dt> <dd>  {{ file.messages.count }}</dd>
+                                    <dt>Client:</dt> <dd><a href="{% url 'admin:sundog_client_change' file.client.client_id %}" class="text-navy">{{ file.client.name|title }}</a> </dd>
+                                    {% comment %}<dt>Version:</dt> <dd> 	v1.4.2 </dd>{% endcomment %}
+                                </dl>
+                            </div>
+                            <div class="col-lg-7" id="cluster_info">
+                                <dl class="dl-horizontal" >
+
+                                    <dt>Last Updated:</dt> <dd>{{ file.last_update_time|formatDatetime }}</dd>
+                                    <dt>Created:</dt> <dd> 	{{ file.created_time|formatDatetime }} </dd>
+                                    <dt>Participants:</dt>
+                                    <dd class="project-people tooltip-demo">
+                                        {% for participant in file.participants.all %}
+                                        <a id="link-participant-{{ participant.id }}" class="link participant-modal-button" data-toggle="modal" data-target="#myParticipantModal"
+                                           data-username="{{ participant.username }}" data-id="{{ participant.id }}">
+                                            <img alt="image" class="img-circle" src="{% avatar_url participant%}"
+                                                        data-toggle="tooltip" data-placement="top" title="" data-original-title="{{ participant.get_full_name }}"/></a>
+                                        {% endfor %}
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+                        {% if not file.current_status.related_percent == None %}
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <dl class="dl-horizontal">
+                                    <dt>Completed:</dt>
+                                    <dd>
+                                        <div class="progress progress-striped active m-b-sm">
+                                            <div style="width: {{ file.current_status.related_percent }}%;" class="progress-bar"></div>
+                                        </div>
+                                        <small>File completed in <strong>{{ file.current_status.related_percent }}%</strong>.</small>
+                                    </dd>
+                                </dl>
+
+                            </div>
+                        </div>
+                        {% endif %}
+                        <div class="row">
+                            <div class="col-lg-5">
+                            <dl class="dl-horizontal">
+                                <dt >Quoted price:</dt> <dd>{{ file.quoted_price|currency }} </dd>
+                                <dt >Quoted date:</dt> <dd>{{ file.quoted_date |date:"SHORT_DATE_FORMAT"}}</dd>
+                            </dl>
+                            </div>
+                            <div class="col-lg-7">
+                            <dl class="dl-horizontal">
+                                <dt >Invoice price:</dt> <dd>{{ file.invoice_price|currency }} </dd>
+                                <dt >Invoice date:</dt> <dd>{{ file.invoice_date|date:"SHORT_DATE_FORMAT" }}</dd>
+                            </dl>
+                            </div>
+                        </div>
+
+                        <div class="row m-t-sm">
+                            <div class="col-lg-12">
+                                <div class="panel blank-panel">
+                                    <div class="panel-heading">
+                                        <div class="panel-options">
+                                            <ul class="nav nav-tabs">
+                                                <li class="active"><a href="#tab-1" data-toggle="tab">Notes</a></li>
+                                                <li class=""><a href="#tab-2" data-toggle="tab">Status History</a></li>
+                                                <li class=""><a href="#tab-3" data-toggle="tab">Documents</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+
+                                    <div class="panel-body">
+
+                                        <div class="tab-content">
+                                            <div class="tab-pane active" id="tab-1">
+                                                <div class="feed-activity-list">
+                                                    {% for message in file.messages.all %}
+                                                    <div class="feed-element">
+                                                        <a href="#" class="pull-left">
+                                                            <img class="profile-thumbnail img-circle" src="{% avatar_url message.user %}" />
+                                                        </a>
+                                                        <div class="media-body ">
+                                                            <small class="pull-right">{{ message.time|formatDatetime }}</small>
+                                                            <strong>{{ message.user.get_full_name }}</strong> <br>
+                                                            <div class="well">
+                                                                {{ message.message }}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    {% endfor %}
+
+                                                </div>
+                                                <div class="social-footer">
+
+                                                    <div class="social-comment">
+                                                        <a href="" class="pull-left">
+                                                            <img style="width: auto" class="profile-thumbnail img-circle" src="{% avatar_url user %}" />
+                                                        </a>
+                                                        <div class="media-body">
+                                                            <form id="upload-message-form" method="post" action="{% url 'messages_upload' file.file_id %}">
+                                                                {% csrf_token %}
+                                                                <textarea class="form-control" name="message" placeholder="Write a message..."></textarea>
+                                                                <div class="m-t text-right">
+                                                                    <button type="submit" class="btn btn-sm btn-primary m-t-n-xs"><strong>Send message</strong></button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                            <div class="tab-pane" id="tab-2">
+                                            {% if file.file_status_history.all %}
+                                                <table class="table table-striped">
+                                                    <thead>
+                                                    <tr>
+                                                        <th>Previous Status</th>
+                                                        <th>New Status</th>
+                                                        <th>Modified by</th>
+                                                        <th>Modified at</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    {% for file_history in file.file_status_history.all %}
+                                                    <tr>
+                                                        <td>
+                                                            <span class="label {{ file_history.previous_file_status_color }}">{{ file_history.previous_file_status|default_if_none:"" }}</span>
+                                                        </td>
+                                                        <td>
+                                                            <span class="label {{ file_history.new_file_status_color }}">{{ file_history.new_file_status }}</span>
+                                                        </td>
+                                                        <td>
+                                                            {% firstof file_history.modifier_user_full_name file_history.modifier_user_username "Anonymous user" %}
+                                                        </td>
+                                                        <td>
+                                                            {{ file_history.modified_time|formatDatetime }}
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                                {% endif %}
+                                            </div>
+                                            <div class="tab-pane" id="tab-3">
+                                                <div class="ibox float-e-margins">
+                                                    <div class="ibox-content">
+                                                        <form id="upload-documents-form" class="dropzone" method="post" action="{% url 'documents_upload' file.file_id %}">
+                                                            {% csrf_token %}
+                                                            <div class="dropzone-previews"></div>
+                                                        </form>
+                                                        <div>
+                                                            <div class="m text-right"><small>Drag and drop files into the form, or click inside the form area to open an upload dialog.</small></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="wrapper wrapper-content project-manager">
+                <div class="row">
+                <h4>File description</h4>
+
+                <p class="small">
+                    {{ file.description|title }}
+                </p>
+                <p class="small font-bold">
+                    <span><i class="fa fa-circle {{ file.priority|priorityColor }}"></i> {{ file.priority|priorityName }}</span>
+                </p>
+                <div class="m-t-lg"></div>
+                <h4>File tags</h4>
+                {% if file.tags.all %}
+                <ul class="tag-list" style="padding: 0">
+                    {% for tag in file.tags.all %}
+                    <li><a><i class="fa fa-tag"></i> {{ tag.name|title }}</a></li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p><small>No tags</small></p>
+                {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal inmodal" id="myParticipantModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content animated bounceInRight">
+               <div class="modal-header">
+                   <button id="pModalCloseButton" type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                   <img id="pModalProfileImage" alt="image" class="img-circle" src="{% static "img/profile_small.jpg" %}">
+
+                   <h3 class="m-b-xs"><div id="pModalFullname" class="font-bold">Full name</div></h3>
+
+                   <div id="pModalUsername" class="font-bold">username</div>
+                   <div class="hr-line-dashed"></div>
+            </div>
+        </div>
+    </div>
+    <script type="text/html" id="template-feed-element">
+        <div class="feed-element">
+            <a href="#" class="pull-left">
+                <img alt="image" class="img-circle" src="{% avatar_url user %}">
+            </a>
+            <div class="media-body ">
+                <small class="pull-right">__TIME__</small>
+                <strong>__FULL_NAME__</strong> <br>
+                <div class="well">
+                    __MESSAGE__
+                </div>
+            </div>
+        </div>
+    </script>
+    <!-- DROPZONE -->
+    <script type="text/javascript" >
+        var document_list = {{documents|jsonify}};
+        $.ajaxSetup({
+            data: {csrfmiddlewaretoken: '{{ csrf_token }}' },
+        });
+    </script>
+    <script src="{% static "js/plugins/dropzone/dropzone.js" %}"></script>
+    <script src="{% static "js/file/file.js" %}"></script>
+{% endblock %}

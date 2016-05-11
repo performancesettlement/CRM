@@ -1,0 +1,413 @@
+{% extends "app-base.html" %}
+{% load  staticfiles my_filters admin_urls avatar_tags %}
+{% block extrahead %}
+    <link href="{% static "css/plugins/dropzone/basic.css" %}" rel="stylesheet">
+    <link href="{% static "css/plugins/dropzone/dropzone.css" %}" rel="stylesheet">
+    <link href="{% static "css/plugins/chosen/chosen.css" %}" rel="stylesheet">
+    <link href="{% static "css/plugins/datapicker/datepicker3.css" %}" rel="stylesheet">
+{% endblock extrahead %}
+{% block content %}
+    <!-- PATH GUIDE -->
+    <div class="row wrapper border-bottom white-bg page-heading">
+        <div class="col-lg-10">
+            <h2>Edit file</h2>
+            <ol class="breadcrumb">
+                <li>
+                    <a href="{% url 'home' %}">Home</a>
+                </li>
+                <li>
+                    <a href="{% url 'file_detail' file_id %}">File detail</a>
+                </li>
+                <li class="active">
+                    <strong>Edit file</strong>
+                </li>
+            </ol>
+        </div>
+        <div class="col-lg-2">
+
+        </div>
+    </div>
+    <!-- PAGE CONTENT -->
+    <div class="row wrapper wrapper-content animated fadeInUp">
+        <div class="col-lg-6">
+            <div class="ibox">
+                <div class="ibox-content">
+                    <form class="form-horizontal" name="EditFileForm" action="{% url 'file_edit' file_id %}" method="post">
+                        {%csrf_token%}
+                        <h2>File Information</h2>
+                        <div class="m-t"></div>
+                        <dl class="dl-horizontal">
+                            <dt>File Id:</dt> <dd>{{ file_id }}</dd>
+                        </dl>
+                        <dl class="dl-horizontal">
+                            <dt>Description:</dt> <dd>{{ form.description }}</dd>
+                        </dl>
+                        <dl class="dl-horizontal">
+                            <dt>Status:</dt> <dd>{{ form.current_status }}</dd>
+                        </dl>
+                        {% if not file.current_status.related_percent == None %}
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <dl class="dl-horizontal">
+                                        <dt>Completed:</dt>
+                                        <dd>
+                                            <div class="progress progress-striped active m-b-sm">
+                                                <div id="progress_bar_div" style="width: {{ file.current_status.related_percent }}%;" class="progress-bar"></div>
+                                            </div>
+                                            <small id="progress_text">File completed in <strong>{{ file.current_status.related_percent }}%</strong>.</small>
+                                        </dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        {% endif %}
+                        <dl class="dl-horizontal">
+                            <dt >Client:</dt> <dd><div class="input-group">{{ form.client }}
+                            {% if perms.sundog.add_client %}
+                                <span class="input-group-btn"><button id="add-client-button" class="btn btn-primary" type="button" title="Add a new client" data-toggle="modal" data-target="#addClientModal"><i class="fa fa-plus"></i>
+                                </button></span>
+                            {% endif %}
+                        </div> </dd>
+                        </dl>
+                        <dl class="dl-horizontal">
+                            <dt >Priority:</dt> <dd>{{ form.priority|addcss:'form-control' }} </dd>
+                        </dl>
+                        <dl class="dl-horizontal">
+                            <dt >Tags:</dt> <dd>{{ form.tags|addcss:'chosen-select'}} </dd>
+                        </dl>
+                        <dl class="dl-horizontal">
+                            <dt >Quoted price:</dt> <dd>{{ form.quoted_price }} </dd>
+                        </dl>
+                        <dl class="dl-horizontal">
+                            <dt >Quoted date:</dt> <dd><div class="input-group group-date">
+                            <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                            {{ form.quoted_date }}
+                        </div> </dd>
+                        </dl>
+                        <dl class="dl-horizontal">
+                            <dt >Invoice price:</dt> <dd>{{ form.invoice_price }} </dd>
+                        </dl>
+                        <dl class="dl-horizontal">
+                            <dt >Invoice date:</dt> <dd><div class="input-group group-date">
+                            <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                            {{ form.invoice_date }}
+                        </div> </dd>
+                        </dl>
+
+                    <div class="hr-line-dashed"></div>
+                    <div class="form-group">
+                        <div class="col-lg-3"></div>
+                        <div class="controls">
+                            <button type="submit" class="btn btn-primary">Update</button>
+                        </div>
+                    </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="ibox">
+                <div class="ibox-content">
+                    <h2>Related File Information</h2>
+                    <div class="m-t"></div>
+                    <div class="row">
+                        <div class="col-lg-5">
+                            <dl class="dl-horizontal">
+
+                                <dt>Created by:</dt> <dd>{% firstof file.creator_user_first_name file.creator_user_username "Anonymous user" %}</dd>
+                                <dt>Notes:</dt> <dd>  {{ file.messages.count }}</dd>
+                              {% comment %}  <dt>Version:</dt> <dd> 	v1.4.2 </dd>{% endcomment %}
+                            </dl>
+                        </div>
+                        <div class="col-lg-7" id="cluster_info">
+                            <dl class="dl-horizontal" >
+
+                                <dt>Last Updated:</dt> <dd>{{ file.last_update_time }}</dd>
+                                <dt>Created:</dt> <dd> 	{{ file.created_time }} </dd>
+                                <dt>Participants:</dt>
+                                <dd class="project-people tooltip-demo">
+                                    {% for participant in file.participants.all %}
+                                        <a id="link-participant-{{ participant.id }}" class="link participant-modal-button" data-toggle="modal" data-target="#myParticipantModal"
+                                           data-username="{{ participant.username }}" data-id="{{ participant.id }}">
+                                            <img alt="image" class="img-circle" src="{% avatar_url participant%}"
+                                                 data-toggle="tooltip" data-placement="top" title="" data-original-title="{% firstof participant.get_full_name participant.username %}"/></a>
+                                    {% endfor %}
+                                    {% if perms.sundog.change_file_participant %}<button id="add-participant-button" class="btn btn-primary btn-circle" type="button" title="Add participants" data-toggle="modal" data-target="#addParticipantModal"><i class="fa fa-plus"></i>{% endif %}
+                                    </button>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <div class="row m-t-sm">
+                        <div class="col-lg-12">
+                            <div class="panel blank-panel">
+                                <div class="panel-heading">
+                                    <div class="panel-options">
+                                        <ul class="nav nav-tabs">
+                                            <li class="active"><a href="#tab-1" data-toggle="tab">Notes</a></li>
+                                            <li class=""><a href="#tab-2" data-toggle="tab">Status History</a></li>
+                                            <li class=""><a href="#tab-3" data-toggle="tab">Documents</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="panel-body">
+
+                                    <div class="tab-content">
+                                        <div class="tab-pane active" id="tab-1">
+                                            <div class="feed-activity-list">
+                                                {% for message in file.messages.all %}
+                                                    <div class="feed-element">
+                                                        <a href="#" class="pull-left">
+                                                            <img class="profile-thumbnail img-circle" src="{% avatar_url message.user %}" />
+                                                        </a>
+                                                        <div class="media-body ">
+                                                            <small class="pull-right">{{ message.time|formatDatetime }}</small>
+                                                            <strong>{{ message.user.get_full_name }}</strong> <br>
+                                                            <div class="well">
+                                                                {{ message.message }}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                {% endfor %}
+
+                                            </div>
+                                            <div class="social-footer">
+
+                                                <div class="social-comment">
+                                                    <a href="" class="pull-left">
+                                                        <img style="width: auto" class="profile-thumbnail img-circle" src="{% avatar_url user %}" />
+                                                    </a>
+                                                    <div class="media-body">
+                                                        <form id="upload-message-form" method="post" action="{% url 'messages_upload' file.file_id %}">
+                                                            {% csrf_token %}
+                                                            <textarea class="form-control" name="message" placeholder="Write a message..."></textarea>
+                                                            <div class="m-t text-right">
+                                                                <button type="submit" class="btn btn-sm btn-primary m-t-n-xs"><strong>Send message</strong></button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                        <div class="tab-pane" id="tab-2">
+                                            {% if file.file_status_history.all %}
+                                                <table class="table table-striped">
+                                                    <thead>
+                                                    <tr>
+                                                        <th>Previous Status</th>
+                                                        <th>New Status</th>
+                                                        <th>Modified by</th>
+                                                        <th>Modified at</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    {% for file_history in file.file_status_history.all %}
+                                                        <tr>
+                                                            <td>
+                                                                <span class="label {{ file_history.previous_file_status_color }}">{{ file_history.previous_file_status|default_if_none:"" }}</span>
+                                                            </td>
+                                                            <td>
+                                                                <span class="label {{ file_history.new_file_status_color }}">{{ file_history.new_file_status }}</span>
+                                                            </td>
+                                                            <td>
+                                                                {% firstof file_history.modifier_user_full_name file_history.modifier_user_username "Anonymous user" %}
+                                                            </td>
+                                                            <td>
+                                                                {{ file_history.modified_time }}
+                                                            </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            {% endif %}
+                                        </div>
+                                        <div class="tab-pane" id="tab-3">
+                                            <div class="ibox float-e-margins">
+                                                <div class="ibox-content">
+                                                    <form id="upload-documents-form" class="dropzone" method="post" action="{% url 'documents_upload' file.file_id %}">
+                                                        {% csrf_token %}
+                                                        <div class="dropzone-previews"></div>
+                                                    </form>
+                                                    <div>
+                                                        <div class="m text-right"><small>Drag and drop files into the form, or click inside the form area to open an upload dialog.</small></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal inmodal" id="myParticipantModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content animated bounceInRight">
+                <div class="modal-header">
+                    <button id="pModalCloseButton" type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                    <img id="pModalProfileImage" alt="image" class="img-circle" src="{% static "img/profile_small.jpg" %}">
+
+                    <h3 class="m-b-xs"><div id="pModalFullname" class="font-bold">Full name</div></h3>
+
+                    <div id="pModalUsername" class="font-bold">username</div>
+                    <div class="hr-line-dashed"></div>
+                    {% if perms.sundog.change_file_participant %}
+                        <div class="contact-box-footer">
+                            <div class="m-t-xs btn-group">
+                                <a id="pModalRemoveButton" class="btn btn-xs btn-white"><i class="fa fa-trash"></i> Remove as participant </a>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+                {% if perms.sundog.change_file_participant %}
+                <form id="remove-participant-form" action="{% url 'file_remove_participant' file.file_id %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" id="user_id" name="user_id" value="" />
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% if perms.sundog.change_file_participant %}
+    <div class="modal inmodal" id="addParticipantModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content animated bounceInRight">
+                <div class="modal-header">
+                    <button id="add-participant-close-button" type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                    <i class="fa fa-user modal-icon"></i>
+                    <h4 class="modal-title">Add file participant</h4>
+                    <small class="font-bold">Select the users too add as participants in the dropdown below.</small>
+                </div>
+                <form id="add-participant-form" action="{% url 'file_add_participant' file_id %}" method="post">
+                    {% csrf_token %}
+                <div class="modal-body">
+                    <div class="form-group"><label for="id_new_participants">New participants: </label>
+                        <select id="id_new_participants" name="new_participants" data-placeholder="Click to display..." class="chosen-select" multiple tabindex="1">
+                            {% for user in participant_options %}
+                            <option value="{{ user.id }}">{{ user.full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-white" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="print-button">Save</button>
+                </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% if perms.sundog.add_client %}
+        <div class="modal inmodal" id="addClientModal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content animated bounceInRight">
+                    <div class="modal-header">
+                        <button id="add-client-close-button" type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                        <i class="fa fa-user modal-icon"></i>
+                        <h4 class="modal-title">Add a new client</h4>
+                        <small class="font-bold">Create a new client providing the information below.</small>
+                    </div>
+                    <form id="add-client-form" action="{% url 'ajax_client_add' %}" method="post">
+                        {% csrf_token %}
+                        <div class="modal-body row no-margins">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="id_client_type"><span class="text-danger">*</span> Client type: </label>
+                                    {{ form_client.client_type }}
+                                </div>
+                                <div class="form-group">
+                                    <label for="id_name"><span class="text-danger">*</span> Name: </label>
+                                    {{ form_client.name|addcss:'form-control' }}
+                                </div>
+                                <div class="form-group">
+                                    <label for="id_identification"><span class="text-danger">*</span> ID: </label>
+                                    {{ form_client.identification|addcss:'form-control' }}
+                                </div>
+                                <div class="form-group">
+                                    <label for="id_email">Email: </label>
+                                    {{ form_client.email|addcss:'form-control' }}
+                                </div>
+                                <div class="form-group">
+                                    <label for="id_phone_number">Phone number: </label>
+                                    {{ form_client.phone_number|addcss:'form-control' }}
+                                </div>
+                                <div class="form-group">
+                                    <label for="id_mobile_number">Mobile number: </label>
+                                    {{ form_client.mobile_number|addcss:'form-control' }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="id_country">Country: </label>
+                                    {{ form_client.country|addcss:'form-control' }}
+                                </div>
+                                <div class="form-group">
+                                    <label for="id_address">Address: </label>
+                                    {{ form_client.address|addcss:'form-control' }}
+                                </div>
+                                <div class="form-group">
+                                    <label for="id_city">City: </label>
+                                    {{ form_client.city|addcss:'form-control' }}
+                                </div>
+                                <div class="form-group">
+                                    <label for="id_state">State: </label>
+                                    {{ form_client.state|addcss:'chosen-select' }}
+                                </div>
+                                <div class="form-group">
+                                    <label for="id_zip_code">Zip code: </label>
+                                    {{ form_client.zip_code|addcss:'form-control' }}
+                                </div>
+                            </div>
+                            <div class="col-md-12"><span class="text-danger">*</span> Required fields.</div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-white" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary" id="new-client-button">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    <script type="text/html" id="template-feed-element">
+        <div class="feed-element">
+            <a href="#" class="pull-left">
+                <img alt="image" class="img-circle" src="{% avatar_url user %}">
+            </a>
+            <div class="media-body ">
+                <small class="pull-right">__TIME__</small>
+                <strong>__FULL_NAME__</strong> <br>
+                <div class="well">
+                    __MESSAGE__
+                </div>
+            </div>
+        </div>
+    </script>
+    <script type="text/javascript" >
+        var message = {{ message|jsonify }};
+        var document_list = {{documents|jsonify}};
+        var form_errors = {{ form_errors|jsonify }};
+        $.ajaxSetup({
+            data: {csrfmiddlewaretoken: '{{ csrf_token }}' }
+        });
+        {% if not perms.sundog.change_file_tag %}
+            $(document).ready(function() {
+                $("#tags").prop('readonly', true);
+            });
+        {% endif %}
+    </script>
+    <!-- Data picker -->
+    <script src="{% static "js/plugins/datapicker/bootstrap-datepicker.js" %}"></script>
+    <!-- Other plugins -->
+    <script src="{% static "js/plugins/chosen/chosen.jquery.js" %}"></script>
+    <script src="{% static "js/plugins/dropzone/dropzone.js" %}"></script>
+    <script src="{% static "js/file/file_form.js" %}"></script>
+
+{% endblock content %}

@@ -1,0 +1,153 @@
+{% load staticfiles avatar_tags tz  %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}SunDog{% endblock title %}</title>
+    <link rel="icon" type="image/ico" href="{% static "img/favicon.ico" %}">
+    <link href="{% static "css/bootstrap.min.css" %}" rel="stylesheet">
+    <link href="{% static "font-awesome/css/font-awesome.css" %}" rel="stylesheet">
+    <link href="{% static "css/plugins/awesome-bootstrap-checkbox/awesome-bootstrap-checkbox.css" %}" rel="stylesheet">
+    <!-- Toastr and sweetalert style -->
+    <link href="{% static "css/plugins/toastr/toastr.min.css" %}" rel="stylesheet">
+    <link href="{% static "css/plugins/sweetalert/sweetalert.css" %}" rel="stylesheet">
+    {% block extrahead %}{% endblock extrahead %}
+    <!-- app custom -->
+    <link href="{% static "css/animate.css" %}" rel="stylesheet">
+    <link href="{% static "css/style.css" %}" rel="stylesheet">
+    <link href="{% static "css/custom.css" %}" rel="stylesheet">
+
+</head>
+
+<body class="md-skin">
+<div id="wrapper">
+    <nav class="navbar-default navbar-static-side" role="navigation">
+        <div class="sidebar-collapse">
+            <ul class="nav metismenu" id="side-menu">
+                <li class="nav-header">
+                    <div class="dropdown profile-element"> <span>
+                            <img alt="profile_image" class="profile-thumbnail img-circle" src="{% avatar_url user %}" />
+                         </span>
+                        <a data-toggle="dropdown" class="dropdown-toggle" href="#">
+                        <span class="clear"> <span class="block m-t-xs"> <strong class="font-bold">{{user.username}} </strong>
+                        </span>{% if user and user.profile %}<span class="block m-t-xs"> {{user.profile.about | default_if_none:""}}</span>{% endif %}<span class="text-muted text-xs block">Settings <b class="caret"></b></span></span> </a>
+
+                        <ul class="dropdown-menu animated fadeInRight m-t-xs">
+                            <li><a href="{% url 'django_auth_app:my_profile' %}">My Profile</a></li>
+                            {% comment %}<li><a href="{% url 'django_auth_app:profile_edit' %}">Edit profile</a></li>{% endcomment %}
+                            <li><a href="{% url 'django_auth_app:update_password' %}">Update Password</a></li>
+                            <li class="divider"></li>
+                            <li><a href="{% url 'django_auth_app:logout'%}">Logout</a></li>
+                        </ul>
+                    </div>
+                    <div class="logo-element">
+                        LN+
+                    </div>
+                </li>
+                {% if user and not user.is_anonymous and user.is_staff%}
+                <li id="menu_admin">
+                    <a href="/admin/"><i class="fa fa-gear"></i> <span class="nav-label">Admin</span></a>
+                </li>
+                {% endif %}
+
+                <li id="menu_home">
+                    <a href="{% url 'home'%}"><i class="fa fa-th-large"></i> <span class="nav-label">Home</span></a>
+                </li>
+
+                {% comment %}<li id="menu_recent">
+                    <a href="{% url 'recent_files'%}"><i class="fa fa-history"></i> <span class="nav-label">Recent Files</span></a>
+                </li>{% endcomment %}
+
+                <li id="menu_recent">
+                    <a href=""><i class="fa fa-history"></i> <span class="nav-label">Recent Files</span><span class="fa arrow"></span></a>
+                    <ul class="nav nav-second-level collapse in">
+                        <li><a href="{% url 'recent_files' %}">Show all</a></li>
+                    {% if recent_files %}
+                        {% for history in recent_files %}
+                        <li><a href="{% url 'file_detail' history.file.file_id %}">#{{ history.file.file_id }}: {{ history.file.description|title|truncatechars:20 }}</a></li>
+                        {% endfor %}
+                    {% endif %}
+                    </ul>
+                </li>
+
+                {% if perms.sundog.import_files or perms.sundog.import_clients %}
+                <li id="menu_import">
+                    <a href=""><i class="fa fa-table"></i><span class="nav-label">Bulk Import</span><span class="fa arrow"></span></a>
+                    <ul class="nav nav-second-level">
+                        {% if perms.sundog.import_files%}<li id="submenu_file_import"><a href="{% url 'file_import' %}">File Import</a></li>{% endif %}
+                        {% if perms.sundog.import_clients%}<li id="submenu_client_import"><a href="{% url 'client_import' %}">Client Import</a></li>{% endif %}
+                    </ul>
+                </li>
+                {% endif %}
+
+            </ul>
+        </div>
+    </nav>
+
+    <div id="page-wrapper" class="gray-bg dashbard-1">
+        <div class="row border-bottom">
+            <nav class="navbar navbar-static-top" role="navigation" style="margin-bottom: 0">
+
+                <ul class="nav navbar-top-links navbar-right">
+                    <li style="display:none;">
+                        <label>{{questionnaire.current_date | date:"SHORT_DATE_FORMAT"}}</label>
+                    </li>
+                    <li>
+                        <a href="{% url 'django_auth_app:profile_edit' %}">{% get_current_timezone as TIME_ZONE %}
+                            <i class="fa fa-globe"></i> {{ TIME_ZONE }}
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'help'%}">
+                            <i class="fa fa-question-circle"></i> Help
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'django_auth_app:logout'%}">
+                            <i class="fa fa-sign-out"></i> Log out
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        <!-- Mainly scripts -->
+        <script src="{% static "js/jquery-2.1.1.js" %}"></script>
+        <script src="{% static "js/bootstrap.min.js" %}"></script>
+        <script src="{% static "js/plugins/toastr/toastr.min.js" %}"></script>
+        <script src="{% static "js/plugins/sweetalert/sweetalert.min.js" %}"></script>
+        <script src="{% static "js/utils.js" %}"></script>
+        {% block content %}{% endblock content %}
+
+        <div class="row" id="base_div_footer">
+            <div class="col-lg-12">
+                <div class="footer">
+                    Company 2015
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<script src="{% static "js/plugins/metisMenu/jquery.metisMenu.js" %}"></script>
+<script src="{% static "js/plugins/slimscroll/jquery.slimscroll.min.js" %}"></script>
+
+
+<!-- Custom and plugin javascript -->
+<script src="{% static "js/inspinia.js" %}"></script>
+<script src="{% static "js/plugins/pace/pace.min.js" %}"></script>
+
+<script type="text/javascript">
+        $('body').on('click', function (e) {
+            //did not click a popover toggle, or icon in popover toggle, or popover
+            if(typeof(initializePopupEvents) == "function"){
+                initializePopupEvents(e);
+            }
+        });
+
+</script>
+</body>
+</html>
