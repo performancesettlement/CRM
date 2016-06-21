@@ -1,0 +1,9 @@
+{{ object.file_id }}
+{{ object.description }}
+{{ object.client.name }}
+{% for tag in object.tags.all %}
+{{ tag.name }}
+{% endfor %}
+{% for participant in object.participants.all %}
+{{ participant.username }}, {{ participant.get_full_name }}
+{% endfor %}

@@ -1,0 +1,72 @@
+{% extends "app-base.html" %}
+{% load  staticfiles my_filters admin_urls avatar_tags %}
+{% block extrahead %}
+    <link href="{% static "css/plugins/dropzone/basic.css" %}" rel="stylesheet">
+    <link href="{% static "css/plugins/dropzone/dropzone.css" %}" rel="stylesheet">
+    <link href="{% static "css/plugins/chosen/chosen.css" %}" rel="stylesheet">
+
+{% endblock extrahead %}
+{% block content %}
+    <!-- PATH GUIDE -->
+    <div class="row wrapper border-bottom white-bg page-heading">
+        <div class="col-lg-10">
+            <h2>File Import</h2>
+            <ol class="breadcrumb">
+                <li>
+                    <a href="{% url 'home' %}">Home</a>
+                </li>
+                <li class="active">
+                    <strong>File Import</strong>
+                </li>
+            </ol>
+        </div>
+        <div class="col-lg-2">
+
+        </div>
+    </div>
+    <!-- PAGE CONTENT -->
+    <div class="row wrapper wrapper-content animated fadeInUp">
+        <div class="col-lg-6">
+            <div class="ibox">
+                <div class="ibox-title">
+                    <h2>Download Sample</h2>
+                </div>
+                <div class="ibox-content">
+                    <p>Download an excel file containing the valid format to fill with the file data to import.</p>
+                    <div class="text-center m-t-lg">
+                        <a class="btn btn-primary" href="{% url 'download_file_import_sample' %}"><i class="fa fa-download"></i> Download</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="ibox">
+                <div class="ibox-title">
+                    <h2>Upload Import File</h2>
+                </div>
+                <div class="ibox-content">
+
+                        <form id="upload-import-form" class="dropzone" method="post" action="{% url 'file_import' %}">
+                            {% csrf_token %}
+                            <div class="dropzone-previews"></div>
+                        </form>
+                        <div>
+                            <div class="m text-right"><small>Drag and drop files into the form, or click inside the form area to open an upload dialog.</small></div>
+                        </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript" >
+        $.ajaxSetup({
+            data: {csrfmiddlewaretoken: '{{ csrf_token }}' }
+        });
+    </script>
+    <!-- Other plugins -->
+    <script src="{% static "js/plugins/chosen/chosen.jquery.js" %}"></script>
+    <script src="{% static "js/plugins/dropzone/dropzone.js" %}"></script>
+    <script src="{% static "js/file/file_import.js" %}"></script>
+
+{% endblock content %}

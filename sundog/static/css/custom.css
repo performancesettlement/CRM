@@ -1,0 +1,262 @@
+fieldset{
+    padding: 10px !important;
+}
+
+.breadcrumbs {
+    word-wrap: break-word;
+}
+
+.inline-group .tabular td.original p{
+    position: relative !important;
+    height: auto !important;
+}
+
+.inline-group .tabular td{
+    padding: 10px;
+}
+
+.sweet-alert{
+    width: auto !important;
+    min-width: 478px;
+}
+.sweet-alert-body-scroll{
+    max-height: 500px;
+    overflow: auto;
+}
+
+
+.i-pointer{
+    cursor: pointer !important;
+}
+
+.profile-thumbnail{
+    width: 55px;
+    height: 55px;
+}
+
+.checkbox.center{
+     margin:0;
+     text-align: center;
+ }
+
+.toast-bottom-center{
+    margin-bottom:25px;
+}
+.toast-top-center{
+    margin-top:25px;
+}
+
+#base_div_footer{
+    position: absolute;
+    bottom : 0;
+    width: 100%;
+}
+
+ul.dropdown-menu li a{
+   color: #676a6c !important;
+}
+
+/* Admin custom style */
+.action-checkbox, .action-checkbox-column{
+    padding: 5px;
+}
+.object-tools {
+    padding-left: 0;
+    float: right;
+    position: relative;
+    margin-top: -2.4em;
+    margin-bottom: -2em;
+    list-style-type: none;
+}
+
+label {
+    min-width: 120px;
+    text-transform: capitalize;
+}
+
+.object-tools li {
+    margin-left: 4px;
+    float: right;
+}
+
+.object-tools li a, .object-tools li a:visited{
+    padding: 6px 12px;;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.42857143;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    background-color: #1ab394;
+    border-color: #1ab394;
+    color: #FFFFFF;
+    border-radius: 3px;
+}
+.submit-row{
+    background-image: none !important;
+}
+
+.submit-row input, #changelist .actions .button,.submit-row .deletelink{
+    padding: 6px 12px !important;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.42857143;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    border-radius: 3px;
+    border:0;
+    background-color: #c2c2c2 !important;
+    background-image: none !important;
+    border-color: #c2c2c2;
+    color: #FFFFFF;
+    border-image: none;
+    box-shadow: none;
+}
+
+.submit-row input:hover, #changelist .actions .button:hover,.submit-row .deletelink:hover{
+    background-color: #bababa !important;
+    border-color: #bababa;
+    color: #FFFFFF;
+}
+#changelist #toolbar{
+    background: white !important;
+}
+.top-navigation input[type=text], .top-navigation input[type=email],.top-navigation input[type=password], .top-navigation input[type=number],
+.top-navigation select, .top-navigation textarea{
+    background-color: #FFFFFF;
+    background-image: none;
+    border: 1px solid #e5e6e7;
+    border-radius: 1px;
+    color: inherit;
+    padding: 6px 12px;
+    transition: border-color 0.15s ease-in-out 0s, box-shadow 0.15s ease-in-out 0s;
+    font-size: 14px;
+}
+.top-navigation input[type=text], .top-navigation input[type=email],.top-navigation input[type=password], .top-navigation input[type=number],
+.top-navigation select{
+    width: 20em;
+}
+.top-navigation textarea{
+    width: 30em;
+}
+.top-navigation #login-form input[type=text],.top-navigation #login-form input[type=password]{
+    margin: 0 30px;
+    width:70%;
+}
+.top-navigation #login-form label{
+    min-width: 140px;
+}
+.top-navigation #login-form{
+    padding: 20px;
+}
+#toolbar input[type=submit]{
+    margin-left: 5px;
+    padding: 3px 12px !important;
+    font-size: 14px !important;
+    font-weight: 400;
+    line-height: 1.42857143;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    border-radius: 3px;
+    border:0;
+    background-color: #23c6c8;
+    border-color: #23c6c8;
+    color: #FFFFFF;
+    border-image: none;
+    box-shadow: none;
+}
+
+#toolbar input[type=submit]:hover{
+    background-color: #21b9bb;
+    border-color: #21b9bb;
+    color: #FFFFFF;
+}
+#content-main{
+    font-family: "open sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    color: #676a6c;
+    background-color: white;
+    margin-top: 40px;
+}
+#content-main label, #content-main p{
+    font-family: "open sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: #676a6c;
+    padding:8px;
+}
+#content-main label{
+    min-width: 10em;
+}
+#changelist-search label{
+    min-width: inherit;
+}
+
+#content-main .ibox-title {
+    padding-top: 7px;
+}
+#content-main .ibox-title h2 {
+    margin-top: 0;
+}
+#content-main .ibox-title i {
+    margin-top: 8px;
+}
+
+.selector-available h2, .selector-chosen h2 {
+    font-size: 16px !important;
+    margin-bottom: 0px !important;
+    text-transform: capitalize;
+}
+.selector-available label{
+    min-width: 30px !important;
+}
+.selector .selector-available input {
+    width: 90% !important;
+}
+.selector .selector-available select{
+    height: 19.2em !important;
+}
+.selector .selector-chosen select{
+    height: 23em !important;
+}
+.vTimeField {
+    min-width: 9.49em !important;
+    margin-top: 10px;
+}
+.vForeignKeyRawIdAdminField {
+    width: 20em !important;
+}
+
+.form-row .datetime, .form-row .file-upload{
+    margin-left: 10em;
+    padding: 0px !important;
+}
+.admin-table th, #changelist table thead th {
+    background: none;
+    padding: 8px !important;
+    border: none;
+    text-align: center;
+    border-bottom: 1px solid #DDDDDD;
+    font-weight: bold;
+    color: #676a6c;
+}
+#changelist table a {
+    color: #676a6c !important;
+}
+#changelist table tbody th, #changelist table tbody td {
+    padding:8px !important;
+}
+
+#changelist-filter ul {
+    padding-right: 10px;
+    overflow-wrap: break-word;
+}
+
+table#change-history thead th {
+    text-align: center;
+}
+table#change-history tbody th, table#change-history tbody td {
+    padding-right: 15px;
+}
+/* End Admin custom style */

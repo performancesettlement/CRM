@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load staticfiles my_filters %}
+{% block title %}SunDog | Login{% endblock title %}
+{% block content %}
+
+    <div class="wrapper wrapper-content animated fadeInRight">
+        <div class="row">
+            <div class="col-lg-10 col-lg-offset-1">
+                <div class="text-center">
+                    <div class="logo-name">
+                        <h1 class="logo-name">SUNDOG</h1>
+                    </div>
+                    <br/>
+
+                    <h2>Welcome!</h2>
+                    <p>If you have an account with us, login to see your profile.</p>
+                </div>
+               <!--  <p>Login in. To see it in action.</p> -->
+
+                <div class="ibox-content">
+                    <div class="row">
+                        <div class="col-sm-6 b-r p-w-md"><h3 class="m-t-none m-b">Sign in</h3>
+                            <p>Sign in typing your username and password.</p>
+                            <form role="form" name="LoginForm" action="{% url 'django_auth_app:login' %}" method="post">
+                                {% csrf_token %}
+                                {% if next %}
+                                <input type="hidden" name="next" value="{{ next }}" />
+                                {% endif %}
+                                <div class="form-group"><label>Username</label> <input type="text" placeholder="Enter username" class="form-control" required="" id="username" name="username"></div>
+                                <div class="form-group"><label>Password</label> <input type="password" placeholder="Password" class="form-control" required="" id="password" name="password"></div>
+                                <div class="form-group m-l-lg">
+                                    <div class="checkbox">
+                                        <input type="checkbox">
+                                        <label>  Remember me</label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <a href="{% url 'django_auth_app:recover' %}" ><small>Forgot password?</small></a>
+                                    <input type="hidden" id="id_timezone" name="timezone" value="" />
+                                </div>
+                                <div class="form-group">
+                                    <button class="btn btn-primary pull-right m-b" type="submit"><strong>Log in</strong></button>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="col-sm-6 p-w-md"><h4>Not a member?</h4>
+                            <p>You can create an account:</p>
+                            <p class="text-center">
+                                <a href="{% url 'django_auth_app:register' %}" ><i class="fa fa-sign-in big-icon"></i></a>
+                            </p>
+
+                            <p>Or Log in using:</p>
+                            <p>
+                                <a  id='twitter_button' class="socialaccount_provider twitter fa fa-twitter-square fa-4x"
+                                    href="/accounts/twitter/login/?process=login" aria-hidden="true"></a>
+                                <a id='facebook_button' class="socialaccount_provider facebook fa fa-facebook-square fa-4x"
+                                   href="/accounts/facebook/login/?process=login" aria-hidden="true"></a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- custom scripts -->
+    <script type="text/javascript" >
+        var form_errors = {{ form_errors|jsonify }};
+    </script>
+    <script src="{% static "js/plugins/jstz-1.0.4.min.js" %}"></script>
+    <script src="{% static "js/login.js" %}"></script>
+{% endblock content %}

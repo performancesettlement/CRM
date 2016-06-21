@@ -1,0 +1,188 @@
+{% extends "app-base.html" %}
+{% load  staticfiles my_filters admin_urls avatar_tags %}
+{% block extrahead %}
+    <link href="{% static "css/plugins/datapicker/datepicker3.css" %}" rel="stylesheet">
+    <link href="{% static "css/plugins/chosen/chosen.css" %}" rel="stylesheet">
+{% endblock extrahead %}
+{% block content %}
+    <!-- PATH GUIDE -->
+    <div class="row wrapper border-bottom white-bg page-heading">
+        <div class="col-lg-10">
+            <h2>New file</h2>
+            <ol class="breadcrumb">
+                <li>
+                    <a href="{% url 'home' %}">Home</a>
+                </li>
+                <li class="active">
+                    <strong>New file</strong>
+                </li>
+            </ol>
+        </div>
+        <div class="col-lg-2">
+
+        </div>
+    </div>
+    <!-- PAGE CONTENT -->
+    <div class="row wrapper wrapper-content animated fadeInUp">
+        <div class="col-lg-3">
+
+        </div>
+        <div class="col-lg-6">
+            <div class="ibox">
+                <div class="ibox-content">
+                    <form class="form-horizontal" id="add-file-form" action="{% url 'file_add' %}" method="post">
+                        {%csrf_token%}
+                        <h2>File Information</h2>
+                        <div class="m-t"></div>
+                        <dl class="dl-horizontal">
+                            <dt><span class="required-field">*</span>Description:</dt><dd>{{ form.description }}</dd>
+                        </dl>
+                        <dl class="dl-horizontal">
+                            <dt><span class="required-field">*</span>Status:</dt><dd>{{ form.current_status|addcss:'chosen-select' }}</dd>
+                        </dl>
+                        {% if not file.current_status.related_percent == None %}
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <dl class="dl-horizontal">
+                                        <dt>Completed:</dt>
+                                        <dd>
+                                            <div class="progress progress-striped active m-b-sm">
+                                                <div id="progress_bar_div" style="width: {{ file.current_status.related_percent }}%;" class="progress-bar"></div>
+                                            </div>
+                                            <small id="progress_text">File completed in <strong>{{ file.current_status.related_percent }}%</strong>.</small>
+                                        </dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        {% endif %}
+                        <dl class="dl-horizontal">
+                            <dt><span class="required-field">*</span>Client:</dt> <dd><div class="input-group">{{ form.client }}
+                            {% if perms.sundog.add_client %}
+                                <span class="input-group-btn"><button id="add-client-button" class="btn btn-primary" type="button" title="Add a new client" data-toggle="modal" data-target="#addClientModal"><i class="fa fa-plus"></i>
+                                </button></span>
+                            {% endif %}
+                        </div> </dd>
+                        </dl>
+                        <dl class="dl-horizontal">
+                            <dt >Priority:</dt> <dd>{{ form.priority|addcss:'form-control' }} </dd>
+                        </dl>
+                        <dl class="dl-horizontal">
+                            <dt >Tags:</dt> <dd>{{ form.tags|addcss:'chosen-select'}} </dd>
+                        </dl>
+                        <dl class="dl-horizontal">
+                            <dt >Quoted price:</dt> <dd>{{ form.quoted_price }} </dd>
+                        </dl>
+                        <dl class="dl-horizontal">
+                            <dt >Quoted date:</dt> <dd><div class="input-group group-date">
+                            <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                            {{ form.quoted_date }}
+                        </div> </dd>
+                        </dl>
+                        <dl class="dl-horizontal">
+                            <dt >Invoice price:</dt> <dd>{{ form.invoice_price }} </dd>
+                        </dl>
+                        <dl class="dl-horizontal">
+                            <dt >Invoice date:</dt> <dd><div class="input-group group-date">
+                            <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                            {{ form.invoice_date }}
+                        </div> </dd>
+                        </dl>
+
+                    <div class="hr-line-dashed"></div>
+                    <div class="form-group">
+                        <div class="col-lg-3"></div>
+                        <div class="controls">
+                            <button type="submit" class="btn btn-primary">Create</button>
+                        </div>
+                    </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% if perms.sundog.add_client %}
+        <div class="modal inmodal" id="addClientModal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content animated bounceInRight">
+                    <div class="modal-header">
+                        <button id="add-client-close-button" type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                        <i class="fa fa-user modal-icon"></i>
+                        <h4 class="modal-title">Add a New Client</h4>
+                        <small class="font-bold">Create a new client providing the information below.</small>
+                    </div>
+                    <form id="add-client-form" action="{% url 'ajax_client_add' %}" method="post">
+                        {% csrf_token %}
+                        <div class="modal-body row no-margins">
+                            <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_client_type"><span class="text-danger">*</span> Client type: </label>
+                                {{ form_client.client_type }}
+                            </div>
+                            <div class="form-group">
+                                <label for="id_name"><span class="text-danger">*</span> Name: </label>
+                                {{ form_client.name|addcss:'form-control' }}
+                            </div>
+                            <div class="form-group">
+                                <label for="id_identification"><span class="text-danger">*</span> ID: </label>
+                                {{ form_client.identification|addcss:'form-control' }}
+                            </div>
+                            <div class="form-group">
+                                <label for="id_email">Email: </label>
+                                {{ form_client.email|addcss:'form-control' }}
+                            </div>
+                            <div class="form-group">
+                                <label for="id_phone_number">Phone number: </label>
+                                {{ form_client.phone_number|addcss:'form-control' }}
+                            </div>
+                            <div class="form-group">
+                                <label for="id_mobile_number">Mobile number: </label>
+                                {{ form_client.mobile_number|addcss:'form-control' }}
+                            </div>
+                            </div>
+                            <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_country">Country: </label>
+                                {{ form_client.country|addcss:'form-control' }}
+                            </div>
+                            <div class="form-group">
+                                <label for="id_address">Address: </label>
+                                {{ form_client.address|addcss:'form-control' }}
+                            </div>
+                            <div class="form-group">
+                                <label for="id_city">City: </label>
+                                {{ form_client.city|addcss:'form-control' }}
+                            </div>
+                            <div class="form-group">
+                                <label for="id_state">State: </label>
+                                {{ form_client.state|addcss:'chosen-select' }}
+                            </div>
+                            <div class="form-group">
+                                <label for="id_zip_code">Zip code: </label>
+                                {{ form_client.zip_code|addcss:'form-control' }}
+                            </div>
+                            </div>
+                            <div class="col-md-12"><span class="text-danger">*</span> Required fields.</div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-white" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary" id="new-client-button">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    <script type="text/javascript" >
+        var form_errors = {{ form_errors|jsonify }};
+        $.ajaxSetup({
+            data: {csrfmiddlewaretoken: '{{ csrf_token }}' }
+        });
+    </script>
+    <!-- Data picker -->
+    <script src="{% static "js/plugins/datapicker/bootstrap-datepicker.js" %}"></script>
+    <!-- Other plugins -->
+    <script src="{% static "js/plugins/chosen/chosen.jquery.js" %}"></script>
+    <script src="{% static "js/plugins/dropzone/dropzone.js" %}"></script>
+    <script src="{% static "js/file/file_new.js" %}"></script>
+
+{% endblock content %}
