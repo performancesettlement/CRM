@@ -1,0 +1,16 @@
+dj-database-url==0.3.0
+Django==1.8.5
+djangorestframework==3.3.0
+psycopg2==2.6
+pillow==3.0.0
+python-dateutil==2.4.2
+django-localflavor
+django_compressor==1.5
+django-taggit==0.17.3
+wagtail==1.1
+django-avatar==2.1.1
+elasticsearch>=1.0.0,<2.0.0
+django-haystack==2.4.1
+xlrd==0.9.4
+django-timezone-utils
+django-crontab
