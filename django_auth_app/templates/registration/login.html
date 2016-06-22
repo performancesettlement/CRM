@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load staticfiles my_filters %}
-{% block title %}SunDog | Login{% endblock title %}
+{% block title %}Performance Settlement | Login{% endblock title %}
 {% block content %}
 
     <div class="wrapper wrapper-content animated fadeInRight">
@@ -8,19 +8,15 @@
             <div class="col-lg-10 col-lg-offset-1">
                 <div class="text-center">
                     <div class="logo-name">
-                        <h1 class="logo-name">SUNDOG</h1>
+                        <h5 class="logo-name">Performance Settlement</h5>
                     </div>
                     <br/>
-
                     <h2>Welcome!</h2>
-                    <p>If you have an account with us, login to see your profile.</p>
                 </div>
-               <!--  <p>Login in. To see it in action.</p> -->
-
                 <div class="ibox-content">
                     <div class="row">
-                        <div class="col-sm-6 b-r p-w-md"><h3 class="m-t-none m-b">Sign in</h3>
-                            <p>Sign in typing your username and password.</p>
+                        <div class="col-sm-6 b-r p-w-md">
+                            <h3 class="m-t-none m-b">Sign in</h3>
                             <form role="form" name="LoginForm" action="{% url 'django_auth_app:login' %}" method="post">
                                 {% csrf_token %}
                                 {% if next %}
@@ -30,8 +26,9 @@
                                 <div class="form-group"><label>Password</label> <input type="password" placeholder="Password" class="form-control" required="" id="password" name="password"></div>
                                 <div class="form-group m-l-lg">
                                     <div class="checkbox">
-                                        <input type="checkbox">
-                                        <label>  Remember me</label>
+                                        <label for="remember-me">
+                                            <input name="remember-me" type="checkbox"> Remember me
+                                        </label>
                                     </div>
                                 </div>
                                 <div>
@@ -47,14 +44,6 @@
                             <p>You can create an account:</p>
                             <p class="text-center">
                                 <a href="{% url 'django_auth_app:register' %}" ><i class="fa fa-sign-in big-icon"></i></a>
-                            </p>
-
-                            <p>Or Log in using:</p>
-                            <p>
-                                <a  id='twitter_button' class="socialaccount_provider twitter fa fa-twitter-square fa-4x"
-                                    href="/accounts/twitter/login/?process=login" aria-hidden="true"></a>
-                                <a id='facebook_button' class="socialaccount_provider facebook fa fa-facebook-square fa-4x"
-                                   href="/accounts/facebook/login/?process=login" aria-hidden="true"></a>
                             </p>
                         </div>
                     </div>
