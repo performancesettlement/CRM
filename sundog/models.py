@@ -1,12 +1,10 @@
 import hashlib
-from decimal import Decimal
 from django.db import models
 from wagtail.wagtailcore.models import Page
 from wagtail.wagtailcore.fields import RichTextField
 from wagtail.wagtailadmin.edit_handlers import FieldPanel
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
-from sundog.errors import ConcurrencyError
 from sundog.utils import document_directory_path, format_price
 import logging
 from sundog import constants
@@ -94,22 +92,126 @@ class ClientType(models.Model):
         super(ClientType, self).save(*args, **kwargs)
 
 
+MARITAL_STATUS_CHOICES = (
+    (None, '--Select--'),
+    ('single', 'Single'),
+    ('married', 'Married'),
+    ('separated', 'Separated'),
+    ('divorced', 'Divorced'),
+)
+
+RESIDENTIAL_STATUS_CHOICES = (
+    (None, '--Select--'),
+    ('renter', 'Renter'),
+    ('home_owner', 'Homeowner'),
+    ('lives_with_f', 'Lives with family/friends'),
+)
+
+EMPLOYMENT_STATUS_CHOICES = (
+    (None, '--Select--'),
+    ('employed', 'Employed'),
+    ('unemployed', 'Unemployed'),
+    ('disabled', 'Disabled'),
+    ('retired', 'Retired'),
+)
+
+DEPENDANTS_CHOICES = (
+    (None, '--Select--'),
+    ('0', 'None'),
+    ('1', '1'),
+    ('2', '2'),
+    ('3', '3'),
+    ('4', '4'),
+    ('5', '5'),
+    ('6', '6'),
+    ('7', '7'),
+    ('8', '8'),
+    ('9', '9'),
+    ('10', '10'),
+)
+
+HARDSHIPS_CHOICES = (
+    (None, '--Select--'),
+    ('divorce_or_separation', 'Divorce or Separation'),
+    ('disability', 'Disability'),
+    ('death_in_family', 'Death In Family'),
+    ('child_expenses', 'Child Expenses'),
+    ('loss_of_employment', 'Loss of Employment'),
+    ('medical_expenses', 'Medical Expenses'),
+    ('pay_cut', 'Pay Cut'),
+    ('relocation_expenses', 'Relocation Expenses'),
+    ('temporary_loss_of_work', 'Temporary Loss of Work'),
+    ('other', 'Other'),
+)
+
+
 class Client(models.Model):
     client_id = models.AutoField(primary_key=True)
     client_type = models.ForeignKey(ClientType)
-    name = models.CharField(max_length=100, unique=True)
-    last_name = models.CharField(max_length=100, blank=True, null=True)
-    identification = models.CharField(max_length=100, unique=True)
-    related_user = models.ForeignKey(User, null=True, blank=True)
-    email = models.CharField(max_length=100, blank=True, null=True)
+
+    first_name = models.CharField(max_length=100)
+    middle_name = models.CharField(max_length=100, blank=True, null=True)
+    last_name = models.CharField(max_length=100)
+    previous_name = models.CharField(max_length=100, blank=True, null=True)
     phone_number = models.CharField(max_length=50, blank=True, null=True)
     mobile_number = models.CharField(max_length=50, blank=True, null=True)
-    country = models.CharField(max_length=60, blank=True, null=True)
-    state = models.CharField(max_length=4, choices=enums.US_STATES, blank=True, null=True)
+    email = models.CharField(max_length=100, blank=True, null=True)
+    birth_date = models.DateField(blank=True, null=True)
+    identification = models.CharField(max_length=100, unique=True)
+    marital_status = models.CharField(choices=MARITAL_STATUS_CHOICES, blank=True, null=True)
+    co_applicant_first_name = models.CharField(max_length=100, blank=True, null=True)
+    co_applicant_middle_name = models.CharField(max_length=100, blank=True, null=True)
+    co_applicant_last_name = models.CharField(max_length=100, blank=True, null=True)
+    co_applicant_previous_name = models.CharField(max_length=100, blank=True, null=True)
+    co_applicant_phone_number = models.CharField(max_length=50, blank=True, null=True)
+    co_applicant_mobile_number = models.CharField(max_length=50, blank=True, null=True)
+    co_applicant_email = models.CharField(max_length=100, blank=True, null=True)
+    co_applicant_birth_date = models.DateField(blank=True, null=True)
+    co_applicant_identification = models.CharField(max_length=100, unique=True)
+    co_applicant_marital_status = models.CharField(choices=MARITAL_STATUS_CHOICES, blank=True, null=True)
+    dependants = models.CharField(choices=DEPENDANTS_CHOICES, blank=True, null=True)
+
+    address_1 = models.CharField(max_length=300, blank=True, null=True)
+    address_2 = models.CharField(max_length=300, blank=True, null=True)
     city = models.CharField(max_length=60, blank=True, null=True)
+    state = models.CharField(max_length=4, choices=enums.US_STATES, blank=True, null=True)
     zip_code = models.CharField(max_length=12, blank=True, null=True)
-    address = models.CharField(max_length=300, blank=True, null=True)
+    residential_status = models.CharField(choices=RESIDENTIAL_STATUS_CHOICES, blank=True, null=True)
+    co_applicant_address = models.CharField(max_length=300, blank=True, null=True)
+    co_applicant_city = models.CharField(max_length=60, blank=True, null=True)
+    co_applicant_state = models.CharField(max_length=4, choices=enums.US_STATES, blank=True, null=True)
+    co_applicant_zip_code = models.CharField(max_length=12, blank=True, null=True)
+
+    employer = models.CharField(max_length=100, blank=True, null=True)
+    employment_status = models.CharField(choices=EMPLOYMENT_STATUS_CHOICES, blank=True, null=True)
+    position = models.CharField(max_length=100, blank=True, null=True)
+    length_of_employment = models.CharField(max_length=100, blank=True, null=True)
+    work_phone = models.CharField(max_length=50, blank=True, null=True)
+    co_applicant_employer = models.CharField(max_length=100, blank=True, null=True)
+    co_applicant_employment_status = models.CharField(choices=EMPLOYMENT_STATUS_CHOICES, blank=True, null=True)
+    co_applicant_position = models.CharField(max_length=100, blank=True, null=True)
+    co_applicant_length_of_employment = models.CharField(max_length=100, blank=True, null=True)
+    co_applicant_work_phone = models.CharField(max_length=50, blank=True, null=True)
+
+    hardships = models.CharField(choices=HARDSHIPS_CHOICES, blank=True, null=True)
+    hardship_description = models.CharField(max_length=300, blank=True, null=True)
+
+    special_note_1 = models.CharField(max_length=100, blank=True, null=True)
+    special_note_2 = models.CharField(max_length=100, blank=True, null=True)
+    special_note_3 = models.CharField(max_length=100, blank=True, null=True)
+    special_note_4 = models.CharField(max_length=100, blank=True, null=True)
+    ssn1 = models.CharField(max_length=100, blank=True, null=True)
+    ssn2 = models.CharField(max_length=100, blank=True, null=True)
+
+    third_party_speaker_full_name = models.CharField(max_length=100, blank=True, null=True)
+    third_party_speaker_last_4_of_ssn = models.CharField(max_length=100, blank=True, null=True)
+    authorization_form_on_file = models.CharField(choices=EMPLOYMENT_STATUS_CHOICES, blank=True, null=True)
+
     active = models.BooleanField(default=True)
+    related_user = models.ForeignKey(User, null=True, blank=True)
+    # TODO: Add company reference after companies has been added.
+    # TODO: Add lead source reference after companies has been added.
+    # TODO: Add call center representative reference after companies has been added.
 
     class Meta:
         verbose_name = 'Client'
@@ -119,13 +221,9 @@ class Client(models.Model):
         )
 
     def __str__(self):
-        return '%s' % self.name
+        return '%s' % self.first_name
 
     def save(self, *args, **kwargs):
-        if self.name:
-            self.name.strip()
-            if not self.name.isupper():
-                self.name = self.name.upper()
         if self.identification:
             self.identification.strip()
             if not self.identification.isupper():

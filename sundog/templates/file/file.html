@@ -89,7 +89,7 @@
                                                         <dl class="dl-horizontal">
                                                             <dt>Created by:</dt> <dd>{% firstof file.creator_user_full_name file.creator_user_username "Anonymous user" %}</dd>
                                                             <dt>Notes:</dt> <dd id="notes-count">  {{ file.messages.count }}</dd>
-                                                            <dt>Client:</dt> <dd><a  data-toggle="modal" data-target="#updateClientModal" class="text-navy">{{ file.client.name|title }}</a></dd>
+                                                            <dt>Client:</dt> <dd><a  data-toggle="modal" data-target="#updateClientModal" class="text-navy">{{ file.client.first_name|title }}</a></dd>
                                                         </dl>
                                                     </div>
                                                     <div class="col-lg-7" id="cluster_info">
@@ -249,7 +249,7 @@
                     <div class="modal-header">
                         <button id="add-client-close-button" type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
                         <i class="fa fa-user modal-icon"></i>
-                        <h4 class="modal-title">Client: {{ file.client.name }}</h4>
+                        <h4 class="modal-title">Client: {{ file.client.first_name }}</h4>
                         <small class="font-bold">Update client information below.</small>
                     </div>
                     <form id="update-client-form" action="{% url 'ajax_client_add' %}" method="post">
@@ -262,7 +262,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="id_name"><span class="text-danger">*</span> Name: </label>
-                                    {{ form_client.name|addcss:'form-control' }}
+                                    {{ form_client.first_name|addcss:'form-control' }}
                                 </div>
                                 <div class="form-group">
                                     <label for="id_identification"><span class="text-danger">*</span> ID: </label>

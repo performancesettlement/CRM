@@ -388,7 +388,7 @@ def add_client_ajax(request):
         if error:
             return JsonResponse({'error': error})
         else:
-            return JsonResponse({'result': {'client_id': new_client.client_id, 'name': new_client.name}})
+            return JsonResponse({'result': {'client_id': new_client.client_id, 'name': new_client.first_name}})
     raise Http404()
 
 

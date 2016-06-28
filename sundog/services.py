@@ -589,7 +589,7 @@ def upload_import_client(import_excel, user, impersonator_user=None):
                     if client_id or [x for x in clients if x.name == cell_name]:
                         errors.append(messages.ERROR_VALIDATE_IMPORT_CELL_UNIQUE % (row_idx, 'client name'))
                     else:
-                        new_client.name = cell_name
+                        new_client.first_name = cell_name
                 else:
                     errors.append(messages.ERROR_VALIDATE_IMPORT_CELL_NOT_EMPTY % (row_idx, 'client name'))
                 # client identification column
