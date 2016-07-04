@@ -57,15 +57,15 @@ urlpatterns = [
     url(r'^delete-documents/(?P<document_id>\d+)/$', views.documents_delete, name='documents_delete'),
     url(r'^file/(?P<file_id>\d+)/message/$', views.messages_upload, name='messages_upload'),
     url(r'^completed_by_status/?$', ajax.get_completed_by_file_status, name='completed_by_status'),
+    url(r'^contact/add/$', views.add_contact, name='add_contact'),
     url(r'^client/add/$', views.add_client_ajax, name='ajax_client_add'),
-    url(r'^client/import/$', views.client_import, name='client_import'),
-    url(r'^client/import/check/$', views.check_client_import, name='client_import_check'),
-    url(r'^client/import/download-sample/$', views.download_client_import_sample, name='download_client_import_sample'),
+    # url(r'^client/import/$', views.client_import, name='client_import'),
+    # url(r'^client/import/check/$', views.check_client_import, name='client_import_check'),
+    # url(r'^client/import/download-sample/$', views.download_client_import_sample, name='download_client_import_sample'),
     url(r'^profile/impersonate_user/$', views.impersonate_user, name='impersonate_user'),
     url(r'^profile/stop_impersonate_user/$', views.stop_impersonate_user, name='stop_impersonate_user'),
     url(r'^admin/update_preferences_for_section_collapsed_state/$', ajax.update_preferences_for_section_collapsed_state, name='update_section_collapsed_state'),
     url(r'^admin/get_preferences_for_sections_collapsed_state/$', ajax.get_preferences_for_sections_collapsed_state, name='get_sections_collapsed_state'),
-
     # For anything not caught by a more specific rule above, hand over to
     # Wagtail's serving mechanism
     url(r'', include(wagtail_urls)),

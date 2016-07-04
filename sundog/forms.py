@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
-from sundog.models import MyFile, FileStatus, Client, Tag, ClientType
+from sundog.models import MyFile, FileStatus, Contact, Tag, ClientType
 from sundog import services
 from haystack.forms import SearchForm
 from sundog.constants import RADIO_FILTER_CHOICES, SHORT_DATE_FORMAT
@@ -108,7 +108,7 @@ class FileCustomForm(forms.ModelForm):
                                             widget=forms.Select(attrs={'class': 'form-control',
                                                                        'onChange': 'updateCompleted(this)'}))
 
-    client = forms.ModelChoiceField(required=True, queryset=Client.objects.all(), empty_label="Select a Client...",
+    client = forms.ModelChoiceField(required=True, queryset=Contact.objects.all(), empty_label="Select a Client...",
                                     widget=forms.Select(attrs={'class': 'chosen-select',
                                                                'data-placeholder': 'Select a Client...'}))
 
@@ -135,36 +135,17 @@ class FileCustomForm(forms.ModelForm):
                    'last_update_time', 'last_update_user_username', 'last_update_user_full_name', 'file_status_history')
 
 
-class ClientForm(forms.ModelForm):
-    client_type = forms.ModelChoiceField(queryset=ClientType.objects.all(), empty_label="Select a Client Type...",
-                                         widget=forms.Select(attrs={'class': 'chosen-select',
-                                                                    'data-placeholder': 'Select a Client Type...'}))
-
-    # client_id = forms.HiddenInput()
+class ContactForm(forms.ModelForm):
 
     class Meta:
         widgets = {
-            "client_id": forms.HiddenInput()
+            'client_id': forms.HiddenInput(),
+            'company': forms.Select()
         }
-        model = Client
-        exclude = ('active',)
+        model = Contact
+        fields = '__all__'
 
     def clean(self):
-        name = self.cleaned_data.get('name')
-        client_id = None
-        if 'client_id' in self.data:
-            client_id = int(self.data.get('client_id'))
-            self.cleaned_data["client_id"] = client_id
-
-        if name:
-            name = str(name).upper().strip()
-            pk = services.check_client_exists(name, client_id)
-            if pk:
-                self.add_error('name', "This name already exists in the system.")
-
-        identification = self.cleaned_data.get('identification')
-        if identification:
-            identification = str(identification).upper().strip()
-            pk = services.check_client_exists_by_identification(identification, client_id)
-            if pk:
-                self.add_error('identification', "This identification already exists in the system.")
+        if 'contact_id' in self.data:
+            contact_id = int(self.data['contact_id'])
+            self.cleaned_data["contact_id"] = contact_id

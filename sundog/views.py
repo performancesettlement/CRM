@@ -1,5 +1,4 @@
 import json
-from time import strptime
 from django_auth_app.utils import serialize_user
 from django.shortcuts import render_to_response, redirect
 from django.template.context import RequestContext
@@ -20,10 +19,10 @@ from sundog.constants import IMPORT_FILE_EXCEL_FILENAME, IMPORT_CLIENT_EXCEL_FIL
 from django.contrib.auth.models import Permission
 from haystack.generic_views import SearchView
 from sundog.decorators import bypass_impersonation_login_required
-from sundog.forms import FileCustomForm, FileSearchForm, ClientForm, ImpersonateUserForm
+from sundog.forms import FileCustomForm, FileSearchForm, ContactForm, ImpersonateUserForm
 from datetime import datetime
 from sundog.messages import MESSAGE_REQUEST_FAILED_CODE, CODES_TO_MESSAGE
-from sundog.models import MyFile, Message, Document, FileStatusHistory, Client
+from sundog.models import MyFile, Message, Document, FileStatusHistory, Contact, LeadSource
 
 logger = logging.getLogger(__name__)
 
@@ -145,9 +144,9 @@ def file_detail(request, file_id):
             template_path = 'file/file_disabled.html'
         else:
             documents = Document.objects.filter(file__file_id=file_id)
-            client = Client.objects.get(client_id=my_file.client.client_id)
+            client = Contact.objects.get(client_id=my_file.client.client_id)
             # print
-            form_client = ClientForm(instance=client)
+            form_client = ContactForm(instance=client)
             documents_json = []
             if documents:
                 documents_json = [
@@ -170,6 +169,62 @@ def file_detail(request, file_id):
         return _render_response(request, context_info, template_path)
 
 
+def add_contact(request):
+    form_errors = None
+    form = ContactForm(request.POST or None)
+    if request.method == 'POST' and request.POST:
+        if form.is_valid():
+            contact = form.save()
+            # TODO: redirect to detail perhaps?
+            return redirect('home')
+        else:
+            form_errors = []
+            for field in form:
+                if field.errors:
+                    for field_error in field.errors:
+                        error = strip_tags(field.html_name.replace("_", " ").title()) + ": " + field_error
+                        form_errors.append(error)
+            for non_field_error in form.non_field_errors():
+                form_errors.append(non_field_error)
+    lead_sources = LeadSource.objects.all()
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'form': form,
+        'form_errors': form_errors,
+        'templates':  [('Add a Client', 'add_a_client')],
+    }
+    template_path = 'contact/add_contact.html'
+    return _render_response(request, context_info, template_path)
+
+
+def add_lead_source(request):
+    form_errors = None
+    form = ContactForm(request.POST or None)
+    if request.method == 'POST' and request.POST:
+        if form.is_valid():
+            lead_source = form.save()
+            # TODO: redirect to lead sources list?
+            return redirect('home')
+        else:
+            form_errors = []
+            for field in form:
+                if field.errors:
+                    for field_error in field.errors:
+                        error = strip_tags(field.html_name.replace("_", " ").title()) + ": " + field_error
+                        form_errors.append(error)
+            for non_field_error in form.non_field_errors():
+                form_errors.append(non_field_error)
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'form': form,
+        'form_errors': form_errors,
+    }
+    template_path = 'lead_source/add_lead_source.html'
+    return _render_response(request, context_info, template_path)
+
+
 @permission_required('sundog.change_myfile')
 def file_edit(request, file_id):
     error_code = 0
@@ -186,7 +241,7 @@ def file_edit(request, file_id):
         else:
             form_errors = None
             if request.user.has_perm('sundog.add_client'):
-                form_client = ClientForm()
+                form_client = ContactForm()
             else:
                 form_client = None
             current_status = my_file.current_status
@@ -272,7 +327,7 @@ def file_add(request):
     form = FileCustomForm(request.POST or None)
     form.fields['current_status'].queryset = services.get_status_list_by_user(request.user)
     if request.user.has_perm('sundog.add_client'):
-        form_client = ClientForm()
+        form_client = ContactForm()
     else:
         form_client = None
     if request.method == 'POST' and request.POST:
@@ -367,11 +422,11 @@ def add_client_ajax(request):
         try:
             data = request.POST
             if "client_id" in data:
-                instance = Client.objects.filter(client_id=data["client_id"])
+                instance = Contact.objects.filter(client_id=data["client_id"])
             if instance and len(instance) > 0:
-                form_client = ClientForm(data, instance=instance[0])
+                form_client = ContactForm(data, instance=instance[0])
             else:
-                form_client = ClientForm(data)
+                form_client = ContactForm(data)
 
             if form_client.is_valid():
                 new_client = form_client.save()

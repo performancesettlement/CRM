@@ -140,26 +140,22 @@
                             </div>
                             </div>
                             <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="id_country">Country: </label>
-                                {{ form_client.country|addcss:'form-control' }}
-                            </div>
-                            <div class="form-group">
-                                <label for="id_address">Address: </label>
-                                {{ form_client.address|addcss:'form-control' }}
-                            </div>
-                            <div class="form-group">
-                                <label for="id_city">City: </label>
-                                {{ form_client.city|addcss:'form-control' }}
-                            </div>
-                            <div class="form-group">
-                                <label for="id_state">State: </label>
-                                {{ form_client.state|addcss:'chosen-select' }}
-                            </div>
-                            <div class="form-group">
-                                <label for="id_zip_code">Zip code: </label>
-                                {{ form_client.zip_code|addcss:'form-control' }}
-                            </div>
+                                <div class="form-group">
+                                    <label for="id_address">Address: </label>
+                                    {{ form_client.address_1|addcss:'form-control' }}
+                                </div>
+                                <div class="form-group">
+                                    <label for="id_city">City: </label>
+                                    {{ form_client.city|addcss:'form-control' }}
+                                </div>
+                                <div class="form-group">
+                                    <label for="id_state">State: </label>
+                                    {{ form_client.state|addcss:'chosen-select' }}
+                                </div>
+                                <div class="form-group">
+                                    <label for="id_zip_code">Zip code: </label>
+                                    {{ form_client.zip_code|addcss:'form-control' }}
+                                </div>
                             </div>
                             <div class="col-md-12"><span class="text-danger">*</span> Required fields.</div>
                         </div>

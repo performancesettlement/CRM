@@ -1,0 +1,81 @@
+{% extends "app-base.html" %}
+{% load staticfiles my_filters %}
+{% block extrahead %}
+    <link href="{% static "css/plugins/datapicker/datepicker3.css" %}" rel="stylesheet">
+    <link href="{% static "css/plugins/chosen/chosen.css" %}" rel="stylesheet">
+{% endblock extrahead %}
+{% block content %}
+    <div class="row wrapper border-bottom white-bg page-heading">
+        <div class="col-lg-10 m-t-md">
+            <ol class="breadcrumb">
+                <li>
+                    <a href="">Contacts</a>
+                </li>
+                <li class="active">
+                    <strong>Add contact</strong>
+                </li>
+            </ol>
+        </div>
+    </div>
+    <div class="m-t-md">
+        <select id="template-chooser" name="movie">
+        {% for template in templates %}
+            <option value="{{template.1}}" >{{template.0}}</option>
+        {% endfor %}
+        </select>
+    </div>
+    <div class="col-xs-12 m-t-md m-b-md">
+        <div class="m-r-xs inline">
+            Active: {{ form.active }}
+        </div>
+        <div class="m-r-xs inline">
+            Company: {{ form.company }}
+        </div>
+        <div class="m-r-xs inline">
+            Assigned To: {{ form.assigned_to }}
+        </div>
+    </div>
+    <div id="add_a_client" class="form-template m-t-md">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="active"><a href="#tab-1" data-toggle="tab">Lead Tracker</a></li>
+            <li class=""><a href="#tab-2" data-toggle="tab">Contact Information</a></li>
+            <li class=""><a href="#tab-3" data-toggle="tab">Address Information</a></li>
+            <li class=""><a href="#tab-4" data-toggle="tab">Employment Information</a></li>
+            <li class=""><a href="#tab-5" data-toggle="tab">Hardships</a></li>
+            <li class=""><a href="#tab-6" data-toggle="tab">Special Notes</a></li>
+            <li class=""><a href="#tab-7" data-toggle="tab">3rd Party Speaker Information</a></li>
+        </ul>
+        <form id="add-contact-form" action="{% url 'add_contact' %}" method="post">
+            <div class="tab-content col-xs-12 m-t-md">
+                {% csrf_token %}
+                <div class="tab-pane active" id="tab-1">
+                    {% include "contact/partials/lead_tracker.html" %}
+                </div>
+                <div class="tab-pane" id="tab-2">
+                    {% include "contact/partials/info.html" %}
+                </div>
+                <div class="tab-pane" id="tab-3">
+                    {% include "contact/partials/address.html" %}
+                </div>
+                <div class="tab-pane" id="tab-4">
+                    {% include "contact/partials/employment.html" %}
+                </div>
+                <div class="tab-pane" id="tab-5">
+                    {% include "contact/partials/hardships.html" %}
+                </div>
+                <div class="tab-pane" id="tab-6">
+                    {% include "contact/partials/special_notes.html" %}
+                </div>
+                <div class="tab-pane" id="tab-7">
+                    {% include "contact/partials/third_party_speaker.html" %}
+                </div>
+            </div>
+            <div class="col-xs-12 m-t-md">
+                <button class="btn btn-primary" type="submit">Save Contact</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="{% static "js/contact/add_contact.js" %}"></script>
+
+{% endblock content %}

@@ -95,3 +95,8 @@ def paginator_range(paginator, page_number):
         last_number = last_number if last_number<=len_range else len_range
         return paginator.page_range[first_number:last_number]
 
+
+@register.filter
+def get_item(dictionary, key):
+    return dictionary.get(key)
+

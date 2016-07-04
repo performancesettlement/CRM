@@ -99,17 +99,6 @@
                     {% endif %}
                     </ul>
                 </li>
-
-                {% if perms.sundog.import_files or perms.sundog.import_clients %}
-                <li id="menu_import">
-                    <a href=""><i class="fa fa-table"></i><span class="nav-label">Bulk Import</span><span class="fa arrow"></span></a>
-                    <ul class="nav nav-second-level">
-                        {% if perms.sundog.import_files%}<li id="submenu_file_import"><a href="{% url 'file_import' %}">File Import</a></li>{% endif %}
-                        {% if perms.sundog.import_clients%}<li id="submenu_client_import"><a href="{% url 'client_import' %}">Client Import</a></li>{% endif %}
-                    </ul>
-                </li>
-                {% endif %}
-
             </ul>
         </div>
     </nav>

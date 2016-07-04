@@ -2,7 +2,7 @@ import copy
 
 from django.contrib.contenttypes.models import ContentType
 
-from sundog.models import MyFile, Client, ClientType, FileStatusHistory, FileStatus, FileAccessHistory, FileStatusStat, Document, Tag, FileImportHistory
+from sundog.models import MyFile, Contact, ClientType, FileStatusHistory, FileStatus, FileAccessHistory, FileStatusStat, Document, Tag, FileImportHistory
 from django.contrib.auth.models import User, Permission
 from django.db.models import Q
 import logging
@@ -299,7 +299,7 @@ def check_client_exists(name, client_id):
         if value is not None:
             return value
         try:
-            value = Client.objects.get(name=name).client_id
+            value = Contact.objects.get(name=name).client_id
             cache.set(name_key, value, constants.CACHE_IMPORT_EXPIRATION)
             if value == client_id:
                 return None
@@ -321,7 +321,7 @@ def check_client_exists_by_identification(ident, client_id):
         if value is not None:
             return value
         try:
-            value = Client.objects.get(identification=ident).client_id
+            value = Contact.objects.get(identification=ident).client_id
             cache.set(ident_key, value, constants.CACHE_IMPORT_EXPIRATION)
             if value == client_id:
                 return None
@@ -570,7 +570,7 @@ def upload_import_client(import_excel, user, impersonator_user=None):
             errors.append(messages.ERROR_FILE_IMPORT_NO_ROWS)
         else:
             for row_idx in range(1, first_sheet.nrows):
-                new_client = Client()
+                new_client = Contact()
                 # client type column
                 file_cell = first_sheet.cell(row_idx, 0)
                 if file_cell.value:
@@ -654,7 +654,7 @@ def upload_import_client(import_excel, user, impersonator_user=None):
             # save import history
             save_import_history(import_excel, user, impersonator_user)
             # save to db
-            Client.objects.bulk_create(clients)
+            Contact.objects.bulk_create(clients)
 
     except IndexError as ie:
         logger.error(messages.ERROR_IMPORT_CLIENTS % user.username if user else "None user")

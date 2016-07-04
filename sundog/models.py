@@ -92,6 +92,76 @@ class ClientType(models.Model):
         super(ClientType, self).save(*args, **kwargs)
 
 
+class LeadSource(models.Model):
+    lead_source_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+
+COMPANY_TYPE_CHOICES = (
+    ('law_firm', 'Law Firm'),
+    ('lead_vendor', 'Lead Vendor'),
+    ('marketing_company', 'Marketing Company'),
+    ('partner', 'Partner'),
+    ('servicing_company', 'Servicing Company'),
+)
+
+TIMEZONE_CHOICES = (
+    ('eastern', 'Eastern'),
+    ('central', 'Central'),
+    ('mountain', 'Mountain'),
+    ('pacific', 'Pacific')
+)
+
+ACCOUNT_EXEC_CHOICES = (
+    (None, '--Select--'),
+    ('user_test', 'User, Test'),
+)
+
+THEME_CHOICES = (
+    (None, '--Select--'),
+    ('default', 'Default'),
+    ('light', 'Light'),
+    ('perf_sett', 'PerfSett'),
+    ('red_black', 'Red/Black'),
+    ('red_gray', 'Red/Gray'),
+)
+
+
+class Company(models.Model):
+    active = models.BooleanField(default=False)
+    company_type = models.CharField(choices=COMPANY_TYPE_CHOICES, max_length=100, blank=True, null=True)
+    parent_company = models.ForeignKey('self', null=True)
+    name = models.CharField(max_length=100)
+    contact_name = models.CharField(max_length=100, blank=True, null=True)
+    company_code = models.CharField(max_length=100, blank=True, null=True)
+    ein = models.CharField(max_length=100, blank=True, null=True)
+    address = models.CharField(max_length=1000, blank=True, null=True)
+    address_2 = models.CharField(max_length=100, blank=True, null=True)
+    city = models.CharField(max_length=100, blank=True, null=True)
+    state = models.CharField(max_length=4, choices=enums.US_STATES, blank=True, null=True)
+    zip = models.CharField(max_length=100, blank=True, null=True)
+    phone = models.CharField(max_length=100, blank=True, null=True)
+    fax = models.CharField(max_length=100, blank=True, null=True)
+    email = models.CharField(max_length=100, blank=True, null=True)
+    domain = models.CharField(max_length=100, blank=True, null=True)
+    timezone = models.CharField(choices=TIMEZONE_CHOICES, max_length=100, blank=True, null=True)
+    account_exec = models.CharField(choices=ACCOUNT_EXEC_CHOICES, max_length=100, blank=True, null=True)
+    theme = models.CharField(choices=THEME_CHOICES, max_length=100, blank=True, null=True)
+    upload_logo = models.FileField(max_length=100, blank=True, null=True)
+    userfield_1 = models.CharField(max_length=100, blank=True, null=True)
+    userfield_2 = models.CharField(max_length=100, blank=True, null=True)
+    userfield_3 = models.CharField(max_length=100, blank=True, null=True)
+    docusign_api_acct = models.CharField(max_length=100, blank=True, null=True)
+    docusign_api_user = models.CharField(max_length=100, blank=True, null=True)
+    docusign_password = models.CharField(max_length=100, blank=True, null=True)
+
+    def __str__(self):
+        return self.name
+
+
 MARITAL_STATUS_CHOICES = (
     (None, '--Select--'),
     ('single', 'Single'),
@@ -144,21 +214,24 @@ HARDSHIPS_CHOICES = (
     ('other', 'Other'),
 )
 
+AUTHORIZATION_FORM_ON_FILE_CHOICES = (
+    (None, '--Select--'),
+    ('yes', 'Yes'),
+)
 
-class Client(models.Model):
-    client_id = models.AutoField(primary_key=True)
-    client_type = models.ForeignKey(ClientType)
 
-    first_name = models.CharField(max_length=100)
+class Contact(models.Model):
+    contact_id = models.AutoField(primary_key=True)
+    first_name = models.CharField(max_length=100, default="")
     middle_name = models.CharField(max_length=100, blank=True, null=True)
-    last_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100, default="")
     previous_name = models.CharField(max_length=100, blank=True, null=True)
     phone_number = models.CharField(max_length=50, blank=True, null=True)
-    mobile_number = models.CharField(max_length=50, blank=True, null=True)
+    mobile_number = models.CharField(max_length=50, default="")
     email = models.CharField(max_length=100, blank=True, null=True)
     birth_date = models.DateField(blank=True, null=True)
-    identification = models.CharField(max_length=100, unique=True)
-    marital_status = models.CharField(choices=MARITAL_STATUS_CHOICES, blank=True, null=True)
+    identification = models.CharField(max_length=100, unique=True, blank=True, null=True)
+    marital_status = models.CharField(max_length=100, choices=MARITAL_STATUS_CHOICES, blank=True, null=True)
     co_applicant_first_name = models.CharField(max_length=100, blank=True, null=True)
     co_applicant_middle_name = models.CharField(max_length=100, blank=True, null=True)
     co_applicant_last_name = models.CharField(max_length=100, blank=True, null=True)
@@ -167,33 +240,33 @@ class Client(models.Model):
     co_applicant_mobile_number = models.CharField(max_length=50, blank=True, null=True)
     co_applicant_email = models.CharField(max_length=100, blank=True, null=True)
     co_applicant_birth_date = models.DateField(blank=True, null=True)
-    co_applicant_identification = models.CharField(max_length=100, unique=True)
-    co_applicant_marital_status = models.CharField(choices=MARITAL_STATUS_CHOICES, blank=True, null=True)
-    dependants = models.CharField(choices=DEPENDANTS_CHOICES, blank=True, null=True)
+    co_applicant_identification = models.CharField(max_length=100, unique=True, blank=True, null=True)
+    co_applicant_marital_status = models.CharField(max_length=100, choices=MARITAL_STATUS_CHOICES, blank=True, null=True)
+    dependants = models.CharField(max_length=100, choices=DEPENDANTS_CHOICES, blank=True, null=True)
 
     address_1 = models.CharField(max_length=300, blank=True, null=True)
     address_2 = models.CharField(max_length=300, blank=True, null=True)
     city = models.CharField(max_length=60, blank=True, null=True)
     state = models.CharField(max_length=4, choices=enums.US_STATES, blank=True, null=True)
     zip_code = models.CharField(max_length=12, blank=True, null=True)
-    residential_status = models.CharField(choices=RESIDENTIAL_STATUS_CHOICES, blank=True, null=True)
+    residential_status = models.CharField(max_length=100, choices=RESIDENTIAL_STATUS_CHOICES, blank=True, null=True)
     co_applicant_address = models.CharField(max_length=300, blank=True, null=True)
     co_applicant_city = models.CharField(max_length=60, blank=True, null=True)
     co_applicant_state = models.CharField(max_length=4, choices=enums.US_STATES, blank=True, null=True)
     co_applicant_zip_code = models.CharField(max_length=12, blank=True, null=True)
 
     employer = models.CharField(max_length=100, blank=True, null=True)
-    employment_status = models.CharField(choices=EMPLOYMENT_STATUS_CHOICES, blank=True, null=True)
+    employment_status = models.CharField(max_length=100, choices=EMPLOYMENT_STATUS_CHOICES, blank=True, null=True)
     position = models.CharField(max_length=100, blank=True, null=True)
     length_of_employment = models.CharField(max_length=100, blank=True, null=True)
     work_phone = models.CharField(max_length=50, blank=True, null=True)
     co_applicant_employer = models.CharField(max_length=100, blank=True, null=True)
-    co_applicant_employment_status = models.CharField(choices=EMPLOYMENT_STATUS_CHOICES, blank=True, null=True)
+    co_applicant_employment_status = models.CharField(max_length=100, choices=EMPLOYMENT_STATUS_CHOICES, blank=True, null=True)
     co_applicant_position = models.CharField(max_length=100, blank=True, null=True)
     co_applicant_length_of_employment = models.CharField(max_length=100, blank=True, null=True)
     co_applicant_work_phone = models.CharField(max_length=50, blank=True, null=True)
 
-    hardships = models.CharField(choices=HARDSHIPS_CHOICES, blank=True, null=True)
+    hardships = models.CharField(max_length=100, choices=HARDSHIPS_CHOICES, blank=True, null=True)
     hardship_description = models.CharField(max_length=300, blank=True, null=True)
 
     special_note_1 = models.CharField(max_length=100, blank=True, null=True)
@@ -205,17 +278,18 @@ class Client(models.Model):
 
     third_party_speaker_full_name = models.CharField(max_length=100, blank=True, null=True)
     third_party_speaker_last_4_of_ssn = models.CharField(max_length=100, blank=True, null=True)
-    authorization_form_on_file = models.CharField(choices=EMPLOYMENT_STATUS_CHOICES, blank=True, null=True)
+    authorization_form_on_file = models.CharField(
+        max_length=100, choices=AUTHORIZATION_FORM_ON_FILE_CHOICES, blank=True, null=True)
 
     active = models.BooleanField(default=True)
-    related_user = models.ForeignKey(User, null=True, blank=True)
-    # TODO: Add company reference after companies has been added.
-    # TODO: Add lead source reference after companies has been added.
-    # TODO: Add call center representative reference after companies has been added.
+    assigned_to = models.ForeignKey(User, null=True, blank=True, related_name='assigned_to')
+    call_center_representative = models.ForeignKey(User, related_name='call_center_representative')
+    lead_source = models.ForeignKey(LeadSource)
+    company = models.ForeignKey(Company, null=True, blank=True)
 
     class Meta:
-        verbose_name = 'Client'
-        verbose_name_plural = 'Clients'
+        verbose_name = 'Contact'
+        verbose_name_plural = 'Contacts'
         permissions = (
             ("import_clients", "Can import clients"),
         )
@@ -228,7 +302,7 @@ class Client(models.Model):
             self.identification.strip()
             if not self.identification.isupper():
                 self.identification = self.identification.upper()
-        super(Client, self).save(*args, **kwargs)
+        super(Contact, self).save(*args, **kwargs)
 
 
 class Tag(models.Model):
@@ -256,7 +330,7 @@ class MyFile(models.Model):
     file_id = models.AutoField(primary_key=True)
     description = models.CharField(max_length=1000)
     current_status = models.ForeignKey(FileStatus)
-    client = models.ForeignKey(Client)
+    client = models.ForeignKey(Contact)
     priority = models.PositiveSmallIntegerField(null=True, blank=True,
                                                 choices=constants.PRIORITY_CHOICES)
     tags = models.ManyToManyField(Tag)
@@ -343,7 +417,7 @@ class MyFile(models.Model):
         client_id = "client_" + str(self.client.client_id) if self.client else "client"
         priority = "priority_" + str(self.priority) if self.priority else ""
         tags = list(self.tags.all())
-        tags_id = "tags_".join([str(tag.id) for tag in tags]) if tags else "tags"
+        tags_id = "tags_    ".join([str(tag.id) for tag in tags]) if tags else "tags"
         quoted_price = "quoted_price_" + format_price(self.quoted_price) if self.quoted_price else "quoted_price"
         quoted_date = "quoted_date_" + str(self.quoted_date) if self.quoted_date else "quoted_date"
         invoice_price = "invoice_price_" + format_price(self.invoice_price) if self.invoice_price else "invoice_price"
