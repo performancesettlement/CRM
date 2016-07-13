@@ -3920,6 +3920,9 @@ table.table-mail tr td {
 .text-white {
   color: #ffffff;
 }
+.text-white-important {
+  color: #ffffff !important;
+}
 .simple_tag {
   background-color: #f3f3f4;
   border: 1px solid #e7eaec;
@@ -8117,4 +8120,17 @@ body.md-skin {
 .required-field {
   color: red;
   margin-right: 3px;
+}
+
+#wrapper {
+  min-height: 800px;
+}
+
+.menu-elem a {
+  color: white !important;
+}
+
+.menu-active a {
+  font-weight: bold !important;
+  background-color: #1dc5a3 !important;
 }

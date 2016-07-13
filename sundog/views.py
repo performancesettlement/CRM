@@ -1,4 +1,5 @@
 import json
+from django.core.paginator import Paginator
 from django_auth_app.utils import serialize_user
 from django.shortcuts import render_to_response, redirect
 from django.template.context import RequestContext
@@ -22,7 +23,7 @@ from sundog.decorators import bypass_impersonation_login_required
 from sundog.forms import FileCustomForm, FileSearchForm, ContactForm, ImpersonateUserForm
 from datetime import datetime
 from sundog.messages import MESSAGE_REQUEST_FAILED_CODE, CODES_TO_MESSAGE
-from sundog.models import MyFile, Message, Document, FileStatusHistory, Contact, LeadSource
+from sundog.models import MyFile, Message, Document, FileStatusHistory, Contact, LeadSource, Stage
 
 logger = logging.getLogger(__name__)
 
@@ -169,14 +170,60 @@ def file_detail(request, file_id):
         return _render_response(request, context_info, template_path)
 
 
+def list_contacts(request):
+    contacts = Contact.objects.all()
+    paginator = Paginator(contacts, 100)
+    page = paginator.page(1)
+    lists = [('All Contacts', 'all_contacts')]
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'page': page,
+        'paginator': paginator,
+        'lists': lists,
+        'menu_page': 'contacts'
+    }
+    template_path = 'contact/contact_list.html'
+    return _render_response(request, context_info, template_path)
+
+
+def workflows(request):
+    form_errors = None
+    form = ContactForm(request.POST or None)
+    if request.method == 'POST' and request.POST:
+        if form.is_valid():
+            contact = form.save()
+            return redirect('list_contacts')
+        else:
+            form_errors = []
+            for field in form:
+                if field.errors:
+                    for field_error in field.errors:
+                        error = strip_tags(field.html_name.replace("_", " ").title()) + ": " + field_error
+                        form_errors.append(error)
+            for non_field_error in form.non_field_errors():
+                form_errors.append(non_field_error)
+    stages = Stage.objects.all()
+
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'form': form,
+        'form_errors': form_errors,
+        'stages': stages,
+        'menu_page': 'contacts'
+    }
+    template_path = 'contact/add_contact.html'
+    return _render_response(request, context_info, template_path)
+
+
 def add_contact(request):
     form_errors = None
     form = ContactForm(request.POST or None)
     if request.method == 'POST' and request.POST:
         if form.is_valid():
             contact = form.save()
-            # TODO: redirect to detail perhaps?
-            return redirect('home')
+            return redirect('list_contacts')
         else:
             form_errors = []
             for field in form:
@@ -193,6 +240,7 @@ def add_contact(request):
         'form': form,
         'form_errors': form_errors,
         'templates':  [('Add a Client', 'add_a_client')],
+        'menu_page': 'contacts'
     }
     template_path = 'contact/add_contact.html'
     return _render_response(request, context_info, template_path)

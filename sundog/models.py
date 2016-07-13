@@ -100,6 +100,24 @@ class LeadSource(models.Model):
         return self.name
 
 
+class Status(models.Model):
+    status_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=100)
+    color = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+
+class Stage(models.Model):
+    stage_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=100)
+    statuses = models.ManyToManyField(Status)
+
+    def __str__(self):
+        return self.name
+
+
 COMPANY_TYPE_CHOICES = (
     ('law_firm', 'Law Firm'),
     ('lead_vendor', 'Lead Vendor'),
@@ -286,6 +304,11 @@ class Contact(models.Model):
     call_center_representative = models.ForeignKey(User, related_name='call_center_representative')
     lead_source = models.ForeignKey(LeadSource)
     company = models.ForeignKey(Company, null=True, blank=True)
+    stage = models.ForeignKey(Stage, blank=True, null=True)
+    status = models.ForeignKey(Status, blank=True, null=True)
+    last_status_change = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 
     class Meta:
         verbose_name = 'Contact'
@@ -294,10 +317,19 @@ class Contact(models.Model):
             ("import_clients", "Can import clients"),
         )
 
+    def full_name(self):
+        full_name = self.first_name if self.first_name.strip() else ""
+        full_name += (" " if full_name and self.last_name else "") + (self.last_name if self.last_name.strip() else "")
+        return full_name
+
     def __str__(self):
         return '%s' % self.first_name
 
     def save(self, *args, **kwargs):
+        if self.contact_id is not None:
+            orig = Contact.objects.get(contact_id=self.contact_id)
+            if orig.status != self.status:
+                self.last_status_change = datetime.now()
         if self.identification:
             self.identification.strip()
             if not self.identification.isupper():

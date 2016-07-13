@@ -22,91 +22,17 @@
 </head>
 
 <body class="md-skin">
-<div id="wrapper">
-    <nav class="navbar-default navbar-static-side" role="navigation">
-        <div class="sidebar-collapse">
-            <ul class="nav metismenu" id="side-menu">
-                <li class="nav-header">
-                    <div class="dropdown profile-element">
-                        <span>
-                            {% if not request.session.user_impersonation %}
-                            <img alt="profile_image" class="profile-thumbnail img-circle" src="{% avatar_url user %}" />
-                            {% else %}
-                            <img alt="profile_image" class="profile-thumbnail img-circle" src="{% avatar_url request.user_impersonator %}" />
-                            {% endif %}
-                        </span>
-                        {% if request.session.user_impersonation %}
-                            <span class="block m-t-xs" style="color: white;">
-                                Impersonating user: <strong class="font-bold">{{user.username}}</strong>
-                            </span>
-                        {% endif %}
-                        <a data-toggle="dropdown" class="dropdown-toggle" href="#">
-                            <span class="clear">
-                                <span class="block m-t-xs">
-                                    {% if not request.session.user_impersonation %}
-                                        <strong class="font-bold">{{user.username}}</strong>
-                                    {% else %}
-                                        <strong class="font-bold">{{request.session.user_impersonator.username}}</strong>
-                                    {% endif %}
-                                </span>
-                                {% if user and user.profile %}
-                                    <span class="block m-t-xs">{{user.profile.about | default_if_none:""}}</span>
-                                {% endif %}
-                                <span class="text-muted text-xs block">
-                                    Settings <b class="caret"></b>
-                                </span>
-                            </span>
-                        </a>
-                        <ul class="dropdown-menu animated fadeInRight m-t-xs">
-                            <li><a href="{% url 'django_auth_app:my_profile' %}">My Profile</a></li>
-                            {% if not request.session.user_impersonation and perms.sundog.impersonate_user %}
-                            <li><a href="{% url 'impersonate_user' %}">Impersonate User</a></li>
-                            {% endif %}
-                            {% if request.session.user_impersonation %}
-                            <li><a href="{% url 'stop_impersonate_user' %}">Stop Impersonating User</a></li>
-                            {% endif %}
-                            <li><a href="{% url 'django_auth_app:update_password' %}">Update Password</a></li>
-                            <li class="divider"></li>
-                            <li><a href="{% url 'django_auth_app:logout'%}">Logout</a></li>
-                        </ul>
-                    </div>
-                    <div class="logo-element">
-                        LN+
-                    </div>
-                </li>
-                {% if user and not user.is_anonymous and user.is_staff%}
-                <li id="menu_admin">
-                    <a href="/admin/"><i class="fa fa-gear"></i> <span class="nav-label">Admin</span></a>
-                </li>
-                {% endif %}
-
-                <li id="menu_home">
-                    <a href="{% url 'home'%}"><i class="fa fa-th-large"></i> <span class="nav-label">Home</span></a>
-                </li>
-
-                {% comment %}<li id="menu_recent">
-                    <a href="{% url 'recent_files'%}"><i class="fa fa-history"></i> <span class="nav-label">Recent Files</span></a>
-                </li>{% endcomment %}
-
-                <li id="menu_recent">
-                    <a href=""><i class="fa fa-history"></i> <span class="nav-label">Recent Files</span><span class="fa arrow"></span></a>
-                    <ul class="nav nav-second-level collapse in">
-                        <li><a href="{% url 'recent_files' %}">Show all</a></li>
-                    {% if recent_files %}
-                        {% for history in recent_files %}
-                        <li><a href="{% url 'file_detail' history.file.file_id %}">#{{ history.file.file_id }}: {{ history.file.description|title|truncatechars:20 }}</a></li>
-                        {% endfor %}
-                    {% endif %}
-                    </ul>
-                </li>
-            </ul>
-        </div>
-    </nav>
-
-    <div id="page-wrapper" class="gray-bg dashbard-1">
+    <div id="wrapper" class="col-xs-12">
         <div class="row border-bottom">
             <nav class="navbar navbar-static-top" role="navigation" style="margin-bottom: 0">
-
+                <ul class="nav navbar-top-links navbar-left m-l-md">
+                    <li class="menu-elem {% ifequal menu_page "contacts" %}menu-active{% endifequal %}">
+                        <a href="{% url 'list_contacts' %}">Contacts</a>
+                    </li>
+                    <li class="menu-elem {% ifequal menu_page "admin" %}menu-active{% endifequal %}">
+                        <a href="">Admin</a>
+                    </li>
+                </ul>
                 <ul class="nav navbar-top-links navbar-right">
                     <li style="display:none;">
                         <label>{{questionnaire.current_date | date:"SHORT_DATE_FORMAT"}}</label>
@@ -140,19 +66,16 @@
         <div class="row" id="base_div_footer">
             <div class="col-lg-12">
                 <div class="footer">
-                    Company 2015
+                    <div class="text-center">
+                        Performance Settlement 2016
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-
 </div>
-
 
 <script src="{% static "js/plugins/metisMenu/jquery.metisMenu.js" %}"></script>
 <script src="{% static "js/plugins/slimscroll/jquery.slimscroll.min.js" %}"></script>
-
-
 <!-- Custom and plugin javascript -->
 <script src="{% static "js/inspinia.js" %}"></script>
 <script src="{% static "js/plugins/pace/pace.min.js" %}"></script>
@@ -164,7 +87,6 @@
                 initializePopupEvents(e);
             }
         });
-
 </script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 from haystack import indexes
-from sundog.models import MyFile
+from sundog.models import MyFile, Contact
 
 
 class FileIndex(indexes.SearchIndex, indexes.Indexable):

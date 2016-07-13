@@ -1,0 +1,85 @@
+{% extends "app-base.html" %}
+{% load staticfiles my_filters admin_urls %}
+{% block extrahead %}
+    <link href="{% static "css/plugins/datapicker/datepicker3.css" %}" rel="stylesheet">
+    <link href="{% static "css/plugins/morris/morris-0.4.3.min.css" %}" rel="stylesheet">
+    <link href="{% static "css/plugins/dataTables/dataTables.bootstrap.css" %}" rel="stylesheet">
+    <link href="{% static "css/plugins/dataTables/dataTables.responsive.css" %}" rel="stylesheet">
+{% endblock extrahead %}
+{% block content %}
+    <div class="row wrapper border-bottom white-bg page-heading">
+        <div class="col-lg-10 m-t-md">
+            <ol class="breadcrumb">
+                <li>
+                    <a href="">Contacts</a>
+                </li>
+            </ol>
+        </div>
+    </div>
+    <div class="col-xs-12 m-t-md m-b-md">
+        <div class="inline m-r-lg">
+            <select id="list-chooser" style="width: 200px;">
+                {% for list in lists %}
+                    <option value="{{list.1}}" >{{list.0}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="inline"><a class="btn btn-primary" href="{% url 'new_list' %}">New List</a></div>
+        <div class="inline"><a class="btn btn-primary" href="{% url 'add_contact' %}">Add a Contact</a></div>
+        <div class="inline"><a class="btn btn-primary" href="{% url 'workflow' %}">Workflow</a></div>
+        <div class="inline"><a class="btn btn-primary" href="{% url 'campaigns' %}">Campaigns</a></div>
+        <div class="inline"><a class="btn btn-primary" href="{% url 'data_sources' %}">Data Sources</a></div>
+    </div>
+    <div class="contact-list">
+        <table id="dataTable" class="table table-hover dataTable no-footer">
+            <thead>
+            <tr>
+                <th id="th_Type" class="sorting">Type</th>
+                <th id="th_Created" class="sorting">Created</th>
+                <th id="th_Company" class="sorting">Company</th>
+                <th id="th_Assigned_To" class="sorting">Assigned To</th>
+                <th id="th_Full_Name" class="sorting">Full Name</th>
+                <th id="th_Home_Phone" class="sorting">Home Phone</th>
+                <th id="th_Email" class="sorting">Email</th>
+                <th id="th_Stage" class="sorting">Stage</th>
+                <th id="th_Status" class="sorting">Stage</th>
+                <th id="th_Data_Source" class="sorting">Data Source</th>
+                <th id="th_Last_Call_Activity" class="sorting">Last Call Activity</th>
+                <th id="th_Time_in_Status" class="sorting">Time in Status</th>
+                <th class="text-center">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% if page.object_list %}
+                {% for result in page.object_list %}
+                    <tr>
+                        <td>Debt Settlement</td>
+                        <td>{% if result.created_at|date:'SHORT_DATETIME_FORMAT' %}{{ result.created_at }}{% endif %}</td>
+                        <td>{% if result.company %}{{ result.company }}{% endif %}</td>
+                        <td>{% if result.assigned_to %}{{ result.assigned_to }}{% endif %}</td>
+                        <td>{% if result.full_name %}{{ result.full_name }}{% endif %}</td>
+                        <td>{% if result.phone_number %}{{ result.phone_number }}{% endif %}</td>
+                        <td>{% if result.email %}{{ result.email }}{% endif %}</td>
+                        <td>{% if result.stage %}{{ result.stage }}{% endif %}</td>
+                        <td>{% if result.status %}{{ result.status }}{% endif %}</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td class="contact-actions">
+
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="7"><strong>No contacts to display!</strong></td>
+                </tr>
+            {% endif %}
+            </tbody>
+        </table>
+    </div>
+    <script src="{% static "js/plugins/datapicker/bootstrap-datepicker.js" %}"></script>
+    <script src="{% static "js/plugins/morris/raphael-2.1.0.min.js" %}"></script>
+    <script src="{% static "js/plugins/morris/morris.js" %}"></script>
+    <script src="{% static "js/home.js" %}"></script>
+{% endblock %}
