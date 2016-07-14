@@ -46,3 +46,7 @@ function resetForm($form) {
     $form.find('input:radio, input:checkbox').removeAttr('checked').removeAttr('selected');
     $form.find('.chosen-select').find('option:first-child').prop('selected', true).end().trigger('chosen:updated');
 }
+
+function refreshScreen() {
+    window.location.replace(window.location);
+}

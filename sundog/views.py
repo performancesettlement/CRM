@@ -20,10 +20,10 @@ from sundog.constants import IMPORT_FILE_EXCEL_FILENAME, IMPORT_CLIENT_EXCEL_FIL
 from django.contrib.auth.models import Permission
 from haystack.generic_views import SearchView
 from sundog.decorators import bypass_impersonation_login_required
-from sundog.forms import FileCustomForm, FileSearchForm, ContactForm, ImpersonateUserForm
+from sundog.forms import FileCustomForm, FileSearchForm, ContactForm, ImpersonateUserForm, StageForm, StatusForm
 from datetime import datetime
 from sundog.messages import MESSAGE_REQUEST_FAILED_CODE, CODES_TO_MESSAGE
-from sundog.models import MyFile, Message, Document, FileStatusHistory, Contact, LeadSource, Stage
+from sundog.models import MyFile, Message, Document, FileStatusHistory, Contact, LeadSource, Stage, STAGE_TYPE_CHOICES
 
 logger = logging.getLogger(__name__)
 
@@ -189,11 +189,32 @@ def list_contacts(request):
 
 def workflows(request):
     form_errors = None
-    form = ContactForm(request.POST or None)
+    form_stage = StageForm()
+    form_status = StatusForm()
+    stages = Stage.objects.all()
+    stage_types = STAGE_TYPE_CHOICES
+
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'form_stage': form_stage,
+        'form_status': form_status,
+        'form_errors': form_errors,
+        'stages': stages,
+        'stage_types': stage_types,
+        'menu_page': 'contacts'
+    }
+    template_path = 'contact/workflows.html'
+    return _render_response(request, context_info, template_path)
+
+
+def add_stage(request):
     if request.method == 'POST' and request.POST:
+        form = StageForm(request.POST)
         if form.is_valid():
-            contact = form.save()
-            return redirect('list_contacts')
+            stage = form.save()
+            stage_data = {'stage_id': stage.stage_id, 'name': stage.name}
+            response = JsonResponse({'result': stage_data})
         else:
             form_errors = []
             for field in form:
@@ -203,18 +224,28 @@ def workflows(request):
                         form_errors.append(error)
             for non_field_error in form.non_field_errors():
                 form_errors.append(non_field_error)
-    stages = Stage.objects.all()
+            response = JsonResponse({'errors': form_errors})
+        return response
 
-    context_info = {
-        'request': request,
-        'user': request.user,
-        'form': form,
-        'form_errors': form_errors,
-        'stages': stages,
-        'menu_page': 'contacts'
-    }
-    template_path = 'contact/add_contact.html'
-    return _render_response(request, context_info, template_path)
+
+def add_status(request):
+    if request.method == 'POST' and request.POST:
+        form = StatusForm(request.POST)
+        if form.is_valid():
+            status = form.save()
+            status_data = {'status_id': status.status_id, 'name': status.name, 'stage_id': status.stage.stage_id}
+            response = JsonResponse({'result': status_data})
+        else:
+            form_errors = []
+            for field in form:
+                if field.errors:
+                    for field_error in field.errors:
+                        error = strip_tags(field.html_name.replace("_", " ").title()) + ": " + field_error
+                        form_errors.append(error)
+            for non_field_error in form.non_field_errors():
+                form_errors.append(non_field_error)
+            response = JsonResponse({'errors': form_errors})
+        return response
 
 
 def add_contact(request):
@@ -222,7 +253,7 @@ def add_contact(request):
     form = ContactForm(request.POST or None)
     if request.method == 'POST' and request.POST:
         if form.is_valid():
-            contact = form.save()
+            form.save()
             return redirect('list_contacts')
         else:
             form_errors = []
@@ -233,7 +264,6 @@ def add_contact(request):
                         form_errors.append(error)
             for non_field_error in form.non_field_errors():
                 form_errors.append(non_field_error)
-    lead_sources = LeadSource.objects.all()
     context_info = {
         'request': request,
         'user': request.user,

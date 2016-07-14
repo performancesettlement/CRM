@@ -126,7 +126,6 @@ class UserPreferences(models.Model):
     accounts_collapsed = models.BooleanField(default=False)
     auth_collapsed = models.BooleanField(default=False)
     avatar_collapsed = models.BooleanField(default=False)
-    social_accounts_collapsed = models.BooleanField(default=False)
     sundog_collapsed = models.BooleanField(default=False)
     app_log_collapsed = models.BooleanField(default=False)
 

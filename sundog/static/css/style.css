@@ -8134,3 +8134,8 @@ body.md-skin {
   font-weight: bold !important;
   background-color: #1dc5a3 !important;
 }
+
+.status-row {
+  margin-left: 25px;
+
+}

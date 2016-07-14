@@ -48,8 +48,6 @@ def update_preferences_for_section_collapsed_state(request):
             user_preferences.auth_collapsed = not user_preferences.auth_collapsed
         elif section == "Avatar":
             user_preferences.avatar_collapsed = not user_preferences.avatar_collapsed
-        elif section == "Social_Accounts":
-            user_preferences.social_accounts_collapsed = not user_preferences.social_accounts_collapsed
         elif section == "SunDog":
             user_preferences.sundog_collapsed = not user_preferences.sundog_collapsed
         elif section == "App_Log":
@@ -72,8 +70,6 @@ def get_preferences_for_sections_collapsed_state(request):
         response_data['auth_collapsed'] = user_preferences.auth_collapsed
         response_data['avatar_collapsed_id'] = "Avatar"
         response_data['avatar_collapsed'] = user_preferences.avatar_collapsed
-        response_data['social_accounts_collapsed_id'] = "Social_Accounts"
-        response_data['social_accounts_collapsed'] = user_preferences.social_accounts_collapsed
         response_data['sundog_collapsed_id'] = "SunDog"
         response_data['sundog_collapsed'] = user_preferences.sundog_collapsed
         response_data['app_log_collapsed_id'] = "App_Log"

@@ -67,12 +67,7 @@ INSTALLED_APPS = (
     'wagtail.wagtailsites',
     'wagtail.contrib.wagtailapi',
     'avatar',
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    'allauth.socialaccount.providers.facebook',
-    'allauth.socialaccount.providers.google',
-    'allauth.socialaccount.providers.twitter',
+    'colorful'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -129,30 +124,6 @@ AUTHENTICATION_BACKENDS = (
     # `allauth` specific authentication methods, such as login by e-mail
     'allauth.account.auth_backends.AuthenticationBackend',
 )
-
-SOCIALACCOUNT_PROVIDERS = {
-    'facebook': {
-        'METHOD': 'oauth2',
-        'SCOPE': ['email', 'public_profile'],
-        'AUTH_PARAMS': {'auth_type': 'reauthenticate'},
-        'FIELDS': [
-          'id',
-          'email',
-          'name',
-          'first_name',
-          'last_name',
-          'verified',
-          'locale',
-          'timezone',
-          'link',
-          'gender',
-          'updated_time'],
-        'EXCHANGE_TOKEN': True,
-        'LOCALE_FUNC': lambda request: 'en_US',
-        'VERIFIED_EMAIL': False,
-        'VERSION': 'v2.4'
-        }
-    }
 
 WSGI_APPLICATION = 'sundog.wsgi.application'
 
@@ -316,10 +287,5 @@ CRONJOBS = [
 
 # seed setting
 SEED_FILE_ID = 1
-
-# social login variables:
-SOCIALACCOUNT_QUERY_EMAIL = True
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_EMAIL_VERIFICATION = 'none'
 
 SHORT_DATETIME_FORMAT = 'm/d/Y h:i a'

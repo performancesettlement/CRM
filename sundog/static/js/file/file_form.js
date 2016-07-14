@@ -12,10 +12,6 @@ function updateCompleted(select){
         });
 }
 
-function refreshScreen() {
-    window.location.replace(window.location);
-}
-
 $(document).ready(function(){
 
     Dropzone.options.uploadDocumentsForm = {

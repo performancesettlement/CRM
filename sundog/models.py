@@ -1,4 +1,6 @@
 import hashlib
+from colorfield.fields import ColorField
+from colorful.fields import RGBColorField
 from django.db import models
 from wagtail.wagtailcore.models import Page
 from wagtail.wagtailcore.fields import RichTextField
@@ -100,19 +102,26 @@ class LeadSource(models.Model):
         return self.name
 
 
-class Status(models.Model):
-    status_id = models.AutoField(primary_key=True)
+STAGE_TYPE_CHOICES = (
+    ('debt_settlement', 'Debt Settlement'),
+    ('student_loans', 'Student Loans'),
+)
+
+
+class Stage(models.Model):
+    type = models.CharField(max_length=100, choices=STAGE_TYPE_CHOICES, default='debt_settlement')
+    stage_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
-    color = models.CharField(max_length=100)
 
     def __str__(self):
         return self.name
 
 
-class Stage(models.Model):
-    stage_id = models.AutoField(primary_key=True)
+class Status(models.Model):
+    status_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
-    statuses = models.ManyToManyField(Status)
+    color = RGBColorField(default='#FFFFFF')
+    stage = models.ForeignKey(Stage, related_name='statuses', blank=True, null=True)
 
     def __str__(self):
         return self.name

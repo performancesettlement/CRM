@@ -9,7 +9,7 @@
         <div class="col-lg-10 m-t-md">
             <ol class="breadcrumb">
                 <li>
-                    <a href="">Contacts</a>
+                    <a href="{% url 'list_contacts' %}">Contacts</a>
                 </li>
                 <li class="active">
                     <strong>Add contact</strong>
@@ -49,25 +49,25 @@
             <div class="tab-content col-xs-12 m-t-md">
                 {% csrf_token %}
                 <div class="tab-pane active" id="tab-1">
-                    {% include "contact/partials/lead_tracker.html" %}
+                    {% include "contact/partials/add_contact/lead_tracker.html" %}
                 </div>
                 <div class="tab-pane" id="tab-2">
-                    {% include "contact/partials/info.html" %}
+                    {% include "contact/partials/add_contact/info.html" %}
                 </div>
                 <div class="tab-pane" id="tab-3">
-                    {% include "contact/partials/address.html" %}
+                    {% include "contact/partials/add_contact/address.html" %}
                 </div>
                 <div class="tab-pane" id="tab-4">
-                    {% include "contact/partials/employment.html" %}
+                    {% include "contact/partials/add_contact/employment.html" %}
                 </div>
                 <div class="tab-pane" id="tab-5">
-                    {% include "contact/partials/hardships.html" %}
+                    {% include "contact/partials/add_contact/hardships.html" %}
                 </div>
                 <div class="tab-pane" id="tab-6">
-                    {% include "contact/partials/special_notes.html" %}
+                    {% include "contact/partials/add_contact/special_notes.html" %}
                 </div>
                 <div class="tab-pane" id="tab-7">
-                    {% include "contact/partials/third_party_speaker.html" %}
+                    {% include "contact/partials/add_contact/third_party_speaker.html" %}
                 </div>
             </div>
             <div class="col-xs-12 m-t-md">

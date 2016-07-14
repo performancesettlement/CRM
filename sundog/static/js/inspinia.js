@@ -22,9 +22,6 @@ $(document).ready(function () {
             if (json["avatar_collapsed"]) {
                 toggle_state("#" + json["avatar_collapsed_id"]);
             }
-            if (json["social_accounts_collapsed"]) {
-                toggle_state("#" + json["social_accounts_collapsed_id"]);
-            }
             if (json["sundog_collapsed"]) {
                 toggle_state("#" + json["sundog_collapsed_id"]);
             }

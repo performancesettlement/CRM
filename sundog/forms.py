@@ -1,6 +1,8 @@
+import colorfield
+from colorfield.fields import ColorWidget
 from django import forms
 from django.contrib.auth.models import User
-from sundog.models import MyFile, FileStatus, Contact, Tag, ClientType
+from sundog.models import MyFile, FileStatus, Contact, Tag, ClientType, Stage, Status
 from sundog import services
 from haystack.forms import SearchForm
 from sundog.constants import RADIO_FILTER_CHOICES, SHORT_DATE_FORMAT
@@ -149,3 +151,15 @@ class ContactForm(forms.ModelForm):
         if 'contact_id' in self.data:
             contact_id = int(self.data['contact_id'])
             self.cleaned_data["contact_id"] = contact_id
+
+
+class StageForm(forms.ModelForm):
+    class Meta:
+        model = Stage
+        fields = ['name']
+
+
+class StatusForm(forms.ModelForm):
+    class Meta:
+        model = Status
+        fields = ['name', 'stage', 'color']
