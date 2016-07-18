@@ -24,6 +24,8 @@ from wagtail.wagtailadmin import urls as wagtailadmin_urls
 from wagtail.wagtaildocs import urls as wagtaildocs_urls
 from wagtail.wagtailcore import urls as wagtail_urls
 
+workflow_base_url = 'workflow/'
+
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
 
@@ -61,7 +63,7 @@ urlpatterns = [
     url(r'^contacts/$', views.list_contacts, name='list_contacts'),
     url(r'^contacts/$', views.list_contacts, name='new_list'),  # TODO: Create proper view and template.
     url(r'^campaigns/$', views.list_contacts, name='campaigns'),  # TODO: Create proper view and template.
-    url(r'^workflow/$', views.workflows, name='workflows'),
+    url(r'^workflow/?$', views.workflows, name='workflows'),
     url(r'^workflow/add_stage/$', views.add_stage, name='add_stage'),
     url(r'^workflow/edit_stage/$', views.edit_stage, name='edit_stage'),
     url(r'^workflow/add_status/$', views.add_status, name='add_status'),

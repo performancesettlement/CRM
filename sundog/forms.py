@@ -2,7 +2,7 @@ import colorfield
 from colorfield.fields import ColorWidget
 from django import forms
 from django.contrib.auth.models import User
-from sundog.models import MyFile, FileStatus, Contact, Tag, ClientType, Stage, Status
+from sundog.models import MyFile, FileStatus, Contact, Tag, ClientType, Stage, Status, STAGE_TYPE_CHOICES
 from sundog import services
 from haystack.forms import SearchForm
 from sundog.constants import RADIO_FILTER_CHOICES, SHORT_DATE_FORMAT
@@ -156,13 +156,18 @@ class ContactForm(forms.ModelForm):
 class StageForm(forms.ModelForm):
     class Meta:
         model = Stage
-        fields = ['name', 'stage_id']
+        fields = ['name', 'stage_id', 'type']
         widgets = {
             'stage_id': forms.HiddenInput(),
+            'type': forms.HiddenInput(),
         }
 
 
 class StatusForm(forms.ModelForm):
+    def __init__(self, type=STAGE_TYPE_CHOICES[0][0], *args, **kwargs):
+        super(StatusForm, self).__init__(*args, **kwargs)
+        self.fields['stage'].queryset = self.fields['stage'].queryset.filter(type=type)
+
     class Meta:
         model = Status
         fields = ['name', 'stage', 'color', 'status_id']

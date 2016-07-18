@@ -142,6 +142,10 @@ def get_status_list_by_user(user, from_admin=False):
     return results
 
 
+def get_stages_by_type(type):
+    return Stage.objects.filter(stage__type=type)
+
+
 def get_default_status():
     value = cache.get('default_status_id')
     if value is not None:

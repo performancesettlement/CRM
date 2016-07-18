@@ -29,7 +29,35 @@ $(document).ready(function() {
         });
     }
 
+    function getStageType() {
+        return $('#type-chooser').val();
+    }
+
+    function hideByType() {
+        var forms = $('#stages');
+        var type = getStageType();
+        forms.children().each(function(index) {
+            var stage = $(this);
+            if (!stage.hasClass(type)) {
+                stage.hide();
+            }
+            else {
+                stage.show();
+            }
+        });
+    }
+
+    function sendToTypeScreen() {
+        window.location.replace(workflow_url + '?type=' + getStageType());
+    }
+
     hideForms();
+    hideByType();
+    $('[name="type"]').val(getStageType());
+
+    $('#type-chooser').change(function() {
+        sendToTypeScreen();
+    });
 
     $('.edit-status').click(function(event) {
         event.preventDefault();
@@ -78,12 +106,13 @@ $(document).ready(function() {
         event.preventDefault();
         var form = $(this);
         var formData = form.serializeArray();
+        formData.push({name: 'stage_type', value: getStageType()});
         $.post(form.attr('action'), formData, function(response) {
             if (response.errors) {
                 showErrorPopup(form_errors);
             }
             if (response.result) {
-                refreshScreen();
+                sendToTypeScreen();
             }
         });
     });
