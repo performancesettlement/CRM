@@ -1,0 +1,22 @@
+<div id="edit-status" class="col-xs-12 m-t-md">
+    <h3>Edit Status</h3>
+    <form id="edit-status-form" action="{% url 'edit_status' %}" method="post" class="form">
+        {% csrf_token %}
+        <input id="id_status_id" name="status_id" type="hidden" value="">
+        <div class="col-xs-12 m-t-md m-b-md">
+            <div class="m-r-xs inline">
+                Name: {{ edit_form_status.name }}
+            </div>
+            <div class="m-r-xs inline">
+                Stage: {{ edit_form_status.stage }}
+            </div>
+            <div class="m-r-xs inline">
+                Color: {{ edit_form_status.color }}
+            </div>
+        </div>
+        <div class="col-xs-12 m-t-md">
+            <button class="btn btn-primary" type="submit">Save</button>
+            <button class="btn btn-primary cancel" type="button">Cancel</button>
+        </div>
+    </form>
+</div>

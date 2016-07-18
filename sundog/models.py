@@ -112,6 +112,10 @@ class Stage(models.Model):
     type = models.CharField(max_length=100, choices=STAGE_TYPE_CHOICES, default='debt_settlement')
     stage_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
+    order = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        ordering = ['order']
 
     def __str__(self):
         return self.name
@@ -122,6 +126,10 @@ class Status(models.Model):
     name = models.CharField(max_length=100)
     color = RGBColorField(default='#FFFFFF')
     stage = models.ForeignKey(Stage, related_name='statuses', blank=True, null=True)
+    order = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        ordering = ['order']
 
     def __str__(self):
         return self.name

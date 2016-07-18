@@ -1,8 +1,10 @@
 import copy
 
 from django.contrib.contenttypes.models import ContentType
+from django.db import transaction
 
-from sundog.models import MyFile, Contact, ClientType, FileStatusHistory, FileStatus, FileAccessHistory, FileStatusStat, Document, Tag, FileImportHistory
+from sundog.models import MyFile, Contact, ClientType, FileStatusHistory, FileStatus, FileAccessHistory, FileStatusStat, Document, Tag, FileImportHistory, \
+    Stage, Status
 from django.contrib.auth.models import User, Permission
 from django.db.models import Q
 import logging
@@ -41,6 +43,27 @@ logger = logging.getLogger(__name__)
 #         logger.error(e)
 #
 #     return results
+
+@transaction.atomic
+def reorder_stages(new_order_list):
+    stages = {x.stage_id: x for x in list(Stage.objects.all())}
+    order = 1
+    for new_stage in new_order_list:
+        stage = stages[new_stage]
+        stage.order = order
+        stage.save()
+        order += 1
+
+
+@transaction.atomic
+def reorder_status(new_order_list, stage_id):
+    statuses = {x.status_id: x for x in list(Status.objects.filter(stage__stage_id=stage_id))}
+    order = 1
+    for new_status in new_order_list:
+        status = statuses[new_status]
+        status.order = order
+        status.save()
+        order += 1
 
 
 def get_impersonable_users(user_id):

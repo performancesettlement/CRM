@@ -1,0 +1,16 @@
+<div id="edit-stage" class="col-xs-12 m-t-md">
+    <h3>Edit Stage</h3>
+    <form id="edit-stage-form" action="{% url 'edit_stage' %}" method="post" class="form">
+        {% csrf_token %}
+        <input id="id_stage_id" name="stage_id" type="hidden" value="">
+        <div class="col-xs-12 m-t-md m-b-md">
+            <div class="m-r-xs inline">
+                Name: {{ form_stage.name }}
+            </div>
+        </div>
+        <div class="col-xs-12 m-t-md">
+            <button class="btn btn-primary" type="submit">Save</button>
+            <button class="btn btn-primary cancel" type="button">Cancel</button>
+        </div>
+    </form>
+</div>

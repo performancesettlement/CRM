@@ -23,70 +23,50 @@
             {% endfor %}
         </select>
     </div>
-    <div id="stages" class="col-xs-12 col-lg-6 m-t-md">
+    <ul id="stages" class="col-xs-12 col-lg-6 m-t-md">
         <h3> Stages/Status </h3>
-        {# TODO: Add sortable from Jquery UI #}
         {% for stage in stages %}
-            <div id="stage-{{ stage.stage_id }}" class="col-xs-12 m-b-md m-l-md">
-                <a href=""> {# TODO: add ref to edit stage. #}
+            <li id="stage-{{ stage.stage_id }}" class="col-xs-12 m-b-md m-l-md" style="min-height: 30px;">
+                <a id="{{ stage.stage_id }}" href="" name="{{ stage.name }}" class="edit-stage">
                     <span style="text-decoration: underline;">{{ stage.name }}</span>
                 </a>
-                <div id="stage-{{ stage.stage_id }}-statuses">
+                <ul id="stage-{{ stage.stage_id }}-statuses" class="statuses">
                 {% for status in stage.statuses.all %}
-                    <div id="status-{{ status.status_id }}" class="status-row">
+                    <li id="status-{{ status.status_id }}" class="status-row">
                         <div class="inline m-r-md">
-                            <a href=""> {# TODO: add ref to edit status. #}
+                            <a id="{{ status.status_id }}" name="{{ status.name }}" stage="{{ stage.stage_id }}" color="{{ status.color }}" class="edit-status" href="">
                                 <span style="text-decoration: underline;">{{ status.name }}</span>
                             </a>
                         </div>
                         <div class="inline m-r-md" style="background-color: {{ status.color }}; width: 100px; height:15px; border: 1px gray solid;"></div>
-                    </div>
+                    </li>
                 {% endfor %}
-                </div>
-            </div>
+                </ul>
+            </li>
         {% endfor %}
-    </div>
-    <div id="forms" class="col-xs-12 col-lg-6">
+    </ul>
+    <div id="actions" class="col-xs-12 col-lg-6">
         <div class="col-xs-12 m-t-md">
             <h3> Actions </h3>
             <button id="add-stage-button" type="button" class="btn btn-primary">Add Stage</button>
             <button id="add-status-button" type="button" class="btn btn-primary" {% if not stages %} style="display: none;" {% endif %}>Add Status</button>
         </div>
-        <div id="add-stage" style="display: none;" class="col-xs-12 m-t-md">
-            <h3>Add Stage</h3>
-            <form id="add-stage-form" action="{% url 'add_stage' %}" method="post">
-                {% csrf_token %}
-                <div class="col-xs-12 m-t-md m-b-md">
-                    <div class="m-r-xs inline">
-                        Name: {{ form_stage.name }}
-                    </div>
-                </div>
-                <div class="col-xs-12 m-t-md">
-                    <button class="btn btn-primary" type="submit">Save</button>
-                </div>
-            </form>
-        </div>
-        <div id="add-status" style="display: none;" class="col-xs-12 m-t-md">
-            <h3>Add Status</h3>
-            <form id="add-status-form" action="{% url 'add_status' %}" method="post">
-                {% csrf_token %}
-                <div class="col-xs-12 m-t-md m-b-md">
-                    <div class="m-r-xs inline">
-                        Name: {{ form_status.name }}
-                    </div>
-                    <div class="m-r-xs inline">
-                        Stage: {{ form_status.stage }}
-                    </div>
-                    <div class="m-r-xs inline">
-                        Color: {{ form_status.color }}
-                    </div>
-                </div>
-                <div class="col-xs-12 m-t-md">
-                    <button class="btn btn-primary" type="submit">Save</button>
-                </div>
-            </form>
+
+        <div id="forms">
+            {% include "contact/partials/workflows/add_status_form.html" %}
+            {% include "contact/partials/workflows/edit_status_form.html" %}
+            {% include "contact/partials/workflows/add_stage.form.html" %}
+            {% include "contact/partials/workflows/edit_stage.form.html" %}
         </div>
     </div>
+    <script src="{% static "js/jquery-ui-1.10.4.min.js" %}"></script>
     <script src="{% static "js/contact/workflows.js" %}"></script>
+    <script type="text/javascript" >
+        var update_stage_order_url = "{% url 'update_stage_order' %}";
+        var update_status_order_url = "{% url 'update_status_order' %}";
+        $.ajaxSetup({
+            data: {csrfmiddlewaretoken: '{{ csrf_token }}' }
+        });
+    </script>
 
 {% endblock content %}

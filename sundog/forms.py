@@ -156,10 +156,16 @@ class ContactForm(forms.ModelForm):
 class StageForm(forms.ModelForm):
     class Meta:
         model = Stage
-        fields = ['name']
+        fields = ['name', 'stage_id']
+        widgets = {
+            'stage_id': forms.HiddenInput(),
+        }
 
 
 class StatusForm(forms.ModelForm):
     class Meta:
         model = Status
-        fields = ['name', 'stage', 'color']
+        fields = ['name', 'stage', 'color', 'status_id']
+        widgets = {
+            'status_id': forms.HiddenInput(),
+        }

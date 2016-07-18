@@ -1,3 +1,4 @@
+import copy
 import json
 from django.core.paginator import Paginator
 from django_auth_app.utils import serialize_user
@@ -23,7 +24,9 @@ from sundog.decorators import bypass_impersonation_login_required
 from sundog.forms import FileCustomForm, FileSearchForm, ContactForm, ImpersonateUserForm, StageForm, StatusForm
 from datetime import datetime
 from sundog.messages import MESSAGE_REQUEST_FAILED_CODE, CODES_TO_MESSAGE
-from sundog.models import MyFile, Message, Document, FileStatusHistory, Contact, LeadSource, Stage, STAGE_TYPE_CHOICES
+from sundog.models import MyFile, Message, Document, FileStatusHistory, Contact, LeadSource, Stage, STAGE_TYPE_CHOICES, \
+    Status
+from sundog.services import reorder_stages, reorder_status
 
 logger = logging.getLogger(__name__)
 
@@ -190,7 +193,9 @@ def list_contacts(request):
 def workflows(request):
     form_errors = None
     form_stage = StageForm()
+    edit_form_stage = StageForm()
     form_status = StatusForm()
+    edit_form_status = StatusForm()
     stages = Stage.objects.all()
     stage_types = STAGE_TYPE_CHOICES
 
@@ -199,6 +204,8 @@ def workflows(request):
         'user': request.user,
         'form_stage': form_stage,
         'form_status': form_status,
+        'edit_form_status': edit_form_status,
+        'edit_form_stage': edit_form_stage,
         'form_errors': form_errors,
         'stages': stages,
         'stage_types': stage_types,
@@ -212,9 +219,35 @@ def add_stage(request):
     if request.method == 'POST' and request.POST:
         form = StageForm(request.POST)
         if form.is_valid():
-            stage = form.save()
-            stage_data = {'stage_id': stage.stage_id, 'name': stage.name}
+            stages = list(Stage.objects.all())
+            previous_last_order = len(stages)
+            stage = form.save(commit=False)
+            stage.order = previous_last_order + 1
+            stage.save()
+            stage_data = {'stage_id': stage.stage_id, 'name': stage.name, 'order': stage.name}
             response = JsonResponse({'result': stage_data})
+        else:
+            form_errors = []
+            for field in form:
+                if field.errors:
+                    for field_error in field.errors:
+                        error = strip_tags(field.html_name.replace("_", " ").title()) + ": " + field_error
+                        form_errors.append(error)
+            for non_field_error in form.non_field_errors():
+                form_errors.append(non_field_error)
+            response = JsonResponse({'errors': form_errors})
+        return response
+
+
+def edit_stage(request):
+    if request.method == 'POST' and request.POST:
+        stage_id = request.POST['stage_id']
+        instance = Stage.objects.get(stage_id=stage_id)
+        form = StageForm(request.POST, instance=instance)
+        if form.is_valid():
+            form.save()
+            status_data = 'Ok'
+            response = JsonResponse({'result': status_data})
         else:
             form_errors = []
             for field in form:
@@ -232,8 +265,13 @@ def add_status(request):
     if request.method == 'POST' and request.POST:
         form = StatusForm(request.POST)
         if form.is_valid():
-            status = form.save()
-            status_data = {'status_id': status.status_id, 'name': status.name, 'stage_id': status.stage.stage_id}
+            stage_id = request.POST['stage']
+            statuses = list(Status.objects.filter(stage__stage_id=stage_id))
+            previous_last_order = len(statuses)
+            status = form.save(commit=False)
+            status.order = previous_last_order + 1
+            status.save()
+            status_data = 'Ok'
             response = JsonResponse({'result': status_data})
         else:
             form_errors = []
@@ -246,6 +284,61 @@ def add_status(request):
                 form_errors.append(non_field_error)
             response = JsonResponse({'errors': form_errors})
         return response
+
+
+def edit_status(request):
+    if request.method == 'POST' and request.POST:
+        status_id = request.POST['status_id']
+        instance = Status.objects.get(status_id=status_id)
+        form = StatusForm(request.POST, instance=instance)
+        if form.is_valid():
+            form.save()
+            status_data = 'Ok'
+            response = JsonResponse({'result': status_data})
+        else:
+            form_errors = []
+            for field in form:
+                if field.errors:
+                    for field_error in field.errors:
+                        error = strip_tags(field.html_name.replace("_", " ").title()) + ": " + field_error
+                        form_errors.append(error)
+            for non_field_error in form.non_field_errors():
+                form_errors.append(non_field_error)
+            response = JsonResponse({'errors': form_errors})
+        return response
+
+
+def update_stage_order(request):
+    if not request.is_ajax():
+        redirect('home') # TODO: handle this a generic way perhaps
+    response = {'result': None}
+    if request.method == 'POST' and request.POST:
+        new_order = copy.copy(request.POST)
+        new_order.pop('csrfmiddlewaretoken')
+        new_order_list = []
+        for i in range(0, len(new_order)):
+            stage_id_str = new_order[str(i)]
+            new_order_list.append(int(stage_id_str))
+        reorder_stages(new_order_list)
+        response['result'] = 'Ok'
+    return JsonResponse(response)
+
+
+def update_status_order(request):
+    if not request.is_ajax():
+        redirect('home')  # TODO: handle this a generic way perhaps
+    response = {'result': None}
+    if request.method == 'POST' and request.POST:
+        new_order = copy.copy(request.POST)
+        new_order.pop('csrfmiddlewaretoken')
+        stage_id = new_order.pop('stageId')[0]
+        new_order_list = []
+        for i in range(0, len(new_order)):
+            stage_id_str = new_order[str(i)]
+            new_order_list.append(int(stage_id_str))
+        reorder_status(new_order_list, stage_id)
+        response['result'] = 'Ok'
+    return JsonResponse(response)
 
 
 def add_contact(request):
