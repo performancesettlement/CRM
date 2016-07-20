@@ -2,7 +2,8 @@ import colorfield
 from colorfield.fields import ColorWidget
 from django import forms
 from django.contrib.auth.models import User
-from sundog.models import MyFile, FileStatus, Contact, Tag, ClientType, Stage, Status, STAGE_TYPE_CHOICES
+from sundog.models import MyFile, FileStatus, Contact, Tag, ClientType, Stage, Status, STAGE_TYPE_CHOICES, \
+    DEBT_SETTLEMENT, Campaign, Source
 from sundog import services
 from haystack.forms import SearchForm
 from sundog.constants import RADIO_FILTER_CHOICES, SHORT_DATE_FORMAT
@@ -164,9 +165,10 @@ class StageForm(forms.ModelForm):
 
 
 class StatusForm(forms.ModelForm):
-    def __init__(self, type=STAGE_TYPE_CHOICES[0][0], *args, **kwargs):
+    def __init__(self, type=DEBT_SETTLEMENT, *args, **kwargs):
         super(StatusForm, self).__init__(*args, **kwargs)
         self.fields['stage'].queryset = self.fields['stage'].queryset.filter(type=type)
+        self.fields['stage'].empty_label = '--Select--'
 
     class Meta:
         model = Status
@@ -174,3 +176,26 @@ class StatusForm(forms.ModelForm):
         widgets = {
             'status_id': forms.HiddenInput(),
         }
+
+
+class CampaignForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super(CampaignForm, self).__init__(*args, **kwargs)
+        self.fields['source'].empty_label = '--Select--'
+
+    class Meta:
+        model = Campaign
+        exclude = ['created_by', 'created_at', 'updated_at']
+        widgets = {
+            'campaign_id': forms.HiddenInput(),
+            'start_date': forms.DateInput(format=SHORT_DATE_FORMAT,
+                                          attrs={'placeholder': 'mm/dd/yyyy', 'data-provide': 'datepicker'}),
+            'end_date': forms.DateInput(format=SHORT_DATE_FORMAT,
+                                        attrs={'placeholder': 'mm/dd/yyyy', 'data-provide': 'datepicker'}),
+        }
+
+
+class SourceForm(forms.ModelForm):
+    class Meta:
+        model = Source
+        fields = ['name']

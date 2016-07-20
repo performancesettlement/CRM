@@ -1,0 +1,112 @@
+{% extends "app-base.html" %}
+{% load staticfiles my_filters admin_urls %}
+{% block extrahead %}
+    <link href="{% static "css/plugins/datapicker/datepicker3.css" %}" rel="stylesheet">
+    <link href="{% static "css/plugins/morris/morris-0.4.3.min.css" %}" rel="stylesheet">
+    <link href="{% static "css/plugins/dataTables/dataTables.bootstrap.css" %}" rel="stylesheet">
+    <link href="{% static "css/plugins/dataTables/dataTables.responsive.css" %}" rel="stylesheet">
+{% endblock extrahead %}
+{% block content %}
+    <div class="row wrapper border-bottom white-bg page-heading">
+        <div class="col-lg-10 m-t-md">
+            <ol class="breadcrumb">
+                <li>
+                    <a href="{% url 'list_contacts' %}">Contacts</a>
+                </li>
+                <li class="active">
+                    <strong>Campaigns</strong>
+                </li>
+            </ol>
+        </div>
+    </div>
+    <div class="hidden">
+        <form id="search-form" action="{% url 'campaigns' %}" method="get">
+            <input type="hidden" name="page" value="{{ page.number }}"/>
+        </form>
+    </div>
+    <div id="campaigns" class="col-xs-8 campaign-list">
+        <table id="dataTable" class="table table-hover dataTable no-footer">
+            <thead>
+                <tr>
+                    <th id="th_Active" class="sorting">Active</th>
+                    <th id="th_Created_At" class="sorting">Created At</th>
+                    <th id="th_Created_By" class="sorting">Created By</th>
+                    <th id="th_Title" class="sorting">Title</th>
+                    <th id="th_Source" class="sorting">Source</th>
+                    <th id="th_Cost" class="sorting">Cost</th>
+                    <th id="th_Priority" class="sorting">Priority</th>
+                    <th id="th_Media" class="sorting">Media</th>
+                    <th id="th_Purchase_Amount" class="sorting">Purchase Amount</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% if page.object_list %}
+                {% for campaign in page.object_list %}
+                    <tr>
+                        <td id="{{ campaign.campaign_id }}-active" value="{{ campaign.active }}">{% if campaign.active %}<span class="text-success glyphicon glyphicon-check"></span>{% else %}<span class="text-danger glyphicon glyphicon-unchecked"></span>{% endif %}</td>
+                        <td id="{{ campaign.campaign_id }}-created_at">{% if campaign.created_at %}{{ campaign.created_at|date:'SHORT_DATE_FORMAT' }}{% endif %}</td>
+                        <td id="{{ campaign.campaign_id }}-created_by">{% if campaign.created_by %}{{ campaign.created_by }}{% endif %}</td>
+                        <td id="{{ campaign.campaign_id }}-title" value="{{ campaign.title }}">{% if campaign.title %}{{ campaign.title }}{% endif %}</td>
+                        <td id="{{ campaign.campaign_id }}-source" value="{{ campaign.source.source_id }}">{% if campaign.source %}{{ campaign.source }}{% endif %}</td>
+                        <td id="{{ campaign.campaign_id }}-cost" value="{{ campaign.cost }}">{% if campaign.cost %}{{ campaign.cost }}{% endif %}</td>
+                        <td id="{{ campaign.campaign_id }}-priority" value="{{ campaign.priority }}">{% if campaign.priority %}{{ campaign.priority }}{% endif %}</td>
+                        <td id="{{ campaign.campaign_id }}-media_type" value="{{ campaign.media_type }}">{% if campaign.media_type %}{{ campaign.media_type|media_type }}{% endif %}</td>
+                        <td id="{{ campaign.campaign_id }}-purchase_amount" value="{{ campaign.purchase_amount }}">{% if campaign.purchase_amount %}{{ campaign.purchase_amount }}{% endif %}</td>
+                        <td id="{{ campaign.campaign_id }}-start_date" value="{{ campaign.start_date|date:'SHORT_DATE_FORMAT' }}"></td>
+                        <td id="{{ campaign.campaign_id }}-end_date" value="{{ campaign.end_date|date:'SHORT_DATE_FORMAT' }}"></td>
+                        <td class="contact-actions">
+                            <a><span id="{{ campaign.campaign_id }}" class="glyphicon glyphicon-edit edit-campaign" aria-hidden="true" title="edit"></span></a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td class="text-center" colspan="12"><strong>No campaigns to display!</strong></td>
+                </tr>
+            {% endif %}
+            </tbody>
+        </table>
+        <div class="ibox-footer">
+            {% if page.object_list %}
+                <div class="text-center">
+                    <div class="btn-group">
+                        <button class="btn btn-white prev-page" type="button" {% if page.number == 1 %}
+                                disabled="disabled"
+                        {% endif %} ><i class="fa fa-chevron-left"></i></button>
+                        {% for number in paginator|paginatorRange:page.number %}
+                            {% if number == page.number %}
+                                <button class="btn btn-white active">{{ number }}</button>
+                            {% else %}
+                                <button class="btn btn-white move-page">{{ number }}</button>
+                            {% endif %}
+                        {% endfor %}
+                        <button class="btn btn-white next-page" type="button" {% if page.number == paginator.num_pages %}
+                                disabled="disabled"
+                        {% endif %}><i class="fa fa-chevron-right"></i> </button>
+                    </div>
+                    <div class="col-xs-12 m-t-sm">
+                        {{ page.object_list|length }} of {{ paginator.count }}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <div id="actions" class="col-xs-4">
+        <div class="col-xs-12 m-t-md border-bottom" style="padding-bottom: 15px;">
+            <h3> Actions </h3>
+            <button id="add-campaign-button" type="button" class="btn btn-primary">Add Campaign</button>
+            <button id="add-source-button" type="button" class="btn btn-primary">Add Source</button>
+        </div>
+        <div class="col-xs-12 m-t-md">
+            <h3>Current Action: </h3>
+            <div id="forms">
+                {% include "contact/partials/campaign/add_campaign_form.html" %}
+                {% include "contact/partials/campaign/edit_campaign_form.html" %}
+                {% include "contact/partials/campaign/add_source_form.html" %}
+            </div>
+        </div>
+    </div>
+    <script src="{% static "js/plugins/datapicker/bootstrap-datepicker.js" %}"></script>
+    <script src="{% static "js/contact/campaigns.js" %}"></script>
+{% endblock %}

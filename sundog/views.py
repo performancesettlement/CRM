@@ -21,10 +21,12 @@ from sundog.constants import IMPORT_FILE_EXCEL_FILENAME, IMPORT_CLIENT_EXCEL_FIL
 from django.contrib.auth.models import Permission
 from haystack.generic_views import SearchView
 from sundog.decorators import bypass_impersonation_login_required
-from sundog.forms import FileCustomForm, FileSearchForm, ContactForm, ImpersonateUserForm, StageForm, StatusForm
+from sundog.forms import FileCustomForm, FileSearchForm, ContactForm, ImpersonateUserForm, StageForm, StatusForm, \
+    CampaignForm, SourceForm
 from datetime import datetime
 from sundog.messages import MESSAGE_REQUEST_FAILED_CODE, CODES_TO_MESSAGE
-from sundog.models import MyFile, Message, Document, FileStatusHistory, Contact, Stage, STAGE_TYPE_CHOICES, Status
+from sundog.models import MyFile, Message, Document, FileStatusHistory, Contact, Stage, STAGE_TYPE_CHOICES, Status, \
+    Campaign
 from sundog.services import reorder_stages, reorder_status
 
 logger = logging.getLogger(__name__)
@@ -194,7 +196,6 @@ def workflows(request):
         type = STAGE_TYPE_CHOICES[0][0]
     else:
         type = request.GET['type']
-    form_errors = None
     form_stage = StageForm()
     edit_form_stage = StageForm()
     form_status = StatusForm(type)
@@ -209,7 +210,6 @@ def workflows(request):
         'form_status': form_status,
         'edit_form_status': edit_form_status,
         'edit_form_stage': edit_form_stage,
-        'form_errors': form_errors,
         'stages': stages,
         'stage_types': stage_types,
         'stage_type': type,
@@ -231,7 +231,7 @@ def add_stage(request):
             stage.order = previous_last_order + 1
             stage.save()
             stage_data = 'Ok'
-            response = JsonResponse({'result': stage_data})
+            response = {'result': stage_data}
         else:
             form_errors = []
             for field in form:
@@ -241,8 +241,8 @@ def add_stage(request):
                         form_errors.append(error)
             for non_field_error in form.non_field_errors():
                 form_errors.append(non_field_error)
-            response = JsonResponse({'errors': form_errors})
-        return response
+            response = {'errors': form_errors}
+        return JsonResponse(response)
 
 
 def edit_stage(request):
@@ -255,7 +255,7 @@ def edit_stage(request):
         if form.is_valid():
             form.save()
             status_data = 'Ok'
-            response = JsonResponse({'result': status_data})
+            response = {'result': status_data}
         else:
             form_errors = []
             for field in form:
@@ -265,15 +265,15 @@ def edit_stage(request):
                         form_errors.append(error)
             for non_field_error in form.non_field_errors():
                 form_errors.append(non_field_error)
-            response = JsonResponse({'errors': form_errors})
-        return response
+            response = {'errors': form_errors}
+        return JsonResponse(response)
 
 
 def add_status(request):
     if request.method == 'POST' and request.POST:
         post_data = request.POST.copy()
         type = post_data.pop('stage_type')[0]
-        form = StatusForm(type, request.POST)
+        form = StatusForm(type, post_data)
         if form.is_valid():
             stage_id = request.POST['stage']
             statuses = list(Status.objects.filter(stage__stage_id=stage_id))
@@ -282,7 +282,7 @@ def add_status(request):
             status.order = previous_last_order + 1
             status.save()
             status_data = 'Ok'
-            response = JsonResponse({'result': status_data})
+            response = {'result': status_data}
         else:
             form_errors = []
             for field in form:
@@ -292,8 +292,8 @@ def add_status(request):
                         form_errors.append(error)
             for non_field_error in form.non_field_errors():
                 form_errors.append(non_field_error)
-            response = JsonResponse({'errors': form_errors})
-        return response
+            response = {'errors': form_errors}
+        return JsonResponse(response)
 
 
 def edit_status(request):
@@ -302,11 +302,11 @@ def edit_status(request):
         type = post_data.pop('stage_type')[0]
         status_id = request.POST['status_id']
         instance = Status.objects.get(status_id=status_id)
-        form = StatusForm(type, request.POST, instance=instance)
+        form = StatusForm(type, post_data, instance=instance)
         if form.is_valid():
             form.save()
             status_data = 'Ok'
-            response = JsonResponse({'result': status_data})
+            response = {'result': status_data}
         else:
             form_errors = []
             for field in form:
@@ -316,8 +316,8 @@ def edit_status(request):
                         form_errors.append(error)
             for non_field_error in form.non_field_errors():
                 form_errors.append(non_field_error)
-            response = JsonResponse({'errors': form_errors})
-        return response
+            response = {'errors': form_errors}
+        return JsonResponse(response)
 
 
 def update_stage_order(request):
@@ -351,6 +351,96 @@ def update_status_order(request):
         reorder_status(new_order_list, stage_id)
         response['result'] = 'Ok'
     return JsonResponse(response)
+
+
+def campaigns(request):
+    try:
+        page = int(request.GET['page'])
+    except:
+        page = 1
+    form_campaign = CampaignForm()
+    edit_form_campaign = CampaignForm()
+    form_source = SourceForm()
+    campaign_list = Campaign.objects.all()
+    paginator = Paginator(campaign_list, 100)
+    page = paginator.page(page)
+
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'form_source': form_source,
+        'form_campaign': form_campaign,
+        'edit_form_campaign': edit_form_campaign,
+        'paginator': paginator,
+        'page': page,
+        'menu_page': 'contacts'
+    }
+    template_path = 'contact/campaigns.html'
+    return _render_response(request, context_info, template_path)
+
+
+def add_campaign(request):
+    if request.method == 'POST' and request.POST:
+        form = CampaignForm(request.POST)
+        if form.is_valid():
+            campaign = form.save(commit=False)
+            campaign.created_by = request.user
+            campaign.save()
+            response_data = 'Ok'
+            response = {'result': response_data}
+        else:
+            form_errors = []
+            for field in form:
+                if field.errors:
+                    for field_error in field.errors:
+                        error = strip_tags(field.html_name.replace("_", " ").title()) + ": " + field_error
+                        form_errors.append(error)
+            for non_field_error in form.non_field_errors():
+                form_errors.append(non_field_error)
+            response = {'errors': form_errors}
+        return JsonResponse(response)
+
+
+def edit_campaign(request):
+    if request.method == 'POST' and request.POST:
+        campaign_id = request.POST['campaign_id']
+        instance = Campaign.objects.get(campaign_id=campaign_id)
+        form = CampaignForm(request.POST, instance=instance)
+        if form.is_valid():
+            form.save()
+            response_data = 'Ok'
+            response = {'result': response_data}
+        else:
+            form_errors = []
+            for field in form:
+                if field.errors:
+                    for field_error in field.errors:
+                        error = strip_tags(field.html_name.replace("_", " ").title()) + ": " + field_error
+                        form_errors.append(error)
+            for non_field_error in form.non_field_errors():
+                form_errors.append(non_field_error)
+            response = {'errors': form_errors}
+        return JsonResponse(response)
+
+
+def add_source(request):
+    if request.method == 'POST' and request.POST:
+        form = SourceForm(request.POST)
+        if form.is_valid():
+            form.save()
+            response_data = 'Ok'
+            response = {'result': response_data}
+        else:
+            form_errors = []
+            for field in form:
+                if field.errors:
+                    for field_error in field.errors:
+                        error = strip_tags(field.html_name.replace("_", " ").title()) + ": " + field_error
+                        form_errors.append(error)
+            for non_field_error in form.non_field_errors():
+                form_errors.append(non_field_error)
+            response = {'errors': form_errors}
+        return JsonResponse(response)
 
 
 def add_contact(request):

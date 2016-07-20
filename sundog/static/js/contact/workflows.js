@@ -1,5 +1,3 @@
-
-
 $(document).ready(function() {
     var stagesSelector = '#stages';
     var statusesSelector = '.statuses';
@@ -109,7 +107,7 @@ $(document).ready(function() {
         formData.push({name: 'stage_type', value: getStageType()});
         $.post(form.attr('action'), formData, function(response) {
             if (response.errors) {
-                showErrorPopup(form_errors);
+                showErrorPopup(response.errors);
             }
             if (response.result) {
                 sendToTypeScreen();

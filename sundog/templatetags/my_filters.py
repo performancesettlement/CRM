@@ -4,11 +4,12 @@ from localflavor.us.us_states import US_STATES
 from django.utils.safestring import mark_safe
 import json
 from sundog import constants, utils
+from sundog.models import CAMPAIGN_SOURCES_CHOICES
 
 register = template.Library()
 
 
-@register.filter(name='times') 
+@register.filter(name='times')
 def times(number):
     return range(number)
 
@@ -99,4 +100,23 @@ def paginator_range(paginator, page_number):
 @register.filter
 def get_item(dictionary, key):
     return dictionary.get(key)
+
+
+@register.filter(name='media_type')
+def times(media_type):
+    media_label = ''
+    for media_data in CAMPAIGN_SOURCES_CHOICES:
+        if media_data[0] == media_type:
+            media_label = media_data[1]
+    return media_label
+
+
+@register.filter(name='multiply')
+def multiply(value, arg):
+    return value * arg
+    
+
+@register.filter(name='minus')
+def minus(value, arg):
+    return value - arg
 

@@ -1,6 +1,7 @@
 import hashlib
 from colorfield.fields import ColorField
 from colorful.fields import RGBColorField
+from decimal import Decimal
 from django.db import models
 from wagtail.wagtailcore.models import Page
 from wagtail.wagtailcore.fields import RichTextField
@@ -102,9 +103,12 @@ class LeadSource(models.Model):
         return self.name
 
 
+DEBT_SETTLEMENT = 'debt_settlement'
+STUDENT_LOANS = 'student_loans'
+
 STAGE_TYPE_CHOICES = (
-    ('debt_settlement', 'Debt Settlement'),
-    ('student_loans', 'Student Loans'),
+    (DEBT_SETTLEMENT, 'Debt Settlement'),
+    (STUDENT_LOANS, 'Student Loans'),
 )
 
 
@@ -352,6 +356,60 @@ class Contact(models.Model):
             if not self.identification.isupper():
                 self.identification = self.identification.upper()
         super(Contact, self).save(*args, **kwargs)
+
+CAMPAIGN_PRIORITY_CHOICES = (
+    (None, '--Select--'),
+    (0, '0'),
+    (1, '1'),
+    (2, '2'),
+    (3, '3'),
+    (4, '4'),
+    (5, '5'),
+    (6, '6'),
+    (7, '7'),
+    (8, '8'),
+    (9, '9'),
+    (10, '10'),
+)
+
+CAMPAIGN_SOURCES_CHOICES = (
+    (None, '--Select--'),
+    ('billboard', 'Billboard'),
+    ('directmail', 'DirectMail'),
+    ('email', 'Email'),
+    ('internal_transfer', 'Internal Transfer'),
+    ('internet', 'Internet'),
+    ('other', 'Other'),
+    ('radio', 'Radio'),
+    ('television', 'Television'),
+)
+
+
+class Source(models.Model):
+    source_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return '%s' % self.name
+
+
+class Campaign(models.Model):
+    campaign_id = models.AutoField(primary_key=True)
+    created_by = models.ForeignKey(User, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+    active = models.BooleanField(default=True)
+    title = models.CharField(max_length=100)
+    start_date = models.DateTimeField(blank=True, null=True)
+    end_date = models.DateTimeField(blank=True, null=True)
+    source = models.ForeignKey(Source, blank=True, null=True)
+    media_type = models.CharField(max_length=100, blank=True, null=True, choices=CAMPAIGN_SOURCES_CHOICES)
+    priority = models.PositiveSmallIntegerField(null=True, blank=True, choices=CAMPAIGN_PRIORITY_CHOICES)
+    cost = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    purchase_amount = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+
+    def __str__(self):
+        return '%s' % self.title
 
 
 class Tag(models.Model):

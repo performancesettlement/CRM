@@ -1,0 +1,15 @@
+<div id="add-source" class="col-xs-12 m-t-md">
+    <h3>Add Source</h3>
+    <form id="add-source-form" action="{% url 'add_source' %}" method="post" class="form">
+        {% csrf_token %}
+        <div class="col-xs-12 m-t-md m-b-md">
+            <div class="m-r-xs inline">
+                Name: {{ form_source.name }}
+            </div>
+        </div>
+        <div class="col-xs-12 m-t-md">
+            <button class="btn btn-primary" type="submit">Save</button>
+            <button class="btn btn-primary cancel" type="button">Cancel</button>
+        </div>
+    </form>
+</div>
