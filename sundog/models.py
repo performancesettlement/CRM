@@ -338,10 +338,12 @@ class Contact(models.Model):
             ("import_clients", "Can import clients"),
         )
 
-    def full_name(self):
-        full_name = self.first_name if self.first_name.strip() else ""
-        full_name += (" " if full_name and self.last_name else "") + (self.last_name if self.last_name.strip() else "")
-        return full_name
+    def __init__(self, *args, **kwargs):
+        super(Contact, self).__init__(*args, **kwargs)
+        full_name = self.last_name if self.last_name.strip() else ""
+        full_name += (", " if full_name and self.first_name else "") + \
+                     (self.first_name if self.first_name.strip() else "")
+        self.full_name = full_name
 
     def __str__(self):
         return '%s' % self.first_name
@@ -356,6 +358,23 @@ class Contact(models.Model):
             if not self.identification.isupper():
                 self.identification = self.identification.upper()
         super(Contact, self).save(*args, **kwargs)
+
+
+class Source(models.Model):
+    source_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return '%s' % self.name
+
+
+class DataSource(models.Model):
+    data_source_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return '%s' % self.name
+
 
 CAMPAIGN_PRIORITY_CHOICES = (
     (None, '--Select--'),
@@ -383,14 +402,6 @@ CAMPAIGN_SOURCES_CHOICES = (
     ('radio', 'Radio'),
     ('television', 'Television'),
 )
-
-
-class Source(models.Model):
-    source_id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=100, unique=True)
-
-    def __str__(self):
-        return '%s' % self.name
 
 
 class Campaign(models.Model):

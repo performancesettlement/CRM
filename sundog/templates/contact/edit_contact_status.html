@@ -1,0 +1,42 @@
+{% extends "app-base.html" %}
+{% load staticfiles my_filters %}
+{% block content %}
+    <div class="row wrapper border-bottom white-bg page-heading">
+        <div class="col-lg-10 m-t-md">
+            <ol class="breadcrumb">
+                <li>
+                    <a href="{% url 'list_contacts' %}">Contacts</a>
+                </li>
+                <li class="active">
+                    <strong>Edit Contact Status</strong>
+                </li>
+            </ol>
+        </div>
+    </div>
+    <div class="m-t-md">
+        <h3>Edit '{{ contact }}' Status</h3>
+        <form id="edit-contact-status-form" action="{% url 'edit_contact_status' contact.contact_id %}" method="post">
+            {% csrf_token %}
+            {{ form.contact_id }}
+            <div class="col-xs-12 m-t-md inline">
+                {% if contact.stage %} Stage: {{ contact.stage }} <div style="display: none">{{ form.stage }}</div> {% else %} Stage: {{ form.stage }} {% endif %}
+            </div>
+            <div class="col-xs-12 m-t-md inline">
+                Status:
+                <div id="status-selector" {% if not contact.stage %} style="display: none" {% else %} style="display: inline-block" {% endif %}>{{ form.status }}</div>
+                <div id="stage-selector-message" {% if contact.stage %} style="display: none" {% else %} style="display: inline-block" {% endif %}>Please select a Stage first.</div>
+                <div id="no-status-message" style="display: none">The selected Stage has no Statuses. Please select one that has.</div>
+            </div>
+            <div class="col-xs-12 m-t-md">
+                <button class="btn btn-primary" type="submit">Save</button>
+            </div>
+        </form>
+    </div>
+    <script type="text/javascript">
+        var getStageStatusesUrl = "{% url 'get_stage_statuses' %}";
+        var csrf = '{{ csrf_token }}';
+        var form_errors = {{ form_errors|jsonify }};
+    </script>
+    <script src="{% static "js/contact/edit-contact-status.js" %}"></script>
+
+{% endblock content %}

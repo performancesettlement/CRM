@@ -46,36 +46,36 @@
                     Assigned To: {{ form.assigned_to }}
                 </div>
             </div>
-            <div class="tab-content col-xs-12 m-t-md">
+            <div class="tab-content col-xs-12">
                 {% csrf_token %}
                 <div class="tab-pane active" id="tab-1">
-                    {% include "contact/partials/add_contact/lead_tracker.html" %}
+                    {% include "contact/partials/contact/lead_tracker.html" %}
                 </div>
                 <div class="tab-pane" id="tab-2">
-                    {% include "contact/partials/add_contact/info.html" %}
+                    {% include "contact/partials/contact/info.html" %}
                 </div>
                 <div class="tab-pane" id="tab-3">
-                    {% include "contact/partials/add_contact/address.html" %}
+                    {% include "contact/partials/contact/address.html" %}
                 </div>
                 <div class="tab-pane" id="tab-4">
-                    {% include "contact/partials/add_contact/employment.html" %}
+                    {% include "contact/partials/contact/employment.html" %}
                 </div>
                 <div class="tab-pane" id="tab-5">
-                    {% include "contact/partials/add_contact/hardships.html" %}
+                    {% include "contact/partials/contact/hardships.html" %}
                 </div>
                 <div class="tab-pane" id="tab-6">
-                    {% include "contact/partials/add_contact/special_notes.html" %}
+                    {% include "contact/partials/contact/special_notes.html" %}
                 </div>
                 <div class="tab-pane" id="tab-7">
-                    {% include "contact/partials/add_contact/third_party_speaker.html" %}
+                    {% include "contact/partials/contact/third_party_speaker.html" %}
                 </div>
             </div>
-            <div class="col-xs-12 m-t-md">
+            <div class="col-xs-12 m-t-md" style="padding-bottom: 95px;">
                 <button class="btn btn-primary" type="submit">Save Contact</button>
             </div>
         </form>
     </div>
 
-    <script src="{% static "js/contact/add_contact.js" %}"></script>
+    <script src="{% static "js/contact/contact.js" %}"></script>
 
 {% endblock content %}

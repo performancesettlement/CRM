@@ -53,8 +53,8 @@
                         <td id="{{ campaign.campaign_id }}-priority" value="{{ campaign.priority }}">{% if campaign.priority %}{{ campaign.priority }}{% endif %}</td>
                         <td id="{{ campaign.campaign_id }}-media_type" value="{{ campaign.media_type }}">{% if campaign.media_type %}{{ campaign.media_type|media_type }}{% endif %}</td>
                         <td id="{{ campaign.campaign_id }}-purchase_amount" value="{{ campaign.purchase_amount }}">{% if campaign.purchase_amount %}{{ campaign.purchase_amount }}{% endif %}</td>
-                        <td id="{{ campaign.campaign_id }}-start_date" value="{{ campaign.start_date|date:'SHORT_DATE_FORMAT' }}"></td>
-                        <td id="{{ campaign.campaign_id }}-end_date" value="{{ campaign.end_date|date:'SHORT_DATE_FORMAT' }}"></td>
+                        <td id="{{ campaign.campaign_id }}-start_date" value="{{ campaign.start_date|date:'SHORT_DATE_FORMAT' }}" style="display: none;"></td>
+                        <td id="{{ campaign.campaign_id }}-end_date" value="{{ campaign.end_date|date:'SHORT_DATE_FORMAT' }}" style="display: none;"></td>
                         <td class="contact-actions">
                             <a><span id="{{ campaign.campaign_id }}" class="glyphicon glyphicon-edit edit-campaign" aria-hidden="true" title="edit"></span></a>
                         </td>

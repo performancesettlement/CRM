@@ -137,6 +137,8 @@ class FileCustomForm(forms.ModelForm):
         exclude = ('participants', 'messages', 'creator_user_username', 'creator_user_full_name',  'created_time',
                    'last_update_time', 'last_update_user_username', 'last_update_user_full_name', 'file_status_history')
 
+EMPTY_LABEL = '--Select--'
+
 
 class ContactForm(forms.ModelForm):
 
@@ -146,15 +148,51 @@ class ContactForm(forms.ModelForm):
             'company': forms.Select()
         }
         model = Contact
-        fields = '__all__'
+        exclude = ['last_status_change', 'created_at', 'updated_at']
+
+    def __init__(self, *args, **kwargs):
+        super(ContactForm, self).__init__(*args, **kwargs)
+        self.fields['assigned_to'].empty_label = EMPTY_LABEL
+        self.fields['lead_source'].empty_label = EMPTY_LABEL
+        self.fields['company'].empty_label = EMPTY_LABEL
+        self.fields['stage'].empty_label = EMPTY_LABEL
+        self.fields['status'].empty_label = EMPTY_LABEL
+        self.fields['call_center_representative'].empty_label = EMPTY_LABEL
 
     def clean(self):
         if 'contact_id' in self.data:
             contact_id = int(self.data['contact_id'])
-            self.cleaned_data["contact_id"] = contact_id
+            self.cleaned_data['contact_id'] = contact_id
+
+
+class ContactStatusForm(forms.ModelForm):
+
+    class Meta:
+        model = Contact
+        fields = ['contact_id', 'stage', 'status']
+        widgets = {
+            'contact_id': forms.HiddenInput(),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(ContactStatusForm, self).__init__(*args, **kwargs)
+        self.fields['status'].empty_label = EMPTY_LABEL
+        self.fields['stage'].empty_label = EMPTY_LABEL
+        self.fields['status'].required = True
+
+        if args and args[0] and 'stage' in args[0]:
+            stage_id = args[0]['stage']
+            self.fields['status'].queryset = Status.objects.filter(stage__stage_id=stage_id)
+        else:
+            if 'instance' in kwargs and kwargs['instance']:
+                instance = kwargs['instance']
+                self.fields['status'].queryset = Status.objects.filter(stage=instance.stage)
+            else:
+                self.fields['status'].queryset = Status.objects.none()
 
 
 class StageForm(forms.ModelForm):
+
     class Meta:
         model = Stage
         fields = ['name', 'stage_id', 'type']
@@ -165,10 +203,6 @@ class StageForm(forms.ModelForm):
 
 
 class StatusForm(forms.ModelForm):
-    def __init__(self, type=DEBT_SETTLEMENT, *args, **kwargs):
-        super(StatusForm, self).__init__(*args, **kwargs)
-        self.fields['stage'].queryset = self.fields['stage'].queryset.filter(type=type)
-        self.fields['stage'].empty_label = '--Select--'
 
     class Meta:
         model = Status
@@ -177,11 +211,17 @@ class StatusForm(forms.ModelForm):
             'status_id': forms.HiddenInput(),
         }
 
+    def __init__(self, type=DEBT_SETTLEMENT, *args, **kwargs):
+        super(StatusForm, self).__init__(*args, **kwargs)
+        self.fields['stage'].queryset = self.fields['stage'].queryset.filter(type=type)
+        self.fields['stage'].empty_label = EMPTY_LABEL
+
 
 class CampaignForm(forms.ModelForm):
+
     def __init__(self, *args, **kwargs):
         super(CampaignForm, self).__init__(*args, **kwargs)
-        self.fields['source'].empty_label = '--Select--'
+        self.fields['source'].empty_label = EMPTY_LABEL
 
     class Meta:
         model = Campaign
@@ -196,6 +236,7 @@ class CampaignForm(forms.ModelForm):
 
 
 class SourceForm(forms.ModelForm):
+
     class Meta:
         model = Source
         fields = ['name']

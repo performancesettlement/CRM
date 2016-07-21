@@ -3282,6 +3282,9 @@ a:focus {
 .border-bottom {
   border-bottom: 1px solid #e7eaec !important;
 }
+.border-top {
+  border-top: 1px solid #e7eaec !important;
+}
 .font-bold {
   font-weight: 600;
 }
@@ -3369,6 +3372,8 @@ video {
 #wrapper {
   width: 100%;
   overflow-x: hidden;
+  height: 100%;
+  padding-bottom: 70px;
 }
 .wrapper {
   padding: 0 20px;
@@ -8122,10 +8127,6 @@ body.md-skin {
   margin-right: 3px;
 }
 
-#wrapper {
-  min-height: 800px;
-}
-
 .menu-elem a {
   color: white !important;
 }
@@ -8138,4 +8139,20 @@ body.md-skin {
 .status-row {
   margin-left: 25px;
 
+}
+
+footer {
+  z-index: 1000;
+  background-color: white;
+  position: absolute !important;
+  bottom: 0;
+}
+
+th {
+  border-left: 1px solid #e7eaec;
+  border-right: 1px solid #e7eaec;
+}
+
+tr {
+  border-top: 1px solid #e7eaec;
 }

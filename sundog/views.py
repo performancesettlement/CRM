@@ -4,7 +4,7 @@ from django.core.paginator import Paginator
 from django_auth_app.utils import serialize_user
 from django.shortcuts import render_to_response, redirect
 from django.template.context import RequestContext
-from django.contrib.auth.decorators import permission_required, user_passes_test
+from django.contrib.auth.decorators import permission_required, user_passes_test, login_required
 from django.http import Http404, StreamingHttpResponse
 from django.http.response import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.core.urlresolvers import reverse
@@ -22,7 +22,7 @@ from django.contrib.auth.models import Permission
 from haystack.generic_views import SearchView
 from sundog.decorators import bypass_impersonation_login_required
 from sundog.forms import FileCustomForm, FileSearchForm, ContactForm, ImpersonateUserForm, StageForm, StatusForm, \
-    CampaignForm, SourceForm
+    CampaignForm, SourceForm, ContactStatusForm
 from datetime import datetime
 from sundog.messages import MESSAGE_REQUEST_FAILED_CODE, CODES_TO_MESSAGE
 from sundog.models import MyFile, Message, Document, FileStatusHistory, Contact, Stage, STAGE_TYPE_CHOICES, Status, \
@@ -174,12 +174,43 @@ def file_detail(request, file_id):
         return _render_response(request, context_info, template_path)
 
 
+@login_required
 def list_contacts(request):
-    contacts = Contact.objects.all()
+    order_by_list = [
+        'type',
+        'created_at',
+        'company',
+        'assigned_to',
+        'last_name,first_name',
+        'phone_number',
+        'email',
+        'stage',
+        'status'
+    ]
+    page = int(request.GET.get('page', '1'))
+    order_by = request.GET.get('order_by', 'created_at')
+
+    if order_by in order_by_list:
+        index = order_by_list.index(order_by)
+        order_by_list[index] = '-' + order_by
+
+    sort = {'name': order_by.replace('-', ''), 'class': 'sorting_desc' if order_by.find('-') else 'sorting_asc'}
+
+    if order_by == 'last_name,first_name':
+        order_by = ['last_name', 'first_name']
+    elif order_by == '-last_name,first_name':
+        order_by = ['-last_name', '-first_name']
+    else:
+        order_by = [order_by]
+
+    contacts = Contact.objects.all().order_by(*order_by)
     paginator = Paginator(contacts, 100)
-    page = paginator.page(1)
+    page = paginator.page(page)
     lists = [('All Contacts', 'all_contacts')]
+
     context_info = {
+        'sort': sort,
+        'order_by_list': order_by_list,
         'request': request,
         'user': request.user,
         'page': page,
@@ -191,6 +222,7 @@ def list_contacts(request):
     return _render_response(request, context_info, template_path)
 
 
+@login_required
 def workflows(request):
     if not request.GET or 'type' not in request.GET:
         type = STAGE_TYPE_CHOICES[0][0]
@@ -219,6 +251,7 @@ def workflows(request):
     return _render_response(request, context_info, template_path)
 
 
+@login_required
 def add_stage(request):
     if request.method == 'POST' and request.POST:
         post_data = request.POST.copy()
@@ -245,6 +278,7 @@ def add_stage(request):
         return JsonResponse(response)
 
 
+@login_required
 def edit_stage(request):
     if request.method == 'POST' and request.POST:
         post_data = request.POST.copy()
@@ -269,6 +303,7 @@ def edit_stage(request):
         return JsonResponse(response)
 
 
+@login_required
 def add_status(request):
     if request.method == 'POST' and request.POST:
         post_data = request.POST.copy()
@@ -296,6 +331,7 @@ def add_status(request):
         return JsonResponse(response)
 
 
+@login_required
 def edit_status(request):
     if request.method == 'POST' and request.POST:
         post_data = request.POST.copy()
@@ -320,6 +356,7 @@ def edit_status(request):
         return JsonResponse(response)
 
 
+@login_required
 def update_stage_order(request):
     if not request.is_ajax():
         redirect('home') # TODO: handle this a generic way perhaps
@@ -336,6 +373,7 @@ def update_stage_order(request):
     return JsonResponse(response)
 
 
+@login_required
 def update_status_order(request):
     if not request.is_ajax():
         redirect('home')  # TODO: handle this a generic way perhaps
@@ -353,6 +391,7 @@ def update_status_order(request):
     return JsonResponse(response)
 
 
+@login_required
 def campaigns(request):
     try:
         page = int(request.GET['page'])
@@ -379,6 +418,7 @@ def campaigns(request):
     return _render_response(request, context_info, template_path)
 
 
+@login_required
 def add_campaign(request):
     if request.method == 'POST' and request.POST:
         form = CampaignForm(request.POST)
@@ -401,6 +441,7 @@ def add_campaign(request):
         return JsonResponse(response)
 
 
+@login_required
 def edit_campaign(request):
     if request.method == 'POST' and request.POST:
         campaign_id = request.POST['campaign_id']
@@ -423,6 +464,7 @@ def edit_campaign(request):
         return JsonResponse(response)
 
 
+@login_required
 def add_source(request):
     if request.method == 'POST' and request.POST:
         form = SourceForm(request.POST)
@@ -443,6 +485,7 @@ def add_source(request):
         return JsonResponse(response)
 
 
+@login_required
 def add_contact(request):
     form_errors = None
     form = ContactForm(request.POST or None)
@@ -467,10 +510,79 @@ def add_contact(request):
         'templates':  [('Add a Client', 'add_a_client')],
         'menu_page': 'contacts'
     }
-    template_path = 'contact/add_contact.html'
+    template_path = 'contact/contact.html'
     return _render_response(request, context_info, template_path)
 
 
+@login_required
+def edit_contact(request, contact_id):
+    form_errors = None
+    instance = Contact.object.get(contact_id=contact_id)
+    form = ContactForm(request.POST or None, instance=instance)
+    if request.method == 'POST' and request.POST:
+        if form.is_valid():
+            form.save()
+            return redirect('list_contacts')
+        else:
+            form_errors = []
+            for field in form:
+                if field.errors:
+                    for field_error in field.errors:
+                        error = strip_tags(field.html_name.replace("_", " ").title()) + ": " + field_error
+                        form_errors.append(error)
+            for non_field_error in form.non_field_errors():
+                form_errors.append(non_field_error)
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'form': form,
+        'form_errors': form_errors,
+        'templates':  [('Add a Client', 'add_a_client')],
+        'menu_page': 'contacts'
+    }
+    template_path = 'contact/contact.html'
+    return _render_response(request, context_info, template_path)
+
+
+@login_required
+def get_stage_statuses(request):
+    if request.POST and 'stage_id' in request.POST:
+        stage_id = request.POST['stage_id']
+        statuses = [{'id': status.status_id, 'name': status.name} for status in list(Status.objects.filter(stage__stage_id=stage_id))]
+        return JsonResponse({'statuses': statuses})
+
+
+@login_required
+def edit_contact_status(request, contact_id):
+    form_errors = None
+    instance = Contact.objects.get(contact_id=contact_id)
+    form = ContactStatusForm(request.POST or None, instance=instance)
+    if request.method == 'POST' and request.POST:
+        if form.is_valid():
+            form.save()
+            return redirect('list_contacts')
+        else:
+            form_errors = []
+            for field in form:
+                if field.errors:
+                    for field_error in field.errors:
+                        error = strip_tags(field.html_name.replace("_", " ").title()) + ": " + field_error
+                        form_errors.append(error)
+            for non_field_error in form.non_field_errors():
+                form_errors.append(non_field_error)
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'contact': instance,
+        'form': form,
+        'form_errors': form_errors,
+        'menu_page': 'contacts'
+    }
+    template_path = 'contact/edit_contact_status.html'
+    return _render_response(request, context_info, template_path)
+
+
+@login_required
 def add_lead_source(request):
     form_errors = None
     form = ContactForm(request.POST or None)

@@ -120,3 +120,8 @@ def multiply(value, arg):
 def minus(value, arg):
     return value - arg
 
+
+@register.filter()
+def get_sort_class(sort, label):
+    return sort['class'] if sort['name'] == label else 'sorting'
+
