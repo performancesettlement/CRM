@@ -84,7 +84,7 @@ def login_user(request):
                         services.set_user_timezone(user_tz, user.id)
                     except:
                         pass
-                return HttpResponseRedirect(reverse("home"))
+                return HttpResponseRedirect(reverse('list_contacts'))
         else:
             form_errors = []
             for field in form:

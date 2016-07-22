@@ -8,14 +8,12 @@
             <div class="col-lg-10 col-lg-offset-1">
                 <div class="text-center">
                     <div class="logo-name">
-                        <h5 class="logo-name">Performance Settlement</h5>
+                        <h1 class="logo-name">Performance Settlement</h1>
                     </div>
-                    <br/>
-                    <h2>Welcome!</h2>
                 </div>
-                <div class="ibox-content">
+                <div class="col-xs-offset-4 col-xs-4 ibox-content">
                     <div class="row">
-                        <div class="col-sm-6 b-r p-w-md">
+                        <div class="p-w-md">
                             <h3 class="m-t-none m-b">Sign in</h3>
                             <form role="form" name="LoginForm" action="{% url 'django_auth_app:login' %}" method="post">
                                 {% csrf_token %}
@@ -39,12 +37,6 @@
                                     <button class="btn btn-primary pull-right m-b" type="submit"><strong>Log in</strong></button>
                                 </div>
                             </form>
-                        </div>
-                        <div class="col-sm-6 p-w-md"><h4>Not a member?</h4>
-                            <p>You can create an account:</p>
-                            <p class="text-center">
-                                <a href="{% url 'django_auth_app:register' %}" ><i class="fa fa-sign-in big-icon"></i></a>
-                            </p>
                         </div>
                     </div>
                 </div>
