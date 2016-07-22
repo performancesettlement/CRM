@@ -144,8 +144,7 @@ class ContactForm(forms.ModelForm):
 
     class Meta:
         widgets = {
-            'client_id': forms.HiddenInput(),
-            'company': forms.Select()
+            'contact_id': forms.HiddenInput(),
         }
         model = Contact
         exclude = ['last_status_change', 'created_at', 'updated_at']

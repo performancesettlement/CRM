@@ -12,7 +12,7 @@
                     <a href="{% url 'list_contacts' %}">Contacts</a>
                 </li>
                 <li class="active">
-                    <strong>Add contact</strong>
+                    <strong>{{ label }} contact</strong>
                 </li>
             </ol>
         </div>
@@ -34,8 +34,13 @@
             <li class=""><a href="#tab-6" data-toggle="tab">Special Notes</a></li>
             <li class=""><a href="#tab-7" data-toggle="tab">3rd Party Speaker Information</a></li>
         </ul>
-        <form id="add-contact-form" action="{% url 'add_contact' %}" method="post">
+        <form id="contact-form" action="{% if label == 'Add' %}{% url 'add_contact' %}{% else %}{% url 'edit_contact' contact_id=contact_id %}{% endif %}" method="post">
+            {% csrf_token %}
+            {% if label == 'Edit' %}
+                <input type="hidden" id="id_contact_id" name="contact_id" value="{{ contact_id }}">
+            {% endif %}
             <div class="col-xs-12 m-t-md m-b-md">
+                {{ form.contact_id }}
                 <div class="m-r-xs inline">
                     Active: {{ form.active }}
                 </div>
@@ -47,7 +52,6 @@
                 </div>
             </div>
             <div class="tab-content col-xs-12">
-                {% csrf_token %}
                 <div class="tab-pane active" id="tab-1">
                     {% include "contact/partials/contact/lead_tracker.html" %}
                 </div>

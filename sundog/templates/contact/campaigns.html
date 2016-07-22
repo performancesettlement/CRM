@@ -28,15 +28,15 @@
         <table id="dataTable" class="table table-hover dataTable no-footer">
             <thead>
                 <tr>
-                    <th id="th_Active" class="sorting">Active</th>
-                    <th id="th_Created_At" class="sorting">Created At</th>
-                    <th id="th_Created_By" class="sorting">Created By</th>
-                    <th id="th_Title" class="sorting">Title</th>
-                    <th id="th_Source" class="sorting">Source</th>
-                    <th id="th_Cost" class="sorting">Cost</th>
-                    <th id="th_Priority" class="sorting">Priority</th>
-                    <th id="th_Media" class="sorting">Media</th>
-                    <th id="th_Purchase_Amount" class="sorting">Purchase Amount</th>
+                    <th class="{{ sort|get_sort_class:'active' }}"><a href="?order_by={{ order_by_list.0 }}">Active</a></th>
+                    <th class="{{ sort|get_sort_class:'created_at' }}"><a href="?order_by={{ order_by_list.1 }}">Created At</a></th>
+                    <th class="{{ sort|get_sort_class:'created_by' }}"><a href="?order_by={{ order_by_list.2 }}">Created By</a></th>
+                    <th class="{{ sort|get_sort_class:'title' }}"><a href="?order_by={{ order_by_list.3 }}">Title</a></th>
+                    <th class="{{ sort|get_sort_class:'source' }}"><a href="?order_by={{ order_by_list.4 }}">Source</a></th>
+                    <th class="{{ sort|get_sort_class:'cost' }}"><a href="?order_by={{ order_by_list.5 }}">Cost</a></th>
+                    <th class="{{ sort|get_sort_class:'priority' }}"><a href="?order_by={{ order_by_list.6 }}">Priority</a></th>
+                    <th class="{{ sort|get_sort_class:'media_type' }}"><a href="?order_by={{ order_by_list.7 }}">Media</a></th>
+                    <th class="{{ sort|get_sort_class:'purchase_amount' }}"><a href="?order_by={{ order_by_list.8 }}">Purchase Amount</a></th>
                     <th class="text-center">Actions</th>
                 </tr>
             </thead>

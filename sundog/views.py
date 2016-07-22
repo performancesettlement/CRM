@@ -393,20 +393,39 @@ def update_status_order(request):
 
 @login_required
 def campaigns(request):
-    try:
-        page = int(request.GET['page'])
-    except:
-        page = 1
+    order_by_list = [
+        'active',
+        'created_at',
+        'created_by',
+        'title',
+        'source',
+        'cost',
+        'priority',
+        'media_type',
+        'purchase_amount'
+    ]
+    page = int(request.GET.get('page', '1'))
+    order_by = request.GET.get('order_by', 'created_at')
+
+    if order_by in order_by_list:
+        index = order_by_list.index(order_by)
+        order_by_list[index] = '-' + order_by
+
+    sort = {'name': order_by.replace('-', ''), 'class': 'sorting_desc' if order_by.find('-') else 'sorting_asc'}
+    order_by = [order_by]
+
     form_campaign = CampaignForm()
     edit_form_campaign = CampaignForm()
     form_source = SourceForm()
-    campaign_list = Campaign.objects.all()
+    campaign_list = Campaign.objects.all().order_by(*order_by)
     paginator = Paginator(campaign_list, 100)
     page = paginator.page(page)
 
     context_info = {
         'request': request,
         'user': request.user,
+        'sort': sort,
+        'order_by_list': order_by_list,
         'form_source': form_source,
         'form_campaign': form_campaign,
         'edit_form_campaign': edit_form_campaign,
@@ -508,7 +527,8 @@ def add_contact(request):
         'form': form,
         'form_errors': form_errors,
         'templates':  [('Add a Client', 'add_a_client')],
-        'menu_page': 'contacts'
+        'label': 'Add',
+        'menu_page': 'contacts',
     }
     template_path = 'contact/contact.html'
     return _render_response(request, context_info, template_path)
@@ -517,7 +537,7 @@ def add_contact(request):
 @login_required
 def edit_contact(request, contact_id):
     form_errors = None
-    instance = Contact.object.get(contact_id=contact_id)
+    instance = Contact.objects.get(contact_id=contact_id)
     form = ContactForm(request.POST or None, instance=instance)
     if request.method == 'POST' and request.POST:
         if form.is_valid():
@@ -536,8 +556,10 @@ def edit_contact(request, contact_id):
         'request': request,
         'user': request.user,
         'form': form,
+        'contact_id': contact_id,
         'form_errors': form_errors,
         'templates':  [('Add a Client', 'add_a_client')],
+        'label': 'Edit',
         'menu_page': 'contacts'
     }
     template_path = 'contact/contact.html'
