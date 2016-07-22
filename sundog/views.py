@@ -17,7 +17,7 @@ from sundog import services
 from sundog import utils
 from sundog import messages
 from sundog.cache.user.info import get_cache_user
-from sundog.constants import IMPORT_FILE_EXCEL_FILENAME, IMPORT_CLIENT_EXCEL_FILENAME
+from sundog.constants import IMPORT_FILE_EXCEL_FILENAME, IMPORT_CLIENT_EXCEL_FILENAME, MY_CONTACTS, ALL_CONTACTS
 from django.contrib.auth.models import Permission
 from haystack.generic_views import SearchView
 from sundog.decorators import bypass_impersonation_login_required
@@ -188,6 +188,7 @@ def list_contacts(request):
         'status'
     ]
     page = int(request.GET.get('page', '1'))
+    selected_list = request.GET.get('selected_list', MY_CONTACTS)
     order_by = request.GET.get('order_by', 'created_at')
 
     if order_by in order_by_list:
@@ -203,13 +204,21 @@ def list_contacts(request):
     else:
         order_by = [order_by]
 
-    contacts = Contact.objects.all().order_by(*order_by)
+    contacts_filter = {}
+    if MY_CONTACTS == selected_list:
+        contacts_filter['assigned_to'] = request.user
+
+    contacts = Contact.objects.filter(**contacts_filter).order_by(*order_by)
     paginator = Paginator(contacts, 100)
     page = paginator.page(page)
-    lists = [('All Contacts', 'all_contacts')]
+    lists = [
+        ('My Contacts', MY_CONTACTS),
+        ('All Contacts', ALL_CONTACTS),
+    ]
 
     context_info = {
         'sort': sort,
+        'selected_list': selected_list,
         'order_by_list': order_by_list,
         'request': request,
         'user': request.user,

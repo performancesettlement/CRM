@@ -20,7 +20,7 @@
         <div class="inline m-r-lg">
             <select id="list-chooser" style="width: 200px;">
                 {% for list in lists %}
-                    <option value="{{list.1}}" >{{list.0}}</option>
+                    <option value="{{list.1}}" {% if list.1 == selected_list %}selected="selected"{% endif %}>{{list.0}}</option>
                 {% endfor %}
             </select>
         </div>
@@ -110,4 +110,7 @@
     </div>
 
     <script src="{% static "js/contact/contact_list.js" %}"></script>
+    <script type="text/javascript">
+        var contacts_list_url = '{% url 'list_contacts' %}';
+    </script>
 {% endblock %}
