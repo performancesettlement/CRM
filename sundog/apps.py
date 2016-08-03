@@ -7,14 +7,15 @@ FILE_ID_SEQUENCE = "sundog_myfile_file_id_seq"
 
 
 def check_my_file_seed(sender, **kwargs):
-    if hasattr(settings, 'SEED_FILE_ID'):
-        seed_id = int(settings.SEED_FILE_ID)
-        cursor = connection.cursor()
-
-        cursor.execute("SELECT last_value FROM " + FILE_ID_SEQUENCE)
-        row = cursor.fetchone()[0]
-        if row and row < seed_id:
-            cursor.execute("ALTER SEQUENCE "+FILE_ID_SEQUENCE+" RESTART WITH " +str(seed_id)+";")
+    pass
+    # if hasattr(settings, 'SEED_FILE_ID'):
+    #     seed_id = int(settings.SEED_FILE_ID)
+    #     cursor = connection.cursor()
+    #
+    #     cursor.execute("SELECT last_value FROM " + FILE_ID_SEQUENCE)
+    #     row = cursor.fetchone()[0]
+    #     if row and row < seed_id:
+    #         cursor.execute("ALTER SEQUENCE "+FILE_ID_SEQUENCE+" RESTART WITH " +str(seed_id)+";")
 
 
 class SunDogConfig(AppConfig):

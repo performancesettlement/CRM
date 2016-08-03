@@ -1,12 +1,14 @@
+import copy
 import colorfield
 from colorfield.fields import ColorWidget
 from django import forms
 from django.contrib.auth.models import User
 from sundog.models import MyFile, FileStatus, Contact, Tag, ClientType, Stage, Status, STAGE_TYPE_CHOICES, \
-    DEBT_SETTLEMENT, Campaign, Source
+    DEBT_SETTLEMENT, Campaign, Source, BankAccount
 from sundog import services
 from haystack.forms import SearchForm
 from sundog.constants import RADIO_FILTER_CHOICES, SHORT_DATE_FORMAT
+from sundog.utils import hash_password
 
 
 class FileSearchForm(SearchForm):
@@ -239,3 +241,34 @@ class SourceForm(forms.ModelForm):
     class Meta:
         model = Source
         fields = ['name']
+
+
+class BankAccountForm(forms.ModelForm):
+
+    class Meta:
+        model = BankAccount
+        widgets = {
+            'contact': forms.HiddenInput(),
+        }
+        exclude = ['created_at', 'updated_at', 'account_number_salt', 'account_number_last_4_digits']
+
+    def __init__(self, *args, **kwargs):
+        super(BankAccountForm, self).__init__(*args, **kwargs)
+        self.previous_account_number = kwargs.get('instance').account_number if kwargs.get('instance') else None
+        if kwargs and 'instance' in kwargs and not args:
+            bank_account = kwargs['instance']
+            if bank_account and bank_account.account_number_last_4_digits:
+                self.initial['account_number'] = '******' + bank_account.account_number_last_4_digits
+
+    def save(self, commit=True):
+        account_number_changed = True
+        if self.instance:
+            if self.cleaned_data and 'account_number' in self.cleaned_data:
+                account_number = self.cleaned_data['account_number']
+                if account_number == '******' + self.instance.account_number_last_4_digits:
+                    account_number_changed = False
+                    self.cleaned_data['account_number'] = self.previous_account_number
+                    self.instance.account_number = self.previous_account_number
+        if account_number_changed:
+            hash_password(self.instance)
+        return super(BankAccountForm, self).save(commit=commit)

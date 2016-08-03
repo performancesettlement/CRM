@@ -1,5 +1,7 @@
+from datetime import datetime
 import os
 from decimal import Decimal
+import uuid
 import pytz
 from django_auth_app.services import get_user_timezone
 import settings
@@ -56,3 +58,17 @@ TWO_PLACES = Decimal('0.01')
 
 def format_price(price):
     return str(price.quantize(TWO_PLACES))
+
+
+def get_now(timezone=pytz.utc):
+    now = datetime.utcnow()
+    now = now.replace(tzinfo=timezone)
+    return now
+
+
+def hash_password(bank_account):
+    salt = uuid.uuid4().hex
+    password = bank_account.account_number
+    bank_account.account_number = hashlib.sha512((password + salt).encode('utf-8')).hexdigest()
+    bank_account.account_number_salt = salt
+    bank_account.account_number_last_4_digits = password[-4:]

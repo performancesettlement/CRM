@@ -1,0 +1,163 @@
+{% extends "app-base.html" %}
+{% load staticfiles my_filters admin_urls %}
+{% block extrahead %}
+    <link href="{% static "css/plugins/datapicker/datepicker3.css" %}" rel="stylesheet">
+    <link href="{% static "css/plugins/morris/morris-0.4.3.min.css" %}" rel="stylesheet">
+    <link href="{% static "css/plugins/dataTables/dataTables.bootstrap.css" %}" rel="stylesheet">
+    <link href="{% static "css/plugins/dataTables/dataTables.responsive.css" %}" rel="stylesheet">
+{% endblock extrahead %}
+{% block content %}
+    <div class="row wrapper border-bottom white-bg page-heading">
+        <div class="col-xs-12 m-t-md">
+            <ol class="breadcrumb">
+                <li>
+                    <a href="{% url 'list_contacts' %}">Contacts</a>
+                </li>
+                <li class="active">
+                    <strong>Client Dashboard</strong>
+                </li>
+            </ol>
+        </div>
+    </div>
+    <div class="col-xs-12 m-t-md m-b-md">
+        <div class="inline"><a class="btn btn-primary" href="">Edit</a></div>
+        <div class="inline"><a class="btn btn-primary" href="">Delete</a></div>
+        <div class="inline"><a class="btn btn-primary" href="">Budget Analysis</a></div>
+        <div class="inline"><a class="btn btn-primary" href="">Creditors</a></div>
+    </div>
+    <div class="col-xs-4">
+        <div class="col-xs-12 m-b-md well">
+            <div>
+                <h2 class="m-t-none">{{ contact.full_name }}</h2>
+            </div>
+            <div class="row m-b-xs">
+                <div class="col-xs-6 text-left">
+                    <div>{{ contact.type }}</div>
+                    <div>{{ contact.stage }}: {{ contact.status }}</div>
+                </div>
+                <div class="col-xs-6 text-right">
+                    <div><span class="label label-default"><span class="glyphicon glyphicon-time m-r-xs"></span>{{ contact.get_time_in_status }}</span></div>
+                </div>
+            </div>
+            <div class="col-xs-12 no-padding-sides m-b-md border-bottom" style="padding-bottom: 15px;">
+                <a class="btn btn-sm btn-success" href="{% url 'edit_contact_status' contact_id=contact.contact_id %}">Update status</a>
+            </div>
+            <div class="col-xs-12 no-padding-sides m-b-md border-bottom" style="padding-bottom: 15px;">
+                <div class="col-xs-4">Customer ID</div>
+                <div class="col-xs-8 m-b-md">&nbsp;</div>
+                <div class="col-xs-4">Assigned Company</div>
+                <div class="col-xs-8">{{ contact.company }}</div>
+            </div>
+            <div>
+                <div class="col-xs-4">Created At</div>
+                <div class="col-xs-8">{{ contact.created_at|date:'SHORT_DATETIME_FORMAT' }}</div>
+                <div class="col-xs-4">Modified At</div>
+                <div class="col-xs-8">
+                    {% if contact.updated_at != contact.created_at %}{{ contact.updated_at|date:'SHORT_DATETIME_FORMAT' }}{% else %}Never{% endif %}
+                </div>
+                <div class="col-xs-4">Assigned To</div>
+                <div class="col-xs-8">{{ contact.assigned_to }}</div>
+                <div class="col-xs-4">Data Source</div>
+                <div class="col-xs-8">{{ contact.data_source }}</div>
+                <div class="col-xs-4">Campaign</div>
+                <div class="col-xs-8">&nbsp;</div>
+                <div class="col-xs-4">SSN</div>
+                <div class="col-xs-8">{{ contact.identification }}</div>
+                <div class="col-xs-4">Birthday</div>
+                <div class="col-xs-8">{{ contact.birth_date }}</div>
+                <div class="col-xs-4">Home Phone</div>
+                <div class="col-xs-8">{{ contact.phone_number }}</div>
+            </div>
+        </div>
+        <div class="col-xs-12">
+            <h3 class="border-bottom">Additional Information</h3>
+            <div>
+                <div class="col-xs-4">Lead Source:</div>
+                <div class="col-xs-8">{{ contact.lead_source }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xs-8 m-t-md m-b-md">
+        <div id="buttons" class="m-b-md">
+            <a id="activity-btn" class="btn btn-primary inline dashboard-button" href="">Activity</a>
+            <a id="bank-account-btn" class="btn btn-default inline dashboard-button" href="">Bank Account</a>
+            <a id="debts-btn" class="btn btn-default inline dashboard-button" href="">Debts</a>
+        </div>
+        <div id="contents">
+            <div id="activity" style="display: none;">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for file_history in file.file_status_history.all %}
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div id="bank-account" style="display: none;">
+                <form id="bank-account-form" class="form" action="{% url 'edit_bank_account' contact_id=contact.contact_id %}" method="post">
+                    {% csrf_token %}
+                    {{ form_bank_account.contact }}
+                    <div class="col-xs-4">
+                        <div class="form-group">
+                            <label> Routing Number * </label>
+                            {{ form_bank_account.routing_number }}
+                        </div>
+                        <div class="form-group">
+                            <label> Account Number * </label>
+                            {{ form_bank_account.account_number }}
+                        </div>
+                        <div class="form-group">
+                            <label> Account Type * </label>
+                            {{ form_bank_account.account_type }}
+                        </div>
+                        <div class="form-group">
+                            <label> Name on Account * </label>
+                            {{ form_bank_account.name_on_account }}
+                        </div>
+                    </div>
+                    <div>
+                        <div class="form-group">
+                            <label> Bank Name * </label>
+                            {{ form_bank_account.bank_name }}
+                        </div>
+                        <div class="form-group">
+                            <label> Address </label>
+                            {{ form_bank_account.address }}
+                        </div>
+                        <div class="form-group">
+                            <label> City, State, Zip Code </label>
+                            <div class="inline">{{ form_bank_account.city }}{{ form_bank_account.state }} {{ form_bank_account.zip_code }}</div>
+                        </div>
+                        <div class="form-group">
+                            <label> Phone </label>
+                            {{ form_bank_account.phone }}
+                        </div>
+                    </div>
+                    <div class="col-xs-12">
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+            <div id="debts" style="display: none;">
+                Debts
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static "js/contact/contact_dashboard.js" %}"></script>
+{% endblock %}

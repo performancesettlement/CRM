@@ -22,11 +22,11 @@ from django.contrib.auth.models import Permission
 from haystack.generic_views import SearchView
 from sundog.decorators import bypass_impersonation_login_required
 from sundog.forms import FileCustomForm, FileSearchForm, ContactForm, ImpersonateUserForm, StageForm, StatusForm, \
-    CampaignForm, SourceForm, ContactStatusForm
+    CampaignForm, SourceForm, ContactStatusForm, BankAccountForm
 from datetime import datetime
 from sundog.messages import MESSAGE_REQUEST_FAILED_CODE, CODES_TO_MESSAGE
 from sundog.models import MyFile, Message, Document, FileStatusHistory, Contact, Stage, STAGE_TYPE_CHOICES, Status, \
-    Campaign
+    Campaign, BankAccount
 from sundog.services import reorder_stages, reorder_status
 
 logger = logging.getLogger(__name__)
@@ -228,6 +228,26 @@ def list_contacts(request):
         'menu_page': 'contacts'
     }
     template_path = 'contact/contact_list.html'
+    return _render_response(request, context_info, template_path)
+
+
+@login_required
+def contact_dashboard(request, contact_id):
+    contact = Contact.objects.filter(contact_id=contact_id)
+    contact = contact[0] if contact else None
+    bank_account = contact.bank_account.all() if contact else None
+    bank_account = bank_account[0] if bank_account else None
+    form_bank_account = BankAccountForm(instance=bank_account)
+    form_bank_account.fields['contact'].initial = contact
+
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'contact': contact,
+        'form_bank_account': form_bank_account,
+        'menu_page': 'contacts',
+    }
+    template_path = 'contact/contact_dashboard.html'
     return _render_response(request, context_info, template_path)
 
 
@@ -581,6 +601,33 @@ def get_stage_statuses(request):
         stage_id = request.POST['stage_id']
         statuses = [{'id': status.status_id, 'name': status.name} for status in list(Status.objects.filter(stage__stage_id=stage_id))]
         return JsonResponse({'statuses': statuses})
+
+
+@login_required
+def edit_bank_account(request, contact_id):
+    if request.method == 'POST' and request.POST:
+        contact = Contact.objects.get(contact_id=contact_id)
+        bank_account = contact.bank_account.all() if contact else None
+        bank_account = bank_account[0] if bank_account else None
+        if bank_account:
+            form = BankAccountForm(request.POST, instance=bank_account)
+        else:
+            form = BankAccountForm(request.POST)
+        if form.is_valid():
+            form.save()
+            response_data = 'Ok'
+            response = {'result': response_data}
+        else:
+            form_errors = []
+            for field in form:
+                if field.errors:
+                    for field_error in field.errors:
+                        error = strip_tags(field.html_name.replace("_", " ").title()) + ": " + field_error
+                        form_errors.append(error)
+            for non_field_error in form.non_field_errors():
+                form_errors.append(non_field_error)
+            response = {'errors': form_errors}
+        return JsonResponse(response)
 
 
 @login_required

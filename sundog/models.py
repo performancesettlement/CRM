@@ -1,14 +1,16 @@
 import hashlib
+import uuid
 from colorfield.fields import ColorField
 from colorful.fields import RGBColorField
 from decimal import Decimal
 from django.db import models
+import pytz
 from wagtail.wagtailcore.models import Page
 from wagtail.wagtailcore.fields import RichTextField
 from wagtail.wagtailadmin.edit_handlers import FieldPanel
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
-from sundog.utils import document_directory_path, format_price
+from sundog.utils import document_directory_path, format_price, get_now
 import logging
 from sundog import constants
 from datetime import datetime
@@ -170,6 +172,7 @@ THEME_CHOICES = (
 
 
 class Company(models.Model):
+    company_id = models.AutoField(primary_key=True)
     active = models.BooleanField(default=False)
     company_type = models.CharField(choices=COMPANY_TYPE_CHOICES, max_length=100, blank=True, null=True)
     parent_company = models.ForeignKey('self', null=True)
@@ -344,9 +347,30 @@ class Contact(models.Model):
         full_name += (", " if full_name and self.first_name else "") + \
                      (self.first_name if self.first_name.strip() else "")
         self.full_name = full_name
+        for stage_type in STAGE_TYPE_CHOICES:
+            if stage_type == STAGE_TYPE_CHOICES[0]:
+                self.type = stage_type[1]
+                break
 
     def __str__(self):
         return '%s' % self.first_name
+
+    def get_time_in_status(self):
+        time_in_status = 'N/A'
+        if self.last_status_change:
+            seconds = (get_now() - self.last_status_change).total_seconds()
+            days, seconds = divmod(seconds, 86400)
+            hours, seconds = divmod(seconds, 3600)
+            minutes, seconds = divmod(seconds, 60)
+            if days > 0:
+                time_in_status = 'Days %d' % days
+            elif hours > 0:
+                time_in_status = 'Hours %d' % hours
+            elif minutes > 0:
+                time_in_status = 'Minutes %d' % minutes
+            else:
+                time_in_status = 'Seconds %d' % seconds
+        return time_in_status
 
     def save(self, *args, **kwargs):
         if self.contact_id is not None:
@@ -360,6 +384,140 @@ class Contact(models.Model):
         super(Contact, self).save(*args, **kwargs)
 
 
+ACCOUNT_TYPE_CHOICES = (
+    (None, '--Select--'),
+    ('checking', 'Checking'),
+    ('savings', 'Savings'),
+)
+
+
+class BankAccount(models.Model):
+    bank_account_id = models.AutoField(primary_key=True)
+    contact = models.ForeignKey(Contact, related_name='bank_account', blank=True, null=True)
+    routing_number = models.CharField(max_length=20)
+    account_number = models.CharField(max_length=128)
+    account_number_salt = models.CharField(max_length=32)
+    account_number_last_4_digits = models.CharField(max_length=4)
+    account_type = models.CharField(max_length=10, choices=ACCOUNT_TYPE_CHOICES)
+    name_on_account = models.CharField(max_length=20)
+    bank_name = models.CharField(max_length=100)
+    address = models.CharField(max_length=100, blank=True, null=True)
+    city = models.CharField(max_length=20, blank=True, null=True)
+    state = models.CharField(max_length=4, choices=enums.US_STATES, blank=True, null=True)
+    zip_code = models.CharField(max_length=10, blank=True, null=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+
+
+ACTIVITY_TYPE_CHOICES = (
+    ('general', 'General'),
+    ('re_assign', 'Re-Assign'),
+    ('bank', 'Bank'),
+    ('enrollment', 'Enrollment'),
+    ('status', 'Status'),
+    ('docs', 'Docs'),
+    ('debts', 'Debts'),
+    ('budget', 'Savings'),
+    ('call', 'Call'),
+    ('note', 'Note'),
+    ('email', 'Email'),
+)
+
+
+class Activity(models.Model):
+    activity_id = models.AutoField(primary_key=True)
+    contact = models.ForeignKey(Contact, related_name='activities', blank=True, null=True)
+    type = models.CharField(max_length=20, choices=ACTIVITY_TYPE_CHOICES)
+    description = models.CharField(max_length=300)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    created_by = models.ForeignKey(User, blank=True, null=True)
+
+
+CALL_TYPE_CHOICES = (
+    ('incoming', 'Incoming'),
+    ('outgoing', 'Outgoing'),
+)
+
+CALL_EVENT_TYPE_CHOICES = (
+    (None, '--Select--'),
+    ('incoming', 'Incoming'),
+    ('outgoing', 'Outgoing'),
+)
+
+CALL_RESULT_TYPE_CHOICES = (
+    (None, '--Select--'),
+    ('already_in_program', 'Already In Program'),
+    ('busy', 'Busy'),
+    ('connected', 'Connected'),
+    ('disconnected', 'Disconnected'),
+    ('do_not_contact', 'Do Not Contact'),
+    ('hung_up', 'Hung Up'),
+    ('left_message', 'Left Message'),
+    ('no_answer', 'No Answer'),
+    ('wrong_answer', 'Wrong Number'),
+)
+
+
+class Call(models.Model):
+    call_id = models.AutoField(primary_key=True)
+    contact = models.ForeignKey(Contact, related_name='activities', blank=True, null=True)
+    type = models.CharField(max_length=20, choices=CALL_TYPE_CHOICES)
+    description = models.CharField(max_length=300, blank=True, null=True)
+    duration = models.CharField(max_length=10, blank=True, null=True)
+    phone_from = models.CharField(max_length=10, blank=True, null=True)
+    phone_to = models.CharField(max_length=10, blank=True, null=True)
+    event_type = models.CharField(max_length=10, choices=CALL_TYPE_CHOICES, blank=True, null=True)
+    result = models.CharField(max_length=20, choices=CALL_RESULT_TYPE_CHOICES, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    created_by = models.ForeignKey(User, blank=True, null=True)
+
+
+class Email(models.Model):
+    email_id = models.AutoField(primary_key=True)
+    contact = models.ForeignKey(Contact, related_name='activities', blank=True, null=True)
+    template = models.CharField(max_length=20, blank=True, null=True)
+    message = models.CharField(max_length=5000, blank=True, null=True)
+    email_from = models.CharField(max_length=300, blank=True, null=True)
+    emails_to = models.CharField(max_length=300, blank=True, null=True)
+    subject = models.CharField(max_length=1000, blank=True, null=True)
+    cc = models.CharField(max_length=300, blank=True, null=True)
+    attachment = models.CharField(max_length=300, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    created_by = models.ForeignKey(User, blank=True, null=True)
+
+
+NOTE_TYPE_CHOICES = (
+    'Client Communication',
+    'Cancellation',
+    'Draft Change',
+    'Settlement Reached',
+    'Authorization Obtained',
+    'File Note',
+    'Negotiations',
+    'Settlement Complete',
+    'NSF Attempt',
+    'Authorization Attempt',
+    'Debt Change',
+    'Welcome Call Attempt',
+    'Underwriting',
+    'Letter Mailed To Client',
+    'Settlement Processing',
+    'Harassment Protection Service',
+    'Welcome Call Complete',
+)
+
+
+class Note(models.Model):
+    note_id = models.AutoField(primary_key=True)
+    contact = models.ForeignKey(Contact, related_name='notes', blank=True, null=True)
+    type = models.CharField(max_length=20, choices=NOTE_TYPE_CHOICES)
+    description = models.CharField(max_length=300, blank=True, null=True)
+    cc = models.CharField(max_length=1000, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    created_by = models.ForeignKey(User, blank=True, null=True)
+
+    
 class Source(models.Model):
     source_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100, unique=True)
