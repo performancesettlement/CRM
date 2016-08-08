@@ -78,5 +78,19 @@ $(document).ready(function() {
         });
     });
 
+    $('.submit').click(function() {
+        var formSelector = '#' + $(this).attr('id').replace('submit', 'form');
+        var form = $(formSelector);
+        var formData = form.serializeArray();
+        $.post(form.attr('action'), formData, function(response) {
+            if (response.errors) {
+                showErrorPopup(response.errors);
+            }
+            if (response.result) {
+                refreshScreen();
+            }
+        });
+    });
+
     showContents();
 });

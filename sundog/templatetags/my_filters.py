@@ -125,3 +125,8 @@ def minus(value, arg):
 def get_sort_class(sort, label):
     return sort['class'] if sort['name'] == label else 'sorting'
 
+
+@register.filter()
+def cut_string_at(text, max=100):
+    cut_text = text[:100] + '...' if len(text) > max else text
+    return cut_text

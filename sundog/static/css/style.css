@@ -3285,6 +3285,9 @@ a:focus {
 .border-top {
   border-top: 1px solid #e7eaec !important;
 }
+.border {
+    border: 1px solid #e7eaec !important;
+}
 .font-bold {
   font-weight: 600;
 }
@@ -8160,4 +8163,8 @@ tr {
 .no-padding-sides {
     padding-left: 0;
     padding-right: 0;
+}
+
+.activity-row {
+    background-color: lightgrey;
 }

@@ -4,7 +4,7 @@ from colorfield.fields import ColorWidget
 from django import forms
 from django.contrib.auth.models import User
 from sundog.models import MyFile, FileStatus, Contact, Tag, ClientType, Stage, Status, STAGE_TYPE_CHOICES, \
-    DEBT_SETTLEMENT, Campaign, Source, BankAccount
+    DEBT_SETTLEMENT, Campaign, Source, BankAccount, Note, Call
 from sundog import services
 from haystack.forms import SearchForm
 from sundog.constants import RADIO_FILTER_CHOICES, SHORT_DATE_FORMAT
@@ -181,15 +181,14 @@ class ContactStatusForm(forms.ModelForm):
         self.fields['stage'].empty_label = EMPTY_LABEL
         self.fields['status'].required = True
 
-        if args and args[0] and 'stage' in args[0]:
+        if 'instance' in kwargs and kwargs['instance']:
+            instance = kwargs['instance']
+            self.fields['status'].queryset = Status.objects.filter(stage=instance.stage)
+        elif args and args[0] and 'stage' in args[0]:
             stage_id = args[0]['stage']
             self.fields['status'].queryset = Status.objects.filter(stage__stage_id=stage_id)
         else:
-            if 'instance' in kwargs and kwargs['instance']:
-                instance = kwargs['instance']
-                self.fields['status'].queryset = Status.objects.filter(stage=instance.stage)
-            else:
-                self.fields['status'].queryset = Status.objects.none()
+            self.fields['status'].queryset = Status.objects.none()
 
 
 class StageForm(forms.ModelForm):
@@ -272,3 +271,56 @@ class BankAccountForm(forms.ModelForm):
         if account_number_changed:
             hash_password(self.instance)
         return super(BankAccountForm, self).save(commit=commit)
+
+
+class NoteForm(forms.ModelForm):
+
+    class Meta:
+        model = Note
+        widgets = {
+            'contact': forms.HiddenInput(),
+            'created_by': forms.HiddenInput(),
+            'description': forms.Textarea(attrs={'class': 'col-xs-12 no-padding', 'rows': 6}),
+            'type': forms.Select(attrs={'class': 'col-xs-12 no-padding'}),
+            'cc': forms.TextInput(attrs={'class': 'col-xs-12 no-padding'})
+        }
+        exclude = ['created_at']
+
+    def __init__(self, contact, user, *args, **kwargs):
+        super(NoteForm, self).__init__(*args, **kwargs)
+        self.fields['contact'].initial = contact
+        self.fields['created_by'].initial = user
+
+
+class CallForm(forms.ModelForm):
+    minutes = forms.CharField(widget=forms.TextInput(attrs={'type': 'number', 'style': 'width: 70px;'}))
+    seconds = forms.CharField(widget=forms.TextInput(attrs={'type': 'number', 'style': 'width: 70px;'}))
+    contact_status = forms.ModelChoiceField(queryset=Status.objects.none())
+
+    class Meta:
+        model = Call
+        widgets = {
+            'contact': forms.HiddenInput(),
+            'created_by': forms.HiddenInput(),
+            'description': forms.Textarea(attrs={'class': 'col-xs-12 no-padding', 'rows': 6})
+        }
+        exclude = ['created_at']
+
+    def __init__(self, contact, user, *args, **kwargs):
+        super(CallForm, self).__init__(*args, **kwargs)
+        self.fields['contact'].initial = contact
+        self.fields['created_by'].initial = user
+        self.fields['type'].initial = 'outgoing'
+        self.fields['type'].empty_label = None
+        self.fields['contact_status'].empty_label = None
+        if contact.stage:
+            self.fields['contact_status'].queryset = Status.objects.filter(stage=contact.stage)
+        if contact.status:
+            self.fields['contact_status'].initial = contact.status
+
+    def save(self, commit=True):
+        minutes = self.cleaned_data.pop('minutes')
+        seconds = self.cleaned_data.pop('seconds')
+        self.cleaned_data['duration'] = (minutes + ':' if minutes else '') + \
+                                        ('0' if not seconds and minutes else seconds)
+        return super(CallForm, self).save(commit=commit)

@@ -1,0 +1,32 @@
+<div class="modal fade" id="add-note" tabindex="-1" role="dialog" aria-labelledby="add-note-label">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">Add Note</h4>
+            </div>
+            <div class="row modal-body">
+                <form id="add-note-form" class="form" action="{% url 'add_note' contact_id=contact.contact_id %}" method="post">
+                    {% csrf_token %}
+                    {{ form_note.contact }}
+                    {{ form_note.created_by }}
+                    <div class="col-xs-12 form-group m-b-xs no-padding">
+                        <label> Type: </label>
+                        {{ form_note.type }}
+                    </div>
+                    <div class="col-xs-12 form-group m-b-xs no-padding">
+                        {{ form_note.description }}
+                    </div>
+                    <div class="col-xs-12 form-group m-b-xs no-padding">
+                        <label> CC Emails: </label>
+                        {{ form_note.cc }}
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="add-note-submit" type="button" class="btn btn-primary submit">Add</button>
+            </div>
+        </div>
+    </div>
+</div>

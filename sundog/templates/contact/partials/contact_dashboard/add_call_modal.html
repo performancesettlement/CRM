@@ -1,0 +1,45 @@
+<div class="modal fade" id="add-call" tabindex="-1" role="dialog" aria-labelledby="add-call-label">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="add-call-label">Log Call Activity for {{ contact.full_name }}</h4>
+            </div>
+            <div class="row modal-body">
+                <form id="add-call-form" class="form" action="{% url 'add_call' contact_id=contact.contact_id %}" method="post">
+                    {% csrf_token %}
+                    {{ form_call.contact }}
+                    {{ form_call.created_by }}
+                    <div class="col-xs-6 form-group m-b-xs no-padding">
+                        <label> Type: </label>
+                        {{ form_call.type }}
+                    </div>
+                    <div class="col-xs-6 form-group m-b-xs no-padding">
+                        <label> Result: </label>
+                        {{ form_call.result }}
+                    </div>
+                    <div class="col-xs-12 form-group m-b-xs no-padding">
+                        <label> Duration: </label>
+                        {{ form_call.minutes }}:{{ form_call.seconds }}
+                    </div>
+                    <div class="col-xs-12 form-group m-b-xs no-padding">
+                        <label> Notes about this call: </label>
+                        {{ form_call.description }}
+                    </div>
+                    <div class="col-xs-12 form-group m-b-xs no-padding">
+                        <label> Event Type: </label>
+                        {{ form_call.event_type }}
+                    </div>
+                    <div class="col-xs-12 form-group m-b-xs no-padding">
+                        <label> Update Client Status: </label>
+                        {{ form_call.contact_status }}
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="add-call-submit" type="button" class="btn btn-primary submit">Add</button>
+            </div>
+        </div>
+    </div>
+</div>

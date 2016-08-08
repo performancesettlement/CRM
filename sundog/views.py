@@ -22,11 +22,11 @@ from django.contrib.auth.models import Permission
 from haystack.generic_views import SearchView
 from sundog.decorators import bypass_impersonation_login_required
 from sundog.forms import FileCustomForm, FileSearchForm, ContactForm, ImpersonateUserForm, StageForm, StatusForm, \
-    CampaignForm, SourceForm, ContactStatusForm, BankAccountForm
+    CampaignForm, SourceForm, ContactStatusForm, BankAccountForm, NoteForm, CallForm
 from datetime import datetime
 from sundog.messages import MESSAGE_REQUEST_FAILED_CODE, CODES_TO_MESSAGE
 from sundog.models import MyFile, Message, Document, FileStatusHistory, Contact, Stage, STAGE_TYPE_CHOICES, Status, \
-    Campaign, BankAccount
+    Campaign, BankAccount, Activity
 from sundog.services import reorder_stages, reorder_status
 
 logger = logging.getLogger(__name__)
@@ -239,16 +239,70 @@ def contact_dashboard(request, contact_id):
     bank_account = bank_account[0] if bank_account else None
     form_bank_account = BankAccountForm(instance=bank_account)
     form_bank_account.fields['contact'].initial = contact
+    form_note = NoteForm(contact, request.user)
+    form_call = CallForm(contact, request.user)
 
+    activities = Activity.objects.filter(contact__contact_id=contact_id)
     context_info = {
         'request': request,
         'user': request.user,
         'contact': contact,
         'form_bank_account': form_bank_account,
+        'form_note': form_note,
+        'form_call': form_call,
+        'activities': activities,
         'menu_page': 'contacts',
     }
     template_path = 'contact/contact_dashboard.html'
     return _render_response(request, context_info, template_path)
+
+
+@login_required
+def add_note(request, contact_id):
+    if request.method == 'POST' and request.POST:
+        contact = Contact.objects.get(contact_id=contact_id)
+        form = NoteForm(contact, request.user, request.POST)
+        if form.is_valid():
+            form.save()
+            response_data = 'Ok'
+            response = {'result': response_data}
+        else:
+            form_errors = []
+            for field in form:
+                if field.errors:
+                    for field_error in field.errors:
+                        error = strip_tags(field.html_name.replace("_", " ").title()) + ": " + field_error
+                        form_errors.append(error)
+            for non_field_error in form.non_field_errors():
+                form_errors.append(non_field_error)
+            response = {'errors': form_errors}
+        return JsonResponse(response)
+
+
+@login_required
+def add_call(request, contact_id):
+    if request.method == 'POST' and request.POST:
+        contact = Contact.objects.get(contact_id=contact_id)
+        form = CallForm(contact, request.user, request.POST)
+        form_errors = []
+        if form.is_valid():
+            contact_status = form.cleaned_data.pop('contact_status')
+            form.save()
+            if contact_status and contact.status.status_id != contact_status.status_id:
+                status_form = ContactStatusForm({'contact_id': contact_id, 'status': contact_status.status_id, 'stage': contact_status.stage.stage_id}, instance=contact)
+                status_form.save()
+            response_data = 'Ok'
+            response = {'result': response_data}
+        else:
+            for field in form:
+                if field.errors:
+                    for field_error in field.errors:
+                        error = strip_tags(field.html_name.replace("_", " ").title()) + ": " + field_error
+                        form_errors.append(error)
+            for non_field_error in form.non_field_errors():
+                form_errors.append(non_field_error)
+            response = {'errors': form_errors}
+        return JsonResponse(response)
 
 
 @login_required

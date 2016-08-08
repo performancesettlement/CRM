@@ -4,6 +4,8 @@ from colorfield.fields import ColorField
 from colorful.fields import RGBColorField
 from decimal import Decimal
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 import pytz
 from wagtail.wagtailcore.models import Page
 from wagtail.wagtailcore.fields import RichTextField
@@ -328,8 +330,8 @@ class Contact(models.Model):
     call_center_representative = models.ForeignKey(User, related_name='call_center_representative')
     lead_source = models.ForeignKey(LeadSource)
     company = models.ForeignKey(Company, null=True, blank=True)
-    stage = models.ForeignKey(Stage, blank=True, null=True)
-    status = models.ForeignKey(Status, blank=True, null=True)
+    stage = models.ForeignKey(Stage, related_name='contact', blank=True, null=True)
+    status = models.ForeignKey(Status, related_name='contact', blank=True, null=True)
     last_status_change = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
@@ -415,6 +417,8 @@ ACTIVITY_TYPE_CHOICES = (
     ('re_assign', 'Re-Assign'),
     ('bank', 'Bank'),
     ('enrollment', 'Enrollment'),
+    ('calendar', 'Calendar'),
+    ('payment', 'Payment'),
     ('status', 'Status'),
     ('docs', 'Docs'),
     ('debts', 'Debts'),
@@ -425,6 +429,23 @@ ACTIVITY_TYPE_CHOICES = (
 )
 
 
+ACTIVITY_TYPE_COLOR = {
+    'general': '#a09652',
+    're_assign': '#e2aa00',
+    'bank': '#69b980',
+    'enrollment': '#ebd200',
+    'calendar': '#a662c3',
+    'payment': '#7b7b7b',
+    'status': '#e25500',
+    'docs': '#00a3df',
+    'debts': '#135100',
+    'budget': '#218000',
+    'call': '#be0000',
+    'note': '#ba5300',
+    'email': '#63cec3',
+}
+
+
 class Activity(models.Model):
     activity_id = models.AutoField(primary_key=True)
     contact = models.ForeignKey(Contact, related_name='activities', blank=True, null=True)
@@ -433,16 +454,24 @@ class Activity(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     created_by = models.ForeignKey(User, blank=True, null=True)
 
+    def get_type(self):
+        for activity_type in ACTIVITY_TYPE_CHOICES:
+            if activity_type[0] == self.type:
+                return activity_type[1]
+
+    def get_color(self):
+        return ACTIVITY_TYPE_COLOR[self.type]
+
 
 CALL_TYPE_CHOICES = (
-    ('incoming', 'Incoming'),
     ('outgoing', 'Outgoing'),
+    ('incoming', 'Incoming'),
 )
 
 CALL_EVENT_TYPE_CHOICES = (
     (None, '--Select--'),
-    ('incoming', 'Incoming'),
-    ('outgoing', 'Outgoing'),
+    ('ppr', 'PPR'),
+    ('welcome_call', 'Welcome Call'),
 )
 
 CALL_RESULT_TYPE_CHOICES = (
@@ -461,21 +490,28 @@ CALL_RESULT_TYPE_CHOICES = (
 
 class Call(models.Model):
     call_id = models.AutoField(primary_key=True)
-    contact = models.ForeignKey(Contact, related_name='activities', blank=True, null=True)
+    contact = models.ForeignKey(Contact, related_name='calls', blank=True, null=True)
     type = models.CharField(max_length=20, choices=CALL_TYPE_CHOICES)
     description = models.CharField(max_length=300, blank=True, null=True)
     duration = models.CharField(max_length=10, blank=True, null=True)
     phone_from = models.CharField(max_length=10, blank=True, null=True)
     phone_to = models.CharField(max_length=10, blank=True, null=True)
-    event_type = models.CharField(max_length=10, choices=CALL_TYPE_CHOICES, blank=True, null=True)
+    event_type = models.CharField(max_length=10, choices=CALL_EVENT_TYPE_CHOICES, blank=True, null=True)
     result = models.CharField(max_length=20, choices=CALL_RESULT_TYPE_CHOICES, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     created_by = models.ForeignKey(User, blank=True, null=True)
 
 
+@receiver(post_save, sender=Call)
+def add_call_activity(sender, instance, **kwargs):
+    activity = Activity(
+        contact=instance.contact, type='call', description=instance.description, created_by=instance.created_by)
+    activity.save()
+
+
 class Email(models.Model):
     email_id = models.AutoField(primary_key=True)
-    contact = models.ForeignKey(Contact, related_name='activities', blank=True, null=True)
+    contact = models.ForeignKey(Contact, related_name='emails', blank=True, null=True)
     template = models.CharField(max_length=20, blank=True, null=True)
     message = models.CharField(max_length=5000, blank=True, null=True)
     email_from = models.CharField(max_length=300, blank=True, null=True)
@@ -484,38 +520,46 @@ class Email(models.Model):
     cc = models.CharField(max_length=300, blank=True, null=True)
     attachment = models.CharField(max_length=300, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
-    created_by = models.ForeignKey(User, blank=True, null=True)
+    created_by = models.ForeignKey(User, related_name='sent_emails', blank=True, null=True)
 
 
 NOTE_TYPE_CHOICES = (
-    'Client Communication',
-    'Cancellation',
-    'Draft Change',
-    'Settlement Reached',
-    'Authorization Obtained',
-    'File Note',
-    'Negotiations',
-    'Settlement Complete',
-    'NSF Attempt',
-    'Authorization Attempt',
-    'Debt Change',
-    'Welcome Call Attempt',
-    'Underwriting',
-    'Letter Mailed To Client',
-    'Settlement Processing',
-    'Harassment Protection Service',
-    'Welcome Call Complete',
+    (None, '--Select--'),
+    ('client_communication', 'Client Communication'),
+    ('cancellation', 'Cancellation'),
+    ('draft_change', 'Draft Change'),
+    ('settlement_reached', 'Settlement Reached'),
+    ('authorization_obtained', 'Authorization Obtained'),
+    ('file_note', 'File Note'),
+    ('negotiations', 'Negotiations'),
+    ('settlement_complete', 'Settlement Complete'),
+    ('nsf_attempt', 'NSF Attempt'),
+    ('authorization_attempt', 'Authorization Attempt'),
+    ('debt_change', 'Debt Change'),
+    ('welcome_call_attempt', 'Welcome Call Attempt'),
+    ('underwriting', 'Underwriting'),
+    ('letter_mailed_to_client', 'Letter Mailed To Client'),
+    ('settlement_processing', 'Settlement Processing'),
+    ('harassment_protection_service', 'Harassment Protection Service'),
+    ('welcome_call_complete', 'Welcome Call Complete'),
 )
 
 
 class Note(models.Model):
     note_id = models.AutoField(primary_key=True)
     contact = models.ForeignKey(Contact, related_name='notes', blank=True, null=True)
-    type = models.CharField(max_length=20, choices=NOTE_TYPE_CHOICES)
-    description = models.CharField(max_length=300, blank=True, null=True)
-    cc = models.CharField(max_length=1000, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    description = models.CharField(max_length=300, blank=True, null=True)
+    type = models.CharField(max_length=20, choices=NOTE_TYPE_CHOICES)
+    cc = models.CharField(max_length=1000, blank=True, null=True)
     created_by = models.ForeignKey(User, blank=True, null=True)
+
+
+@receiver(post_save, sender=Note)
+def add_note_activity(sender, instance, **kwargs):
+    activity = Activity(
+        contact=instance.contact, type='note', description=instance.description, created_by=instance.created_by)
+    activity.save()
 
     
 class Source(models.Model):

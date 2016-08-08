@@ -44,7 +44,7 @@
             </div>
             <div class="col-xs-12 no-padding-sides m-b-md border-bottom" style="padding-bottom: 15px;">
                 <div class="col-xs-4">Customer ID</div>
-                <div class="col-xs-8 m-b-md">&nbsp;</div>
+                <div class="col-xs-8 m-b-md">{{ contact.contact_id }}</div>
                 <div class="col-xs-4">Assigned Company</div>
                 <div class="col-xs-8">{{ contact.company }}</div>
             </div>
@@ -56,17 +56,17 @@
                     {% if contact.updated_at != contact.created_at %}{{ contact.updated_at|date:'SHORT_DATETIME_FORMAT' }}{% else %}Never{% endif %}
                 </div>
                 <div class="col-xs-4">Assigned To</div>
-                <div class="col-xs-8">{{ contact.assigned_to }}</div>
+                <div class="col-xs-8">{% if contact.assigned_to %}{{ contact.assigned_to }}{% else %}&nbsp;{% endif %}</div>
                 <div class="col-xs-4">Data Source</div>
-                <div class="col-xs-8">{{ contact.data_source }}</div>
+                <div class="col-xs-8">&nbsp;</div>
                 <div class="col-xs-4">Campaign</div>
                 <div class="col-xs-8">&nbsp;</div>
                 <div class="col-xs-4">SSN</div>
-                <div class="col-xs-8">{{ contact.identification }}</div>
+                <div class="col-xs-8">{% if contact.identification %}{{ contact.identification }}{% else %}&nbsp;{% endif %}</div>
                 <div class="col-xs-4">Birthday</div>
-                <div class="col-xs-8">{{ contact.birth_date }}</div>
+                <div class="col-xs-8">{% if contact.birth_date %}{{ contact.birth_date }}{% else %}&nbsp;{% endif %}</div>
                 <div class="col-xs-4">Home Phone</div>
-                <div class="col-xs-8">{{ contact.phone_number }}</div>
+                <div class="col-xs-8">{% if contact.phone_number %}{{ contact.phone_number }}{% else %}&nbsp;{% endif %}</div>
             </div>
         </div>
         <div class="col-xs-12">
@@ -83,30 +83,30 @@
             <a id="bank-account-btn" class="btn btn-default inline dashboard-button" href="">Bank Account</a>
             <a id="debts-btn" class="btn btn-default inline dashboard-button" href="">Debts</a>
         </div>
-        <div id="contents">
+        <div id="contents" class="col-xs-12 no-padding border">
             <div id="activity" style="display: none;">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th></th>
-                            <th></th>
-                            <th></th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {% for file_history in file.file_status_history.all %}
-                        <tr>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+                <div class="col-xs-12">
+                    <div class="m-b-md m-t-xs">
+                        <button id="add-note-btn" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#add-note">Add Note</button>
+                        <button id="add-call-btn" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#add-call">Add Call Log</button>
+                        <button id="add-email-btn" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#add-email">Add Email</button>
+                    </div>
+                    <h3>Activity Feed</h3>
+                    <table class="col-xs-12 m-b-xs">
+                        <tbody>
+                        {% for activity in activities %}
+                            <tr class="activity-row">
+                                <td class="col-xs-2 text-right" style="background: {{ activity.get_color }}; color: white;">{{ activity.get_type }}</td>
+                                <td class="col-xs-3">
+                                    <p class="m-b-none">{{ activity.created_at|date:'SHORT_DATETIME_FORMAT' }}</p>
+                                    <p class="font-bold m-b-none">{{ activity.created_by.get_full_name }} - {{ activity.created_by.username }}</p>
+                                </td>
+                                <td class="col-xs-7">{{ activity.description|cut_string_at }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
             <div id="bank-account" style="display: none;">
                 <form id="bank-account-form" class="form" action="{% url 'edit_bank_account' contact_id=contact.contact_id %}" method="post">
@@ -155,6 +155,27 @@
             </div>
             <div id="debts" style="display: none;">
                 Debts
+            </div>
+        </div>
+    </div>
+    <div id="modals">
+        {% include "contact/partials/contact_dashboard/add_note_modal.html" %}
+        {% include "contact/partials/contact_dashboard/add_call_modal.html" %}
+        <div class="modal fade" id="add-email" tabindex="-1" role="dialog" aria-labelledby="add-email-label">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="myModalLabel">Add Email</h4>
+                    </div>
+                    <div class="modal-body">
+                        ...
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary">Add</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
