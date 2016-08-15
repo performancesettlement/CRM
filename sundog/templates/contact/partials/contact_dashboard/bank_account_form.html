@@ -1,0 +1,43 @@
+<form id="bank-account-form" class="form col-xs-12 no-padding m-t-md m-b-md" action="{% url 'edit_bank_account' contact_id=contact.contact_id %}" method="post">
+    {% csrf_token %}
+    {{ form_bank_account.contact }}
+    <div class="col-xs-4">
+        <div class="form-group">
+            <label> Routing Number * </label>
+            {{ form_bank_account.routing_number }}
+        </div>
+        <div class="form-group">
+            <label> Account Number * </label>
+            {{ form_bank_account.account_number }}
+        </div>
+        <div class="form-group">
+            <label> Account Type * </label>
+            {{ form_bank_account.account_type }}
+        </div>
+        <div class="form-group">
+            <label> Name on Account * </label>
+            {{ form_bank_account.name_on_account }}
+        </div>
+    </div>
+    <div class="col-xs-8">
+        <div class="form-group">
+            <label> Bank Name * </label>
+            {{ form_bank_account.bank_name }}
+        </div>
+        <div class="form-group">
+            <label> Address </label>
+            {{ form_bank_account.address }}
+        </div>
+        <div class="form-group">
+            <label> City, State, Zip Code </label>
+            <div class="inline">{{ form_bank_account.city }}{{ form_bank_account.state }} {{ form_bank_account.zip_code }}</div>
+        </div>
+        <div class="form-group">
+            <label> Phone </label>
+            {{ form_bank_account.phone }}
+        </div>
+    </div>
+    <div class="col-xs-12">
+        <button type="submit" class="btn btn-primary">Save</button>
+    </div>
+</form>

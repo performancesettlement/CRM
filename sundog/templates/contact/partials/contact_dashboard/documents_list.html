@@ -1,0 +1,97 @@
+{% load my_filters %}
+<div class="col-xs-12 m-b-md border-bottom" style="padding-top: 10px; padding-bottom: 10px;">
+    <div class="pull-left">
+        <h3 style="margin-top: 8px;">Client Documents</h3>
+    </div>
+    <div class="pull-right inline">
+        <a href="" class="btn btn-primary inline m-r-xs">Generated PDF</a>
+        <a href="" class="btn btn-primary inline" data-toggle="modal" data-target="#upload-file">Upload Files</a>
+    </div>
+</div>
+<div class="col-xs-12 m-b-md border-bottom" style="margin-top: 10px; margin-bottom: 10px;">
+    <h3 class="m-b-md">Generated PDF Docs</h3>
+    <table class="table table-hover dataTable no-footer">
+        <thead>
+        <tr>
+            <td class="sorting">Document Title</td>
+            <td class="sorting">Created At</td>
+            <td class="sorting">Created By</td>
+            <td></td>
+        </tr>
+        </thead>
+        <tbody>
+        {% for doc in generated_docs %}
+            <tr>
+                <td>{{ doc.title }}</td>
+                <td>{{ doc.created_at|date:'SHORT_DATETIME_FORMAT' }}</td>
+                <td>{{ doc.created_by.full_name }}</td>
+                <td>
+                    <a href="" class="generated-doc-view"><span title="View" class="glyphicon glyphicon-zoom-in"></span></a>
+                    <a href="" class="generated-doc-download"><span title="Download" class="glyphicon glyphicon-download"></span></a>
+                    <a href="" class="generated-doc-delete"><span title="Delete" class="glyphicon glyphicon-trash"></span></a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div class="col-xs-12 m-b-md border-bottom" style="margin-top: 10px; margin-bottom: 10px;">
+    <h3 class="m-b-md">E-Sign Docs</h3>
+    <table class="table table-hover dataTable no-footer">
+        <thead>
+        <tr>
+            <td class="sorting">Sent At</td>
+            <td class="sorting">Sent By</td>
+            <td class="sorting">Doc Title</td>
+            <td class="sorting"># Signers</td>
+            <td class="sorting">Status</td>
+            <td></td>
+        </tr>
+        </thead>
+        <tbody>
+        {% for doc in e_signed_docs %}
+            <tr>
+                <td>{{ doc.uploaded_by.sent_at|date:'SHORT_DATETIME_FORMAT' }}</td>
+                <td>{{ doc.uploaded_by.sent_by.get_full_name }}</td>
+                <td>{{ doc.uploaded_by.title }}</td>
+                <td>{{ doc.uploaded_by.signers.all|length }}</td>
+                <td>{{ doc.uploaded_by.status_label }}</td>
+                <td>
+                    <a href="" class="e-signed-doc-info"><span title="View" class="glyphicon glyphicon-info-sign"></span></a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div class="col-xs-12" style="margin-top: 10px; margin-bottom: 10px;">
+    <h3 class="m-b-md">Uploaded Files</h3>
+    <table class="table table-hover dataTable no-footer">
+        <thead>
+        <tr>
+            <td class="sorting">Uploaded At</td>
+            <td class="sorting">Uploaded By</td>
+            <td class="sorting">Doc Type</td>
+            <td class="sorting">File Name</td>
+            <td class="sorting">Description</td>
+            <td></td>
+        </tr>
+        </thead>
+        <tbody>
+        {% for doc in uploaded_docs %}
+            <tr>
+                <td>{{ doc.created_at|date:'SHORT_DATETIME_FORMAT' }}</td>
+                <td>{{ doc.created_by.get_full_name }}</td>
+                <td>{{ doc.type_label }}</td>
+                <td>{{ doc.name }}</td>
+                <td>{{ doc.description }}</td>
+                <td>
+                    <a href="" class="uploaded-doc-view"><span title="View" class="glyphicon glyphicon-zoom-in"></span></a>
+                    <a href="" class="uploaded-doc-download"><span title="Download" class="glyphicon glyphicon-download"></span></a>
+                    <a href="" class="uploaded-doc-delete"><span title="Delete" class="glyphicon glyphicon-trash"></span></a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>

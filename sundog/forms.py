@@ -1,10 +1,8 @@
-import copy
-import colorfield
-from colorfield.fields import ColorWidget
 from django import forms
 from django.contrib.auth.models import User
-from sundog.models import MyFile, FileStatus, Contact, Tag, ClientType, Stage, Status, STAGE_TYPE_CHOICES, \
-    DEBT_SETTLEMENT, Campaign, Source, BankAccount, Note, Call
+from django.core.validators import validate_email
+from sundog.models import MyFile, FileStatus, Contact, Tag, Stage, Status, Campaign, Source, BankAccount, Note, Call,\
+    Email, DEBT_SETTLEMENT, Uploaded
 from sundog import services
 from haystack.forms import SearchForm
 from sundog.constants import RADIO_FILTER_CHOICES, SHORT_DATE_FORMAT
@@ -324,3 +322,60 @@ class CallForm(forms.ModelForm):
         self.cleaned_data['duration'] = (minutes + ':' if minutes else '') + \
                                         ('0' if not seconds and minutes else seconds)
         return super(CallForm, self).save(commit=commit)
+
+
+class MultiEmailField(forms.Field):
+    def to_python(self, value):
+        if not value:
+            return []
+        return value.split(',')
+
+    def validate(self, value):
+        super(MultiEmailField, self).validate(value)
+        for email in value:
+            validate_email(email)
+
+
+class EmailForm(forms.ModelForm):
+    file_upload = forms.FileField(required=False)
+    emails_to = MultiEmailField(widget=forms.TextInput(attrs={'class': 'col-xs-12 no-padding'}))
+    cc = MultiEmailField(required=False, widget=forms.TextInput(attrs={'class': 'col-xs-12 no-padding'}))
+
+    class Meta:
+        model = Email
+        widgets = {
+            'contact': forms.HiddenInput(),
+            'email_from': forms.EmailInput(attrs={'class': 'col-xs-6 no-padding'}),
+            'message': forms.Textarea(attrs={'class': 'col-xs-12 no-padding', 'id': 'message'}),
+            'subject': forms.TextInput(attrs={'class': 'col-xs-12 no-padding'}),
+        }
+        exclude = ['created_at']
+
+    def __init__(self, contact, user, *args, **kwargs):
+        super(EmailForm, self).__init__(*args, **kwargs)
+        self.fields['contact'].initial = contact
+        self.fields['created_by'].initial = user
+
+    def clean_emails_to(self):
+        data = self.cleaned_data['emails_to']
+        data = ','.join(data)
+        return data
+
+
+class UploadedForm(forms.ModelForm):
+    class Meta:
+        model = Uploaded
+        widgets = {
+            'contact': forms.HiddenInput(),
+            'created_by': forms.HiddenInput(),
+            'name': forms.HiddenInput(),
+            'description': forms.Textarea(attrs={'class': 'col-xs-12 no-padding',
+                                                 'style': 'max-width: 566px;min-height: 200px'}),
+            'content': forms.FileInput(attrs={'style': 'padding-left: 3px;'}),
+        }
+        exclude = ['created_at']
+
+    def __init__(self, contact, user, *args, **kwargs):
+        super(UploadedForm, self).__init__(*args, **kwargs)
+        self.fields['contact'].initial = contact
+        self.fields['created_by'].initial = user

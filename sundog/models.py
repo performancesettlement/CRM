@@ -6,6 +6,7 @@ from decimal import Decimal
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from multi_email_field.fields import MultiEmailField
 import pytz
 from wagtail.wagtailcore.models import Page
 from wagtail.wagtailcore.fields import RichTextField
@@ -509,12 +510,18 @@ def add_call_activity(sender, instance, **kwargs):
     activity.save()
 
 
+EMAIL_TYPE_CHOICES = (
+    ('manual', 'Manual'),
+    ('automated', 'Automated'),
+)
+
+
 class Email(models.Model):
     email_id = models.AutoField(primary_key=True)
     contact = models.ForeignKey(Contact, related_name='emails', blank=True, null=True)
-    template = models.CharField(max_length=20, blank=True, null=True)
-    message = models.CharField(max_length=5000, blank=True, null=True)
-    email_from = models.CharField(max_length=300, blank=True, null=True)
+    message = models.CharField(max_length=10000, blank=True, null=True)
+    type = models.CharField(max_length=10, choices=EMAIL_TYPE_CHOICES, blank=True, null=True)
+    email_from = models.EmailField(max_length=300, blank=True, null=True)
     emails_to = models.CharField(max_length=300, blank=True, null=True)
     subject = models.CharField(max_length=1000, blank=True, null=True)
     cc = models.CharField(max_length=300, blank=True, null=True)
@@ -560,6 +567,104 @@ def add_note_activity(sender, instance, **kwargs):
     activity = Activity(
         contact=instance.contact, type='note', description=instance.description, created_by=instance.created_by)
     activity.save()
+
+
+class Generated(models.Model):
+    generated_id = models.AutoField(primary_key=True)
+    contact = models.ForeignKey(Contact, related_name='generated_docs', blank=True, null=True)
+    title = models.CharField(max_length=300)
+    content = models.FileField(upload_to='/generated')
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    created_by = models.ForeignKey(User, related_name='generated_files', blank=True, null=True)
+
+
+E_SIGNED_STATUS_CHOICES = (
+    ('sent', 'Sent'),
+    ('pending', 'Pending'),
+    ('completed', 'completed'),
+)
+
+
+def e_signed_directory_path(instance, filename):
+    return 'esigned/{0}/{1}'.format(instance.contact.contact_id, filename)
+
+
+class ESigned(models.Model):
+    e_signed_id = models.AutoField(primary_key=True)
+    contact = models.ForeignKey(Contact, related_name='e_signed_docs', blank=True, null=True)
+    title = models.CharField(max_length=300)
+    content = models.FileField(upload_to=e_signed_directory_path)
+    sender_ip = models.GenericIPAddressField(blank=True, null=True)
+    status = models.CharField(max_length=10, choices=E_SIGNED_STATUS_CHOICES, blank=True, null=True)
+    sent_at = models.DateTimeField(blank=True, null=True)
+    sent_by = models.ForeignKey(User, related_name='e_signed_sent_files', blank=True, null=True)
+
+    def __init__(self, *args, **kwargs):
+        super(ESigned, self).__init__(*args, **kwargs)
+        for e_sign_status in E_SIGNED_STATUS_CHOICES:
+            if e_sign_status[0] == self.e_sign_status:
+                self.status_label = e_sign_status[1]
+                break
+
+
+class Signer(models.Model):
+    e_signed = models.ForeignKey(ESigned, related_name='signers')
+    first_name = models.CharField(max_length=30)
+    last_name = models.CharField(max_length=30)
+    opened_at = models.DateTimeField(blank=True, null=True)
+    signed_at = models.DateTimeField(blank=True, null=True)
+    signing_ip = models.GenericIPAddressField()
+
+
+DOCUMENT_TYPE_CHOICES = (
+    (None, '--Select--'),
+    ('1099c', '1099-C'),
+    ('30_day_notice', '30 Day Notice (debt has moved)'),
+    ('3rd_party_auth', '3rd Party Speaker Authorization'),
+    ('auth_to_comm_with_cred', 'Auth. To Communicate w/ Creditors'),
+    ('client_correspondence', 'Client Correspondence'),
+    ('collector_correspondence', 'Collector Correspondence'),
+    ('contract_agreement', 'Contract / Agreement'),
+    ('credit_report', 'Credit Report'),
+    ('creditor_correspondence', 'Creditor Correspondence'),
+    ('general', 'General / Misc.'),
+    ('hardship_notification', 'Hardship Notification Letter'),
+    ('hardship_statement', 'Hardship Statement'),
+    ('inc_exp_form', 'Inc/Exp Form'),
+    ('legal_document', 'Legal Document'),
+    ('legal_solicitation', 'Legal Solicitation Notice'),
+    ('quality_control_rec', 'Quality Control Recording'),
+    ('settlement_letter', 'Settlement Letter'),
+    ('settlement_offer', 'Settlement Offer'),
+    ('settlement_payment_confirmation', 'Settlement Payment Confirmation'),
+    ('settlement_recording', 'Settlement Recording'),
+    ('statement', 'Statement'),
+    ('summons', 'Summons'),
+    ('term_checker', 'Term Checker'),
+    ('unknown_creditor', 'Unknown Creditor'),
+)
+
+
+def uploaded_directory_path(instance, filename):
+    return 'uploaded/{0}/{1}'.format(instance.contact.contact_id, filename)
+
+
+class Uploaded(models.Model):
+    uploaded_id = models.AutoField(primary_key=True)
+    contact = models.ForeignKey(Contact, related_name='uploaded_docs', blank=True, null=True)
+    name = models.CharField(max_length=300)
+    description = models.CharField(max_length=2000)
+    type = models.CharField(max_length=50, choices=DOCUMENT_TYPE_CHOICES, blank=True, null=True)
+    content = models.FileField(upload_to=uploaded_directory_path)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    created_by = models.ForeignKey(User, related_name='uploaded_files', blank=True, null=True)
+
+    def __init__(self, *args, **kwargs):
+        super(Uploaded, self).__init__(*args, **kwargs)
+        for document_type in DOCUMENT_TYPE_CHOICES:
+            if document_type[0] == self.type:
+                self.type_label = document_type[1]
+                break
 
     
 class Source(models.Model):

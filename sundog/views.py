@@ -1,5 +1,7 @@
 import copy
 import json
+import smtplib
+from django.core import mail
 from django.core.paginator import Paginator
 from django_auth_app.utils import serialize_user
 from django.shortcuts import render_to_response, redirect
@@ -22,7 +24,7 @@ from django.contrib.auth.models import Permission
 from haystack.generic_views import SearchView
 from sundog.decorators import bypass_impersonation_login_required
 from sundog.forms import FileCustomForm, FileSearchForm, ContactForm, ImpersonateUserForm, StageForm, StatusForm, \
-    CampaignForm, SourceForm, ContactStatusForm, BankAccountForm, NoteForm, CallForm
+    CampaignForm, SourceForm, ContactStatusForm, BankAccountForm, NoteForm, CallForm, EmailForm, UploadedForm
 from datetime import datetime
 from sundog.messages import MESSAGE_REQUEST_FAILED_CODE, CODES_TO_MESSAGE
 from sundog.models import MyFile, Message, Document, FileStatusHistory, Contact, Stage, STAGE_TYPE_CHOICES, Status, \
@@ -241,7 +243,11 @@ def contact_dashboard(request, contact_id):
     form_bank_account.fields['contact'].initial = contact
     form_note = NoteForm(contact, request.user)
     form_call = CallForm(contact, request.user)
-
+    form_email = EmailForm(contact, request.user)
+    form_upload = UploadedForm(contact, request.user)
+    e_signed_docs = list(contact.e_signed_docs.all())
+    generated_docs = list(contact.generated_docs.all())
+    uploaded_docs = list(contact.uploaded_docs.all())
     activities = Activity.objects.filter(contact__contact_id=contact_id)
     context_info = {
         'request': request,
@@ -250,7 +256,12 @@ def contact_dashboard(request, contact_id):
         'form_bank_account': form_bank_account,
         'form_note': form_note,
         'form_call': form_call,
+        'form_email': form_email,
+        'form_upload': form_upload,
         'activities': activities,
+        'e_signed_docs': e_signed_docs,
+        'generated_docs': generated_docs,
+        'uploaded_docs': uploaded_docs,
         'menu_page': 'contacts',
     }
     template_path = 'contact/contact_dashboard.html'
@@ -268,6 +279,79 @@ def add_note(request, contact_id):
             response = {'result': response_data}
         else:
             form_errors = []
+            for field in form:
+                if field.errors:
+                    for field_error in field.errors:
+                        error = strip_tags(field.html_name.replace("_", " ").title()) + ": " + field_error
+                        form_errors.append(error)
+            for non_field_error in form.non_field_errors():
+                form_errors.append(non_field_error)
+            response = {'errors': form_errors}
+        return JsonResponse(response)
+
+
+@login_required
+def add_email(request, contact_id):
+    if request.method == 'POST' and request.POST:
+        post_data = request.POST.copy()
+        contact = Contact.objects.get(contact_id=contact_id)
+        files = request.FILES
+        if files:
+            attachment = ''
+            for file in files.values():
+                if attachment:
+                    attachment += ',' + file.name
+                else:
+                    attachment += file.name
+            post_data['attachment'] = attachment
+        form = EmailForm(contact, request.user, post_data)
+        form_errors = []
+        if form.is_valid():
+            email_data = form.cleaned_data
+            emails_to = []
+            for email_to in email_data['emails_to'].split(','):
+                emails_to.append(email_to.strip())
+            email = mail.EmailMessage(
+                email_data['subject'],
+                email_data['message'],
+                email_data['email_from'],
+                emails_to,
+            )
+            for file in files.values():
+                email.attach(file.name, file.read(), file.content_type)
+            try:
+                email.send()
+                form.save()
+            except Exception as e:
+                form_errors.append('There was a error sending the email')
+            if form_errors:
+                response = {'errors': form_errors}
+            else:
+                response_data = 'Ok'
+                response = {'result': response_data}
+        else:
+            for field in form:
+                if field.errors:
+                    for field_error in field.errors:
+                        error = strip_tags(field.html_name.replace("_", " ").title()) + ": " + field_error
+                        form_errors.append(error)
+            for non_field_error in form.non_field_errors():
+                form_errors.append(non_field_error)
+            response = {'errors': form_errors}
+        return JsonResponse(response)
+
+
+@login_required
+def upload_file(request, contact_id):
+    if request.method == 'POST' and request.POST:
+        contact = Contact.objects.get(contact_id=contact_id)
+        form = UploadedForm(contact, request.user, request.POST, request.FILES)
+        form_errors = []
+        if form.is_valid():
+            form.save()
+            response_data = 'Ok'
+            response = {'result': response_data}
+        else:
             for field in form:
                 if field.errors:
                     for field_error in field.errors:

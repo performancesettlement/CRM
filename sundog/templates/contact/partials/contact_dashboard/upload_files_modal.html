@@ -1,0 +1,34 @@
+<div class="modal fade" id="upload-file" tabindex="-1" role="dialog" aria-labelledby="upload-file-label">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="upload-file-label">Upload File</h4>
+            </div>
+            <div class="row modal-body">
+                <form id="upload-file-form" class="form" action="{% url 'upload_file' contact_id=contact.contact_id %}" method="post">
+                    {% csrf_token %}
+                    {{ form_upload.contact }}
+                    {{ form_upload.created_by }}
+                    {{ form_upload.name }}
+                    <div class="col-xs-12 form-group m-b-xs no-padding">
+                        <label class="col-xs-2 no-padding"> Select a File: </label>
+                        {{ form_upload.content }}
+                    </div>
+                    <div class="col-xs-12 form-group m-b-xs no-padding">
+                        <label> Type: </label>
+                        {{ form_upload.type }}
+                    </div>
+                    <div class="col-xs-12 form-group m-b-xs no-padding">
+                        <label> Description: </label>
+                        {{ form_upload.description }}
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="upload-file-submit" type="button" class="btn btn-primary">Upload</button>
+            </div>
+        </div>
+    </div>
+</div>

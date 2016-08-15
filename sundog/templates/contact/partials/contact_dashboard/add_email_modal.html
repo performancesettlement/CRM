@@ -1,0 +1,83 @@
+<div class="modal fade" id="add-email" tabindex="-1" role="dialog" aria-labelledby="add-email-label">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="add-email-label">Send An Email</h4>
+            </div>
+            <div class="row modal-body">
+                <form id="add-email-form" class="form" action="{% url 'add_email' contact_id=contact.contact_id %}" method="post">
+                    {% csrf_token %}
+                    {{ form_note.contact }}
+                    {{ form_note.created_by }}
+                    <div class="col-xs-12 form-group m-b-xs no-padding">
+                        <label class="col-xs-1 no-padding no-min-width"> From *: </label>
+                        <div class="col-xs-11 no-padding">{{ form_email.email_from }}</div>
+                    </div>
+                    <div class="col-xs-12 form-group m-b-xs no-padding">
+                        <label class="col-xs-1 no-padding no-min-width"> To *: </label>
+                        <div class="col-xs-11 no-padding">{{ form_email.emails_to }}</div>
+                    </div>
+                    <div class="col-xs-12 form-group m-b-xs no-padding">
+                        <label class="col-xs-1 no-padding no-min-width"> CC: </label>
+                        <div class="col-xs-11 no-padding">{{ form_email.cc }}</div>
+                    </div>
+                    <div class="col-xs-12 form-group m-b-xs no-padding">
+                        <label class="col-xs-1 no-padding no-min-width"> Subject: </label>
+                        <div class="col-xs-11 no-padding">{{ form_email.subject }}</div>
+                    </div>
+                    <div class="col-xs-12 form-group m-b-xs no-padding">
+                        <label> Message: </label>
+                        {{ form_email.message }}
+                    </div>
+                    <div class="col-xs-12 form-group m-b-xs m-t-md no-padding">
+                        <div id="radio-panel">
+                            <div class="inline m-r-md">
+                                <label class="no-min-width"> Local: </label>
+                                <input id="local" class="radio-file-type" checked="checked" type="radio">
+                            </div>
+                            <div class="inline m-r-md">
+                                <label class="no-min-width"> Media Library: </label>
+                                <input id="media" class="radio-file-type" type="radio">
+                            </div>
+                            <div class="inline m-r-md">
+                                <label class="no-min-width"> Generated Document: </label>
+                                <input id="generated" class="radio-file-type" type="radio">
+                            </div>
+                            <div class="inline m-r-md">
+                                <label class="no-min-width"> E-Signed Docs: </label>
+                                <input id="e-signed" class="radio-file-type" type="radio">
+                            </div>
+                            <div class="inline">
+                                <label class="no-min-width"> Uploaded Document: </label>
+                                <input id="uploaded" class="radio-file-type" type="radio">
+                            </div>
+                        </div>
+                        <div id="radio-panel-data">
+                            <div id="local-data" class="radio-file-data" style="display: none;">
+                                {{ form_email.file_upload }}
+                            </div>
+                            <div id="media-data" class="radio-file-data" style="display: none;">
+{#                            {{ form_email.media_select }} TODO: Add the docs media after adding the docs #}
+                            </div>
+                            <div id="generated-data" class="radio-file-data" style="display: none;">
+{#                            {{ form_email.generated_select }} TODO: Add the docs media after adding the docs #}
+                            </div>
+                            <div id="e-signed-data" class="radio-file-data" style="display: none;">
+{#                            {{ form_email.e_signed_select }} TODO: Add the docs media after adding the docs #}
+                            </div>
+                            <div id="uploaded-data" class="radio-file-data" style="display: none;">
+{#                            {{ form_email.uploaded_select }} TODO: Add the docs media after adding the docs #}
+                            </div>
+                        </div>
+                    </div>
+                    <div id="files" class="col-xs-12 no-padding m-l-md"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="email-submit" type="button" class="btn btn-primary">Add</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -67,7 +67,8 @@ INSTALLED_APPS = (
     'wagtail.wagtailsites',
     'wagtail.contrib.wagtailapi',
     'avatar',
-    'colorful'
+    'colorful',
+    'multi_email_field',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -251,14 +252,15 @@ LOGIN_REDIRECT_URL = '/home/'
 
 # email
 
-NO_REPLY_EMAIL_ADDRESS = "careers@mahisoft.com"
-INFO_EMAIL_ADDRESS = "careers@mahisoft.com"
-TO_CONTACT_INFO_EMAIL_ADDRESS = "careers@mahisoft.com"
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+NO_REPLY_EMAIL_ADDRESS = "info@performancesettlement.com"
+# INFO_EMAIL_ADDRESS = "careers@mahisoft.com"
+# TO_CONTACT_INFO_EMAIL_ADDRESS = "careers@mahisoft.com"
 
-EMAIL_HOST = 'email-smtp.us-east-1.amazonaws.com'
-EMAIL_PORT = 2587
-EMAIL_HOST_USER = 'AKIAIJLAJXAWTVFG7QEQ'
-EMAIL_HOST_PASSWORD = 'AlbxKXHApE81Dv2fU0/e8rLxv4JNAXCubbIgDVjSncq7'
+EMAIL_HOST = 'smtp.coxmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'psettelment@printer.occoxmail.com'
+EMAIL_HOST_PASSWORD = 'summer2016'
 EMAIL_USE_TLS = True
 
 ACCESS_TOKEN_EXPIRE_SECONDS = 360000

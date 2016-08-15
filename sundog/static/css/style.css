@@ -8168,3 +8168,12 @@ tr {
 .activity-row {
     background-color: lightgrey;
 }
+
+.no-min-width {
+    min-width: 0 !important;
+}
+
+.radio-file-type {
+    margin-top: -1px !important;
+    vertical-align: middle;
+}
