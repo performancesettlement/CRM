@@ -1,6 +1,7 @@
 import copy
 import json
 import smtplib
+import chardet
 from django.core import mail
 from django.core.paginator import Paginator
 from django_auth_app.utils import serialize_user
@@ -28,7 +29,7 @@ from sundog.forms import FileCustomForm, FileSearchForm, ContactForm, Impersonat
 from datetime import datetime
 from sundog.messages import MESSAGE_REQUEST_FAILED_CODE, CODES_TO_MESSAGE
 from sundog.models import MyFile, Message, Document, FileStatusHistory, Contact, Stage, STAGE_TYPE_CHOICES, Status, \
-    Campaign, BankAccount, Activity
+    Campaign, BankAccount, Activity, Uploaded
 from sundog.services import reorder_stages, reorder_status
 
 logger = logging.getLogger(__name__)
@@ -387,6 +388,32 @@ def add_call(request, contact_id):
                 form_errors.append(non_field_error)
             response = {'errors': form_errors}
         return JsonResponse(response)
+
+
+def uploaded_file_view(request, contact_id, uploaded_id):
+    doc = Uploaded.objects.get(uploaded_id=uploaded_id)
+    with open(doc.content.path, 'rb') as file:
+        if doc.get_type() == 'pdf':
+            response = HttpResponse(file.read(), content_type=doc.mime_type)
+            response['Content-Disposition'] = 'inline; filename=%s' % doc.name
+        else:
+            response = HttpResponse()
+        return response
+
+
+def uploaded_file_download(request, contact_id, uploaded_id):
+    doc = Uploaded.objects.get(uploaded_id=uploaded_id)
+    response = HttpResponse(doc.content, content_type=doc.mime_type)
+    response['Content-Disposition'] = 'attachment; filename=%s' % doc.name
+    response['Content-Length'] = os.path.getsize(doc.content.path)
+    return response
+
+
+def uploaded_file_delete(request, contact_id, uploaded_id):
+    doc = Uploaded.objects.get(uploaded_id=uploaded_id)
+    os.remove(doc.content.path)
+    doc.delete()
+    return JsonResponse({'result': 'Ok'})
 
 
 @login_required

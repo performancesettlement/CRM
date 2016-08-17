@@ -569,11 +569,16 @@ def add_note_activity(sender, instance, **kwargs):
     activity.save()
 
 
+def generated_directory_path(instance, filename):
+    return 'generated/{0}/{1}'.format(instance.contact.contact_id, filename)
+
+
 class Generated(models.Model):
     generated_id = models.AutoField(primary_key=True)
     contact = models.ForeignKey(Contact, related_name='generated_docs', blank=True, null=True)
     title = models.CharField(max_length=300)
-    content = models.FileField(upload_to='/generated')
+    content = models.FileField(upload_to=generated_directory_path)
+    mime_type = models.CharField(max_length=100, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     created_by = models.ForeignKey(User, related_name='generated_files', blank=True, null=True)
 
@@ -594,6 +599,7 @@ class ESigned(models.Model):
     contact = models.ForeignKey(Contact, related_name='e_signed_docs', blank=True, null=True)
     title = models.CharField(max_length=300)
     content = models.FileField(upload_to=e_signed_directory_path)
+    mime_type = models.CharField(max_length=100, blank=True, null=True)
     sender_ip = models.GenericIPAddressField(blank=True, null=True)
     status = models.CharField(max_length=10, choices=E_SIGNED_STATUS_CHOICES, blank=True, null=True)
     sent_at = models.DateTimeField(blank=True, null=True)
@@ -608,6 +614,7 @@ class ESigned(models.Model):
 
 
 class Signer(models.Model):
+    signer_id = models.AutoField(primary_key=True)
     e_signed = models.ForeignKey(ESigned, related_name='signers')
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
@@ -656,6 +663,7 @@ class Uploaded(models.Model):
     description = models.CharField(max_length=2000)
     type = models.CharField(max_length=50, choices=DOCUMENT_TYPE_CHOICES, blank=True, null=True)
     content = models.FileField(upload_to=uploaded_directory_path)
+    mime_type = models.CharField(max_length=100, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     created_by = models.ForeignKey(User, related_name='uploaded_files', blank=True, null=True)
 
@@ -665,6 +673,12 @@ class Uploaded(models.Model):
             if document_type[0] == self.type:
                 self.type_label = document_type[1]
                 break
+
+    def get_type(self):
+        split_name = self.name.split('.')
+        if len(split_name) > 1:
+            return split_name[-1]
+        return ''
 
     
 class Source(models.Model):

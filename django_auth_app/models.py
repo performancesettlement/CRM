@@ -69,7 +69,7 @@ class UserProfile(models.Model):
 
         # Save the thumbnail
         temp_handle = StringIO()
-        image.save(temp_handle, pil_type)
+        image.save()
         temp_handle.seek(0)
 
         # Save image to a SimpleUploadedFile which can be saved into
@@ -102,7 +102,7 @@ class UserProfile(models.Model):
 
         # Save the thumbnail
         temp_handle = StringIO()
-        image.save(temp_handle, pil_type)
+        image.save()
         temp_handle.seek(0)
 
         # Save image to a SimpleUploadedFile which can be saved into

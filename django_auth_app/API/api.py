@@ -37,7 +37,7 @@ class UploadFileView(APIView):
                 and 'action_type' in request.POST and request.POST['action_type'] == 'profile_photo'):                    
                 try:
                     image_name = 'avatar_original_%s.jpg' % user.id
-                    user_profile.profile_photo_original.save(image_name, request.FILES['file'], save=True)
+                    user_profile.profile_photo_original.save(save=True)
                     response_data = get_response_body(True,settings.SITE_DOMAIN + user_profile.profile_photo.url)
                     return HttpResponse(json.dumps(response_data), content_type='application/json')
         

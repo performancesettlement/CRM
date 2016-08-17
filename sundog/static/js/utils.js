@@ -41,6 +41,31 @@ function showErrorPopup(error){
     }
 }
 
+function showConfirmationPopup(confirmMsg, callback) {
+    swal(
+        {
+            title: "Are you sure?",
+            html: true,
+            showCancelButton: true,
+            confirmButtonText: 'Yes delete it!',
+            confirmButtonColor: '#DD6B55',
+            closeOnConfirm: false,
+            type: "warning",
+            text: confirmMsg
+        },
+        callback
+    );
+}
+
+function showSuccessPopup(msg) {
+    swal({
+        title: "Success",
+        html: true,
+        type: "success",
+        text: msg
+    });
+}
+
 function resetForm($form) {
     $form.find('input:text, input:password, input:file, select, textarea').val('');
     $form.find('input:radio, input:checkbox').removeAttr('checked').removeAttr('selected');

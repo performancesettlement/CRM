@@ -32,6 +32,9 @@
                 </td>
             </tr>
         {% endfor %}
+        <tr class="empty-table text-center" {% if generated_docs %}style="display:none;"{% endif %}>
+            <td colspan="12"><strong>No generated files yet</strong></td>
+        </tr>
         </tbody>
     </table>
 </div>
@@ -61,6 +64,9 @@
                 </td>
             </tr>
         {% endfor %}
+        <tr class="empty-table text-center" {% if e_signed_docs %}style="display:none;"{% endif %}>
+            <td colspan="12"><strong>No e-signed files yet</strong></td>
+        </tr>
         </tbody>
     </table>
 </div>
@@ -86,12 +92,15 @@
                 <td>{{ doc.name }}</td>
                 <td>{{ doc.description }}</td>
                 <td>
-                    <a href="" class="uploaded-doc-view"><span title="View" class="glyphicon glyphicon-zoom-in"></span></a>
-                    <a href="" class="uploaded-doc-download"><span title="Download" class="glyphicon glyphicon-download"></span></a>
-                    <a href="" class="uploaded-doc-delete"><span title="Delete" class="glyphicon glyphicon-trash"></span></a>
+                    <a href="{% url "uploaded_file_view" contact_id=contact.contact_id uploaded_id=doc.uploaded_id %}" target="_blank" class="uploaded-doc-view"><span title="View" class="glyphicon glyphicon-zoom-in"></span></a>
+                    <a href="{% url "uploaded_file_download" contact_id=contact.contact_id uploaded_id=doc.uploaded_id %}" class="uploaded-doc-download"><span title="Download" class="glyphicon glyphicon-download"></span></a>
+                    <a href="{% url "uploaded_file_delete" contact_id=contact.contact_id uploaded_id=doc.uploaded_id %}" class="uploaded-doc-delete"><span title="Delete" class="glyphicon glyphicon-trash"></span></a>
                 </td>
             </tr>
         {% endfor %}
+            <tr class="empty-table text-center" {% if uploaded_docs %}style="display:none;"{% endif %}>
+                <td colspan="12"><strong>No uploaded files yet</strong></td>
+            </tr>
         </tbody>
     </table>
 </div>

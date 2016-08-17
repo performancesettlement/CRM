@@ -369,6 +369,7 @@ class UploadedForm(forms.ModelForm):
             'contact': forms.HiddenInput(),
             'created_by': forms.HiddenInput(),
             'name': forms.HiddenInput(),
+            'mime_type': forms.HiddenInput(),
             'description': forms.Textarea(attrs={'class': 'col-xs-12 no-padding',
                                                  'style': 'max-width: 566px;min-height: 200px'}),
             'content': forms.FileInput(attrs={'style': 'padding-left: 3px;'}),

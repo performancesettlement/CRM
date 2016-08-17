@@ -106,5 +106,9 @@
         {% include "contact/partials/contact_dashboard/add_email_modal.html" %}
         {% include "contact/partials/contact_dashboard/upload_files_modal.html" %}
     </div>
+    <script type="text/javascript" >
+        var csrfToken = '{{ csrf_token }}';
+    </script>
     <script src="{% static "js/contact/contact_dashboard.js" %}"></script>
+
 {% endblock %}

@@ -162,7 +162,7 @@ $(document).ready(function() {
             processData: false,
             contentType: false,
             type: 'POST',
-            success: function(data){
+            success: function(response){
                 if (response.errors) {
                     showErrorPopup(response.errors);
                 }
@@ -174,8 +174,15 @@ $(document).ready(function() {
     });
 
     $('#upload-file-form').find('#id_content').change(function() {
+        var form = $('#upload-file-form');
         var fileName = $(this).val();
-        $('#upload-file-form').find('#id_name').val(fileName);
+        var mimeType = $(this).prop('files')[0].type;
+        form.find('#id_name').val(fileName);
+        form.find('#id_mime_type').val(mimeType);
+    });
+
+    $('#upload-file').on('hidden.bs.modal', function() {
+        $('#upload-file-form').find('input, select, textarea').val('');
     });
 
     $('#upload-file-submit').click(function(event) {
@@ -195,12 +202,45 @@ $(document).ready(function() {
             processData: false,
             contentType: false,
             type: 'POST',
-            success: function(data){
+            success: function(response){
                 if (response.errors) {
                     showErrorPopup(response.errors);
                 }
                 if (response.result) {
                     refreshScreen();
+                }
+            }
+        });
+    });
+
+    $('.uploaded-doc-delete').click(function(event){
+        event.preventDefault();
+        showConfirmationPopup('You will not be able to recover this file!');
+        var button = $(this);
+        var url = button.prop('href');
+        $.ajax({
+            url: url,
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader("X-CSRFToken", csrfToken);
+            },
+            type: 'DELETE',
+            success: function(response) {
+                if (response && response.result === 'Ok') {
+                    showConfirmationPopup(
+                        'You will not be able to recover this file!',
+                        function() {
+                            var row = button.parent().parent();
+                            var tableRows = row.parent();
+                            row.remove();
+                            if (tableRows.children().length == 1) {
+                                tableRows.find('.empty-table').show();
+                            }
+                            showSuccessPopup('Uploaded file has been successfully deleted.');
+                        }
+                    );
+                }
+                else {
+                    showErrorPopup('An error occurred deleting the file.');
                 }
             }
         });

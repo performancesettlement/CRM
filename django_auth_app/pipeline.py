@@ -14,5 +14,5 @@ def save_profile_picture(strategy, user, response, details,
             content = urllib.urlopen(image_url)
             profile = user.profile
             profile.full_name = user.first_name
-            profile.profile_photo_original.save(image_name, ContentFile(content.read()), save=True)
+            profile.profile_photo_original.save(save=True)
                 
