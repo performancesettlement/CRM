@@ -218,17 +218,17 @@ $(document).ready(function() {
         showConfirmationPopup('You will not be able to recover this file!');
         var button = $(this);
         var url = button.prop('href');
-        $.ajax({
-            url: url,
-            beforeSend: function(xhr) {
-                xhr.setRequestHeader("X-CSRFToken", csrfToken);
-            },
-            type: 'DELETE',
-            success: function(response) {
-                if (response && response.result === 'Ok') {
-                    showConfirmationPopup(
-                        'You will not be able to recover this file!',
-                        function() {
+        showConfirmationPopup(
+            'You will not be able to recover this file!',
+            function() {
+                $.ajax({
+                    url: url,
+                    beforeSend: function (xhr) {
+                        xhr.setRequestHeader("X-CSRFToken", csrfToken);
+                    },
+                    type: 'DELETE',
+                    success: function (response) {
+                        if (response && response.result === 'Ok') {
                             var row = button.parent().parent();
                             var tableRows = row.parent();
                             row.remove();
@@ -237,13 +237,13 @@ $(document).ready(function() {
                             }
                             showSuccessPopup('Uploaded file has been successfully deleted.');
                         }
-                    );
-                }
-                else {
-                    showErrorPopup('An error occurred deleting the file.');
-                }
+                        else {
+                            showErrorPopup('An error occurred deleting the file.');
+                        }
+                    }
+                });
             }
-        });
+        );
     });
 
     showContents();

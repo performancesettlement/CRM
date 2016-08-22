@@ -1,4 +1,5 @@
 import hashlib
+import inspect
 import uuid
 from colorfield.fields import ColorField
 from colorful.fields import RGBColorField
@@ -341,15 +342,19 @@ class Contact(models.Model):
         verbose_name = 'Contact'
         verbose_name_plural = 'Contacts'
         permissions = (
-            ("import_clients", "Can import clients"),
+            ('import_clients', 'Can import clients'),
         )
 
     def __init__(self, *args, **kwargs):
         super(Contact, self).__init__(*args, **kwargs)
-        full_name = self.last_name if self.last_name.strip() else ""
-        full_name += (", " if full_name and self.first_name else "") + \
-                     (self.first_name if self.first_name.strip() else "")
+        full_name = self.last_name if self.last_name.strip() else ''
+        full_name += (', ' if full_name and self.first_name else '') + \
+                     (self.first_name if self.first_name.strip() else '')
+        full_name_straight = (self.first_name if self.first_name.strip() else '')
+        full_name_straight += (' ' if full_name and self.first_name else '') + \
+                              (self.last_name if self.last_name.strip() else '')
         self.full_name = full_name
+        self.full_name_straight = full_name_straight
         for stage_type in STAGE_TYPE_CHOICES:
             if stage_type == STAGE_TYPE_CHOICES[0]:
                 self.type = stage_type[1]
@@ -680,7 +685,148 @@ class Uploaded(models.Model):
             return split_name[-1]
         return ''
 
-    
+
+class Incomes(models.Model):
+    incomes_id = models.AutoField(primary_key=True)
+    contact = models.ForeignKey(Contact, related_name='incomes', blank=True, null=True)
+    take_home_pay = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    other_income = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    alimony = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    child_support = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    social_security = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    retirement_income = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+
+    checking_account = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    checking_account_lien = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    savings_account = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    savings_account_lien = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    cash = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    cash_lien = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+
+    property_balance = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    property_balance_lien = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    stocks = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    stocks_lien = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    vehicles = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    vehicles_lien = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    other_incomes = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    other_incomes_lien = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+
+    def total(self):
+        attrs = [
+            'take_home_pay',
+            'other_income',
+            'alimony',
+            'child_support',
+            'social_security',
+            'retirement_income',
+            'checking_account',
+            'checking_account_lien',
+            'savings_account',
+            'savings_account_lien',
+            'cash',
+            'cash_lien',
+            'property_balance',
+            'property_balance_lien',
+            'stocks',
+            'stocks_lien',
+            'vehicles',
+            'vehicles_lien',
+            'other_incomes',
+            'other_incomes_lien',
+        ]
+        total = Decimal('0.00')
+        for attr in attrs:
+            total += getattr(self, attr)
+        return total
+
+    def assets(self):
+        attrs = [
+            'checking_account',
+            'checking_account_lien',
+            'savings_account',
+            'savings_account_lien',
+            'cash',
+            'cash_lien',
+            'property_balance',
+            'property_balance_lien',
+            'stocks',
+            'stocks_lien',
+            'vehicles',
+            'vehicles_lien',
+            'other_incomes',
+            'other_incomes_lien',
+        ]
+        total = Decimal('0.00')
+        for attr in attrs:
+            total += getattr(self, attr)
+        return total
+
+
+class Expenses(models.Model):
+    expenses_id = models.AutoField(primary_key=True)
+    contact = models.ForeignKey(Contact, related_name='expenses', blank=True, null=True)
+    rent = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    utilities = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    transportation = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    insurance_premiums = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    food = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    telephone = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    medical_bills = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    back_taxes = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    student_loans = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    child_support = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    child_care = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    other_expenses = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+
+    rent_2 = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    auto_other = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    tv = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    charity = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    clothing = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    education = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    entertainment = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    health = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    home_insurance = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    household_items = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    life_insurance = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    laundry = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    medical_care = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+
+    def total(self):
+        attrs = [
+            'rent',
+            'utilities',
+            'transportation',
+            'insurance_premiums',
+            'food',
+            'telephone',
+            'medical_bills',
+            'back_taxes',
+            'student_loans',
+            'child_support',
+            'child_care',
+            'other_expenses',
+            'rent_2',
+            'auto_other',
+            'tv',
+            'charity',
+            'clothing',
+            'education',
+            'entertainment',
+            'health',
+            'home_insurance',
+            'household_items',
+            'life_insurance',
+            'laundry',
+            'medical_care',
+        ]
+        total = Decimal('0.00')
+        for attr in attrs:
+            total += getattr(self, attr)
+        return total
+
+
 class Source(models.Model):
     source_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100, unique=True)

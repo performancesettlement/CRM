@@ -1,0 +1,170 @@
+<div class="col-xs-12 no-padding">
+    <h3>Monthly Income</h3>
+    <div class="border col-xs-12 no-padding">
+        {{ form_incomes.contact }}
+        <div class="col-xs-12 form-group m-t-xs m-b-xs">
+            <label class="col-xs-4 no-padding"> Take Home Pay </label>
+            <div class="col-xs-8 no-padding input-group">
+                <span class="input-group-addon green">$</span>
+                {{ form_incomes.take_home_pay }}
+            </div>
+        </div>
+        <div class="col-xs-12 form-group m-b-xs">
+            <label class="col-xs-4 no-padding"> Other Income (SSI, Alimony/Support, Retirement) </label>
+            <div class="col-xs-8 no-padding input-group">
+                <span class="input-group-addon green">$</span>
+                {{ form_incomes.other_income }}
+            </div>
+        </div>
+        <div class="col-xs-12 form-group m-b-xs">
+            <label class="col-xs-4 no-padding"> Alimony </label>
+            <div class="col-xs-8 no-padding input-group">
+                <span class="input-group-addon green">$</span>
+                {{ form_incomes.alimony }}
+            </div>
+        </div>
+        <div class="col-xs-12 form-group m-b-xs">
+            <label class="col-xs-4 no-padding"> Child Support </label>
+            <div class="col-xs-8 no-padding input-group">
+                <span class="input-group-addon green">$</span>
+                {{ form_incomes.child_support }}
+            </div>
+        </div>
+        <div class="col-xs-12 form-group m-b-xs">
+            <label class="col-xs-4 no-padding"> Social Security </label>
+            <div class="col-xs-8 no-padding input-group">
+                <span class="input-group-addon green">$</span>
+                {{ form_incomes.social_security }}
+            </div>
+        </div>
+        <div class="col-xs-12 form-group m-b-xs">
+            <label class="col-xs-4 no-padding"> Retirement Income </label>
+            <div class="col-xs-8 no-padding input-group">
+                <span class="input-group-addon green">$</span>
+                {{ form_incomes.retirement_income }}
+            </div>
+        </div>
+    </div>
+</div>
+<div class="col-xs-12 no-padding m-t-md">
+    <h3>Liquid Assets</h3>
+    <div class="border col-xs-12 no-padding">
+        <div class="col-xs-12 form-group m-t-xs m-b-xs">
+            <label class="col-xs-4 no-padding"> Checking Account </label>
+            <div class="col-xs-4 no-padding">
+                <div class="input-group">
+                    <span class="input-group-addon green">$</span>
+                    {{ form_incomes.checking_account }}
+                </div>
+            </div>
+            <div class="col-xs-4 no-padding">
+                <div class="input-group">
+                    Lien:
+                    <span class="input-group-addon green">$</span>
+                    {{ form_incomes.checking_account_lien }}
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-12 form-group m-b-xs">
+            <label class="col-xs-4 no-padding"> Savings Account </label>
+            <div class="col-xs-4 no-padding">
+                <div class="input-group">
+                    <span class="input-group-addon green">$</span>
+                    {{ form_incomes.savings_account }}
+                </div>
+            </div>
+            <div class="col-xs-4 no-padding">
+                <div class="input-group">
+                    Lien:
+                    <span class="input-group-addon green">$</span>
+                    {{ form_incomes.savings_account_lien }}
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-12 form-group m-b-xs">
+            <label class="col-xs-4 no-padding"> Cash </label>
+            <div class="col-xs-4 no-padding">
+                <div class="input-group">
+                    <span class="input-group-addon green">$</span>
+                    {{ form_incomes.cash }}
+                </div>
+            </div>
+            <div class="col-xs-4 no-padding">
+                <div class="input-group">
+                    Lien:
+                    <span class="input-group-addon green">$</span>
+                    {{ form_incomes.cash_lien }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="col-xs-12 no-padding m-t-md">
+    <h3>Other Assets</h3>
+    <div class="border col-xs-12 no-padding">
+        <div class="col-xs-12 form-group m-t-xs m-b-xs">
+            <label class="col-xs-4 no-padding"> Property Balance (only if homeowner)</label>
+            <div class="col-xs-4 no-padding">
+                <div class="input-group">
+                    <span class="input-group-addon green">$</span>
+                    {{ form_incomes.property_balance }}
+                </div>
+            </div>
+            <div class="col-xs-4 no-padding">
+                <div class="input-group">
+                    Lien:
+                    <span class="input-group-addon green">$</span>
+                    {{ form_incomes.property_balance_lien }}
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-12 form-group m-b-xs">
+            <label class="col-xs-4 no-padding"> Stocks, Bonds, 401k </label>
+            <div class="col-xs-4 no-padding">
+                <div class="input-group">
+                    <span class="input-group-addon green">$</span>
+                    {{ form_incomes.stocks }}
+                </div>
+            </div>
+            <div class="col-xs-4 no-padding">
+                <div class="input-group">
+                    Lien:
+                    <span class="input-group-addon green">$</span>
+                    {{ form_incomes.stocks_lien }}
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-12 form-group m-b-xs">
+            <label class="col-xs-4 no-padding"> Vehicles </label>
+            <div class="col-xs-4 no-padding">
+                <div class="input-group">
+                    <span class="input-group-addon green">$</span>
+                    {{ form_incomes.vehicles }}
+                </div>
+            </div>
+            <div class="col-xs-4 no-padding">
+                <div class="input-group">
+                    Lien:
+                    <span class="input-group-addon green">$</span>
+                    {{ form_incomes.vehicles_lien }}
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-12 form-group m-b-xs">
+            <label class="col-xs-4 no-padding"> Other </label>
+            <div class="col-xs-4 no-padding">
+                <div class="input-group">
+                    <span class="input-group-addon green">$</span>
+                    {{ form_incomes.other_incomes }}
+                </div>
+            </div>
+            <div class="col-xs-4 no-padding">
+                <div class="input-group">
+                    Lien:
+                    <span class="input-group-addon green">$</span>
+                    {{ form_incomes.other_incomes_lien }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,73 @@
+{% extends "app-base.html" %}
+{% load staticfiles my_filters admin_urls %}
+{% block extrahead %}
+    <link href="{% static "css/plugins/datapicker/datepicker3.css" %}" rel="stylesheet">
+    <link href="{% static "css/plugins/morris/morris-0.4.3.min.css" %}" rel="stylesheet">
+    <link href="{% static "css/plugins/dataTables/dataTables.bootstrap.css" %}" rel="stylesheet">
+    <link href="{% static "css/plugins/dataTables/dataTables.responsive.css" %}" rel="stylesheet">
+{% endblock extrahead %}
+{% block content %}
+    <div class="row wrapper border-bottom white-bg page-heading">
+        <div class="col-lg-10 m-t-md">
+            <ol class="breadcrumb">
+                <li>
+                    <a href="{% url "list_contacts" %}">Contacts</a>
+                </li>
+                <li>
+                    <a href="{% url "contact_dashboard" contact_id=contact.contact_id %}">{{ contact.full_name_straight }}</a>
+                </li>
+                <li class="active">
+                    <strong>Monthly Budget Analysis</strong>
+                </li>
+            </ol>
+        </div>
+    </div>
+    <div class="col-xs-12 m-t-md border-bottom" style="padding-bottom: 20px;">
+        <h3>Monthly Budget Analysis For: <a href="{% url "contact_dashboard" contact_id=contact.contact_id %}" style="text-decoration: underline;" title="Back to Dashboard">{{ contact.full_name_straight }}</a></h3>
+    </div>
+    <div class="col-xs-12 border-bottom no-padding-sides" style="padding-bottom: 20px;">
+        <div id="totals" class="col-xs-6 m-t-md">
+            <div class="inline m-r-md">
+                <div class="m-b-xs font-bold">Total Income</div>
+                <div class="blue font-medium font-bold">{{ form_incomes.instance.total|currency }}</div>
+            </div>
+            <div class="inline m-r-md">
+                <div class="m-b-xs font-bold">Total Expenses</div>
+                <div class="blue font-medium font-bold">{{ form_expenses.instance.total|currency }}</div>
+            </div>
+            <div class="inline m-r-md">
+                <div class="m-b-xs font-bold">DTI</div>
+                <div class="blue font-medium font-bold">{{ form_incomes.instance.total|dti:form_expenses.instance.total|percent }}</div>
+            </div>
+            <div class="inline m-r-md">
+                <div class="m-b-xs font-bold">Cash Flow</div>
+                {% cash_flow as cash %}
+                <div class="font-medium font-bold" style="color: {% if cash < 0 %}red{% else %}green{% endif %};">{{ cash|currency }}</div>
+            </div>
+            <div class="inline">
+                <div class="m-b-xs font-bold">Total Assets</div>
+                <div class="blue font-medium font-bold">{{ form_incomes.instance.assets|currency }}</div>
+            </div>
+        </div>
+        <div class="col-xs-6 m-t-md" style="padding-top: 5px;">
+            <a id="budget-submit" href="" class="btn btn-primary m-r-xs">Save</a>
+            <a id="budget-delete" href="{% url "delete_budget_analysis" contact_id=contact.contact_id %}" class="btn btn-danger">Delete</a>
+        </div>
+    </div>
+    <div id="budget" class="col-xs-12 m-t-md m-b-md no-padding-sides" style="padding-bottom: 70px;">
+        <form id="budget-form" class="form" action="{% url 'budget_analysis_save' contact_id=contact.contact_id %}" method="post">
+            {% csrf_token %}
+            <div class="col-xs-12 col-lg-6">
+                {% include "contact/partials/budget_analysis/incomes_form_fields.html" %}
+            </div>
+            <div class="col-xs-12 col-lg-6">
+                {% include "contact/partials/budget_analysis/expenses_form_fields.html" %}
+            </div>
+        </form>
+    </div>
+    <script type="text/javascript" >
+        var csrfToken = '{{ csrf_token }}';
+    </script>
+    <script src="{% static "js/plugins/datapicker/bootstrap-datepicker.js" %}"></script>
+    <script src="{% static "js/contact/budget_analysis.js" %}"></script>
+{% endblock %}

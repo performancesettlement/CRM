@@ -8177,3 +8177,32 @@ tr {
     margin-top: -1px !important;
     vertical-align: middle;
 }
+
+.blue {
+    color: blue;
+}
+
+.green {
+    color: green;
+}
+
+.font-medium {
+    font-size: medium;
+}
+
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none !important;
+    margin: 0;
+}
+
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+input {
+    border-radius: 0 !important;
+    height: 28px !important;
+    padding-left: 5px !important;
+    border: 1px solid #E5E6E7 !important;
+}

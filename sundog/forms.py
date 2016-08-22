@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django.core.validators import validate_email
 from sundog.models import MyFile, FileStatus, Contact, Tag, Stage, Status, Campaign, Source, BankAccount, Note, Call,\
-    Email, DEBT_SETTLEMENT, Uploaded
+    Email, DEBT_SETTLEMENT, Uploaded, Incomes, Expenses
 from sundog import services
 from haystack.forms import SearchForm
 from sundog.constants import RADIO_FILTER_CHOICES, SHORT_DATE_FORMAT
@@ -380,3 +380,29 @@ class UploadedForm(forms.ModelForm):
         super(UploadedForm, self).__init__(*args, **kwargs)
         self.fields['contact'].initial = contact
         self.fields['created_by'].initial = user
+
+
+class IncomesForm(forms.ModelForm):
+    class Meta:
+        model = Incomes
+        widgets = {
+            'contact': forms.HiddenInput(),
+        }
+        fields = '__all__'
+
+    def __init__(self, contact, *args, **kwargs):
+        super(IncomesForm, self).__init__(*args, **kwargs)
+        self.fields['contact'].initial = contact
+
+
+class ExpensesForm(forms.ModelForm):
+    class Meta:
+        model = Expenses
+        widgets = {
+            'contact': forms.HiddenInput(),
+        }
+        fields = '__all__'
+
+    def __init__(self, contact, *args, **kwargs):
+        super(ExpensesForm, self).__init__(*args, **kwargs)
+        self.fields['contact'].initial = contact

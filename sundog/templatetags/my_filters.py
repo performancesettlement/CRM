@@ -1,3 +1,5 @@
+from decimal import Decimal
+import decimal
 from django import template
 from django.contrib.humanize.templatetags.humanize import intcomma
 from localflavor.us.us_states import US_STATES
@@ -130,3 +132,16 @@ def get_sort_class(sort, label):
 def cut_string_at(text, max=100):
     cut_text = text[:100] + '...' if len(text) > max else text
     return cut_text
+
+
+@register.filter(name='dti')
+def dti(incomes, expenses):
+    if incomes:
+        return ((expenses * Decimal('100')) / incomes).quantize(Decimal('.01'), rounding=decimal.ROUND_UP)
+    else:
+        return Decimal('0.00')
+
+
+@register.assignment_tag(takes_context=True)
+def cash_flow(context):
+    return context['form_incomes'].instance.total() - context['form_expenses'].instance.total()

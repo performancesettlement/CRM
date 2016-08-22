@@ -13,6 +13,7 @@ from django.http.response import HttpResponse, HttpResponseRedirect, JsonRespons
 from django.core.urlresolvers import reverse
 from django.utils.html import strip_tags
 from django.core.files import File
+from django_auth_app.views import login_user
 import settings
 import os
 import logging
@@ -25,11 +26,12 @@ from django.contrib.auth.models import Permission
 from haystack.generic_views import SearchView
 from sundog.decorators import bypass_impersonation_login_required
 from sundog.forms import FileCustomForm, FileSearchForm, ContactForm, ImpersonateUserForm, StageForm, StatusForm, \
-    CampaignForm, SourceForm, ContactStatusForm, BankAccountForm, NoteForm, CallForm, EmailForm, UploadedForm
+    CampaignForm, SourceForm, ContactStatusForm, BankAccountForm, NoteForm, CallForm, EmailForm, UploadedForm, \
+    ExpensesForm, IncomesForm
 from datetime import datetime
 from sundog.messages import MESSAGE_REQUEST_FAILED_CODE, CODES_TO_MESSAGE
 from sundog.models import MyFile, Message, Document, FileStatusHistory, Contact, Stage, STAGE_TYPE_CHOICES, Status, \
-    Campaign, BankAccount, Activity, Uploaded
+    Campaign, BankAccount, Activity, Uploaded, Expenses, Incomes
 from sundog.services import reorder_stages, reorder_status
 
 logger = logging.getLogger(__name__)
@@ -236,8 +238,7 @@ def list_contacts(request):
 
 @login_required
 def contact_dashboard(request, contact_id):
-    contact = Contact.objects.filter(contact_id=contact_id)
-    contact = contact[0] if contact else None
+    contact = Contact.objects.get(contact_id=contact_id)
     bank_account = contact.bank_account.all() if contact else None
     bank_account = bank_account[0] if bank_account else None
     form_bank_account = BankAccountForm(instance=bank_account)
@@ -246,6 +247,8 @@ def contact_dashboard(request, contact_id):
     form_call = CallForm(contact, request.user)
     form_email = EmailForm(contact, request.user)
     form_upload = UploadedForm(contact, request.user)
+    form_expenses = ExpensesForm(contact)
+    form_incomes = IncomesForm(contact)
     e_signed_docs = list(contact.e_signed_docs.all())
     generated_docs = list(contact.generated_docs.all())
     uploaded_docs = list(contact.uploaded_docs.all())
@@ -259,6 +262,8 @@ def contact_dashboard(request, contact_id):
         'form_call': form_call,
         'form_email': form_email,
         'form_upload': form_upload,
+        'form_incomes': form_incomes,
+        'form_expenses': form_expenses,
         'activities': activities,
         'e_signed_docs': e_signed_docs,
         'generated_docs': generated_docs,
@@ -267,6 +272,89 @@ def contact_dashboard(request, contact_id):
     }
     template_path = 'contact/contact_dashboard.html'
     return _render_response(request, context_info, template_path)
+
+
+@login_required
+def budget_analysis(request, contact_id):
+    contact = Contact.objects.get(contact_id=contact_id)
+    try:
+        incomes = Incomes.objects.get(contact__contact_id=contact_id)
+    except Incomes.DoesNotExist as e:
+        incomes = None
+    try:
+        expenses = Expenses.objects.get(contact__contact_id=contact_id)
+    except Expenses.DoesNotExist as e:
+        expenses = None
+    form_incomes = IncomesForm(contact, instance=incomes)
+    form_expenses = ExpensesForm(contact, instance=expenses)
+
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'contact': contact,
+        'form_incomes': form_incomes,
+        'form_expenses': form_expenses,
+        'menu_page': 'contacts',
+    }
+    template_path = 'contact/budget_analysis.html'
+    return _render_response(request, context_info, template_path)
+
+
+@login_required
+def budget_analysis_save(request, contact_id):
+    if request.method == 'POST' and request.POST:
+        contact = Contact.objects.get(contact_id=contact_id)
+        try:
+            incomes = Incomes.objects.get(contact__contact_id=contact_id)
+        except Incomes.DoesNotExist as e:
+            incomes = None
+        form_incomes = IncomesForm(contact, request.POST, instance=incomes)
+        try:
+            expenses = Expenses.objects.get(contact__contact_id=contact_id)
+        except Expenses.DoesNotExist as e:
+            expenses = None
+        form_expenses = ExpensesForm(contact, request.POST, instance=expenses)
+        form_errors = []
+        if not form_incomes.is_valid():
+            for field in form_incomes:
+                if field.errors:
+                    for field_error in field.errors:
+                        error = strip_tags(field.html_name.replace("_", " ").title()) + ": " + field_error
+                        form_errors.append(error)
+            for non_field_error in form_incomes.non_field_errors():
+                form_errors.append(non_field_error)
+        if not form_expenses.is_valid():
+            for field in form_expenses:
+                if field.errors:
+                    for field_error in field.errors:
+                        error = strip_tags(field.html_name.replace("_", " ").title()) + ": " + field_error
+                        form_errors.append(error)
+            for non_field_error in form_expenses.non_field_errors():
+                form_errors.append(non_field_error)
+        if not form_errors:
+            form_incomes.save()
+            form_expenses.save()
+            response_data = 'Ok'
+            response = {'result': response_data}
+        else:
+            response = {'errors': form_errors}
+        return JsonResponse(response)
+
+
+@login_required
+def delete_budget_analysis(request, contact_id):
+    if request.method == 'DELETE':
+        try:
+            expenses = Expenses.objects.get(contact__contact_id=contact_id)
+            expenses.delete()
+        except Expenses.DoesNotExist as e:
+            pass
+        try:
+            incomes = Incomes.objects.get(contact__contact_id=contact_id)
+            incomes.delete()
+        except Incomes.DoesNotExist as e:
+            pass
+        return JsonResponse({'result': 'Ok'})
 
 
 @login_required
@@ -410,10 +498,11 @@ def uploaded_file_download(request, contact_id, uploaded_id):
 
 
 def uploaded_file_delete(request, contact_id, uploaded_id):
-    doc = Uploaded.objects.get(uploaded_id=uploaded_id)
-    os.remove(doc.content.path)
-    doc.delete()
-    return JsonResponse({'result': 'Ok'})
+    if request.method == 'DELETE':
+        doc = Uploaded.objects.get(uploaded_id=uploaded_id)
+        os.remove(doc.content.path)
+        doc.delete()
+        return JsonResponse({'result': 'Ok'})
 
 
 @login_required

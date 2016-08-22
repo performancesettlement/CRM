@@ -21,9 +21,9 @@
         </div>
     </div>
     <div class="col-xs-12 m-t-md m-b-md">
-        <div class="inline"><a class="btn btn-primary" href="">Edit</a></div>
+        <div class="inline"><a class="btn btn-primary" href="{% url "edit_contact" contact_id=contact.contact_id %}">Edit</a></div>
         <div class="inline"><a class="btn btn-primary" href="">Delete</a></div>
-        <div class="inline"><a class="btn btn-primary" href="">Budget Analysis</a></div>
+        <div class="inline"><a class="btn btn-primary" href="{% url "budget_analysis" contact_id=contact.contact_id %}">Budget Analysis</a></div>
         <div class="inline"><a class="btn btn-primary" href="">Creditors</a></div>
     </div>
     <div class="col-xs-4">
