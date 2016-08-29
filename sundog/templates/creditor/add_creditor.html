@@ -1,0 +1,85 @@
+{% extends "app-base.html" %}
+{% load staticfiles my_filters admin_urls %}
+{% block extrahead %}
+    <link href="{% static "css/plugins/dataTables/dataTables.bootstrap.css" %}" rel="stylesheet">
+    <link href="{% static "css/plugins/dataTables/dataTables.responsive.css" %}" rel="stylesheet">
+{% endblock extrahead %}
+{% block content %}
+    <div class="row wrapper border-bottom white-bg page-heading">
+        <div class="col-lg-10 m-t-md">
+            <ol class="breadcrumb">
+                <li>
+                    <a href="{% url "creditors_list" %}">Creditors</a>
+                </li>
+                <li class="active">
+                    <a href="">Add a New Creditor</a>
+                </li>
+            </ol>
+        </div>
+    </div>
+    <div class="col-xs-12 no-padding-sides m-t-md">
+        <h3>Add a Creditor</h3>
+        <form id="add-creditor-form" action="{% url 'add_creditor' %}" method="post">
+            {% csrf_token %}
+            <div class="col-xs-12 m-b-xs">
+                <label>Creditor Name</label>
+                {{ form.name }}
+            </div>
+            <div class="col-xs-12 m-b-xs">
+                <label>First Name</label>
+                {{ form.first_name }}
+            </div>
+            <div class="col-xs-12 m-b-xs">
+                <label>Last Name</label>
+                {{ form.last_name }}
+            </div>
+            <div class="col-xs-12 m-b-xs">
+                <label>Address 1</label>
+                {{ form.address_1 }}
+            </div>
+            <div class="col-xs-12 m-b-xs">
+                <label>Address 2</label>
+                {{ form.address_2 }}
+            </div>
+            <div class="col-xs-12 m-b-xs">
+                <label>City</label>
+                {{ form.city }}
+            </div>
+            <div class="col-xs-12 m-b-xs">
+                <label>State</label>
+                {{ form.state }}
+            </div>
+            <div class="col-xs-12 m-b-xs">
+                <label>Zip</label>
+                {{ form.zip_code }}
+            </div>
+            <div class="col-xs-12 m-b-xs">
+                <label>Phone</label>
+                {{ form.phone_1 }}
+            </div>
+            <div class="col-xs-12 m-b-xs">
+                <label>Phone 2</label>
+                {{ form.phone_2 }}
+            </div>
+            <div class="col-xs-12 m-b-xs">
+                <label>Fax</label>
+                {{ form.fax }}
+            </div>
+            <div class="col-xs-12 m-b-xs">
+                <label>Email</label>
+                {{ form.email }}
+            </div>
+            <div class="col-xs-12 m-b-xs">
+                <label>Url</label>
+                {{ form.url }}
+            </div>
+            <div class="col-xs-12 m-t-md" style="padding-bottom: 95px;">
+                <button class="btn btn-primary" type="submit">Save Creditor</button>
+            </div>
+        </form>
+    </div>
+    <script type="text/javascript">
+        var formErrors = {{ form_errors|jsonify }};
+    </script>
+    <script src="{% static "js/creditor/add_creditor.js" %}"></script>
+{% endblock %}

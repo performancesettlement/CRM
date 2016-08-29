@@ -27,11 +27,11 @@ from haystack.generic_views import SearchView
 from sundog.decorators import bypass_impersonation_login_required
 from sundog.forms import FileCustomForm, FileSearchForm, ContactForm, ImpersonateUserForm, StageForm, StatusForm, \
     CampaignForm, SourceForm, ContactStatusForm, BankAccountForm, NoteForm, CallForm, EmailForm, UploadedForm, \
-    ExpensesForm, IncomesForm
+    ExpensesForm, IncomesForm, CreditorForm
 from datetime import datetime
 from sundog.messages import MESSAGE_REQUEST_FAILED_CODE, CODES_TO_MESSAGE
 from sundog.models import MyFile, Message, Document, FileStatusHistory, Contact, Stage, STAGE_TYPE_CHOICES, Status, \
-    Campaign, BankAccount, Activity, Uploaded, Expenses, Incomes
+    Campaign, BankAccount, Activity, Uploaded, Expenses, Incomes, Creditor
 from sundog.services import reorder_stages, reorder_status
 
 logger = logging.getLogger(__name__)
@@ -50,155 +50,17 @@ def index(request):
         return HttpResponseRedirect(settings.INDEX_PAGE)
 
 
-@bypass_impersonation_login_required
-def files_recent(request):
-    recent_files_list = services.get_access_file_history(request.user)
-    context_info = {'request': request, 'user': request.user, 'recent_files_list': recent_files_list}
-    return _render_response(request, context_info, 'file/recent_files.html')
-
-
-@bypass_impersonation_login_required
-def help(request):
-    context_info = {'request': request, 'user': request.user}
-    return _render_response(request, context_info, 'file/recent_files.html')
-
-
-def terms(request):
-    return render_to_response('sundog/terms.html')
-
-
-def render404(request):
-    return render_to_response('404.html')
-
-
-@bypass_impersonation_login_required
-@user_passes_test(lambda u: u.is_superuser)
-def display_log(request):
-    try:
-        log_file_path = os.path.join(settings.PROJECT_ROOT, 'log/sundog.log')
-        content = open(log_file_path, 'r').read()
-        response = StreamingHttpResponse(content)
-        response['Content-Type'] = 'text/plain; charset=utf8'
-        return response
-    except Exception as e:
-        logger.error("An error occurred trying to display the log.")
-        logger.error(str(e))
-        return HttpResponseRedirect(reverse("admin:index"))
-
-
-@permission_required('auth.impersonate_user')
-def impersonate_user(request):
-    post_data = request.POST
-    form = ImpersonateUserForm(id=request.user.id)
-    context_info = {'request': request, 'form': form}
-    template_path = 'impersonate_user.html'
-    if post_data:
-        impersonated_user_id = post_data.get('id')
-        form_errors = []
-        if impersonated_user_id:
-            request.session["user_impersonation"] = True
-            request.session["user_impersonator"] = serialize_user(request.user)
-            try:
-                impersonated_user = get_cache_user(impersonated_user_id)
-                request.session["user_impersonated"] = serialize_user(impersonated_user)
-                return redirect('home')
-            except Exception as e:
-                logger.error("An error occurred trying to impersonate user.")
-                logger.error(str(e))
-                form_errors.append("Invalid user for impersonation.")
-        else:
-            form_errors.append("User is required for impersonation.")
-        context_info["form_errors"] = form_errors
-        return _render_response(request, context_info, template_path)
-    else:
-        return _render_response(request, context_info, template_path)
-
-
-@bypass_impersonation_login_required
-def stop_impersonate_user(request):
-    if request.session:
-        user_impersonation = request.session.get("user_impersonation", False)
-        if user_impersonation:
-            request.session["user_impersonation"] = False
-            request.session["user_impersonated"] = None
-            request.session["user_impersonator"] = None
-            return redirect('home')
-        else:
-            logger.error("An error occurred trying to stop impersonating user.")
-            logger.error("There is no user being impersonated.")
-            pass  # TODO: Return error no user impersonated
-
-
-@bypass_impersonation_login_required
-def erase_log(request):
-    try:
-        if request.POST:
-            log_file_path = os.path.join(settings.PROJECT_ROOT, 'log/sundog.log')
-            with open(log_file_path, 'w'):
-                pass
-            return JsonResponse({'result': 'OK'})
-    except Exception as e:
-        logger.error("An error occurred trying to delete the log.")
-        logger.error(str(e))
-        return JsonResponse({'result': 'An error occurred!'})
-
-
-@bypass_impersonation_login_required
-def file_detail(request, file_id):
-    my_file = services.get_file_by_id_for_user(file_id, request.user)
-    if my_file is None:
-        raise Http404()
-    else:
-        if my_file == "Unavailable":
-            context_info = {'request': request, 'user': request.user, 'file_id': file_id}
-            template_path = 'file/file_disabled.html'
-        else:
-            documents = Document.objects.filter(file__file_id=file_id)
-            client = Contact.objects.get(client_id=my_file.client.client_id)
-            # print
-            form_client = ContactForm(instance=client)
-            documents_json = []
-            if documents:
-                documents_json = [
-                    {
-                        'size': t.document.size,
-                        'name': t.document.name,
-                        'url': t.document.url,
-                        'id': t.pk
-                    } for t in documents
-                ]
-            context_info = {
-                'request': request,
-                'user': request.user,
-                'opts': MyFile._meta,
-                'file': my_file,
-                'documents': documents_json,
-                'form_client': form_client
-            }
-            template_path = 'file/file.html'
-        return _render_response(request, context_info, template_path)
-
-
 @login_required
 def list_contacts(request):
-    order_by_list = [
-        'type',
-        'created_at',
-        'company',
-        'assigned_to',
-        'last_name,first_name',
-        'phone_number',
-        'email',
-        'stage',
-        'status'
-    ]
+    order_by_list = ['type', 'created_at', 'company', 'assigned_to', 'last_name,first_name', 'phone_number', 'email',
+                     'stage', 'status']
     page = int(request.GET.get('page', '1'))
     selected_list = request.GET.get('selected_list', MY_CONTACTS)
     order_by = request.GET.get('order_by', 'created_at')
 
     if order_by in order_by_list:
-        index = order_by_list.index(order_by)
-        order_by_list[index] = '-' + order_by
+        i = order_by_list.index(order_by)
+        order_by_list[i] = '-' + order_by
 
     sort = {'name': order_by.replace('-', ''), 'class': 'sorting_desc' if order_by.find('-') else 'sorting_asc'}
 
@@ -819,7 +681,7 @@ def add_contact(request):
 
 @login_required
 def edit_contact(request, contact_id):
-    form_errors = None
+    form_errors = []
     instance = Contact.objects.get(contact_id=contact_id)
     form = ContactForm(request.POST or None, instance=instance)
     if request.method == 'POST' and request.POST:
@@ -827,7 +689,6 @@ def edit_contact(request, contact_id):
             form.save()
             return redirect('list_contacts')
         else:
-            form_errors = []
             for field in form:
                 if field.errors:
                     for field_error in field.errors:
@@ -940,6 +801,207 @@ def add_lead_source(request):
     }
     template_path = 'lead_source/add_lead_source.html'
     return _render_response(request, context_info, template_path)
+
+
+@login_required
+def creditors_list(request):
+    order_by_list = ['name', 'address_1', 'city', 'state', 'zip_code', 'debtors', 'total_debts', 'avg']
+    page = int(request.GET.get('page', '1'))
+    order_by = request.GET.get('order_by', 'name')
+    sort = {'name': order_by.replace('-', ''), 'class': 'sorting_desc' if order_by.find('-') else 'sorting_asc'}
+    if order_by in order_by_list:
+        i = order_by_list.index(order_by)
+        order_by_list[i] = '-' + order_by
+    if order_by.replace('-', '') not in ['debtors', 'total_debts', 'avg']:
+        order_by = [order_by]
+        contacts = Creditor.objects.all().order_by(*order_by)
+    else:
+        contacts = Creditor.objects.prefetch_related('creditor_debts').all()
+        if order_by == 'total_debts':
+            sorted(contacts, key=lambda c: c.total_debts())
+        elif order_by == '-total_debts':
+            sorted(contacts, key=lambda c: -c.total_debts())
+        elif order_by == 'debtors':
+            sorted(contacts, key=lambda c: c.total_debtors())
+        elif order_by == '-debtors':
+            sorted(contacts, key=lambda c: -c.total_debtors())
+        elif order_by == 'avg':
+            sorted(contacts, key=lambda c: c.avg_settled())
+        elif order_by == '-avg':
+            sorted(contacts, key=lambda c: -c.avg_settled())
+
+    paginator = Paginator(contacts, 20)
+    page = paginator.page(page)
+    context_info = {
+        'sort': sort,
+        'order_by_list': order_by_list,
+        'request': request,
+        'user': request.user,
+        'page': page,
+        'paginator': paginator,
+        'menu_page': 'creditors'
+    }
+    template_path = 'creditor/creditors_list.html'
+    return _render_response(request, context_info, template_path)
+
+
+@login_required
+def add_creditor(request):
+    form_errors = None
+    form = CreditorForm(request.POST or None)
+    if request.method == 'POST' and request.POST:
+        if form.is_valid():
+            form.save()
+            return redirect('creditors_list')
+        else:
+            form_errors = []
+            for field in form:
+                if field.errors:
+                    for field_error in field.errors:
+                        error = strip_tags(field.html_name.replace("_", " ").title()) + ": " + field_error
+                        form_errors.append(error)
+            for non_field_error in form.non_field_errors():
+                form_errors.append(non_field_error)
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'form': form,
+        'form_errors': form_errors,
+        'menu_page': 'creditors',
+    }
+    template_path = 'creditor/add_creditor.html'
+    return _render_response(request, context_info, template_path)
+
+#######################################################################
+
+
+@bypass_impersonation_login_required
+def files_recent(request):
+    recent_files_list = services.get_access_file_history(request.user)
+    context_info = {'request': request, 'user': request.user, 'recent_files_list': recent_files_list}
+    return _render_response(request, context_info, 'file/recent_files.html')
+
+
+@bypass_impersonation_login_required
+def help(request):
+    context_info = {'request': request, 'user': request.user}
+    return _render_response(request, context_info, 'file/recent_files.html')
+
+
+def terms(request):
+    return render_to_response('sundog/terms.html')
+
+
+def render404(request):
+    return render_to_response('404.html')
+
+
+@bypass_impersonation_login_required
+@user_passes_test(lambda u: u.is_superuser)
+def display_log(request):
+    try:
+        log_file_path = os.path.join(settings.PROJECT_ROOT, 'log/sundog.log')
+        content = open(log_file_path, 'r').read()
+        response = StreamingHttpResponse(content)
+        response['Content-Type'] = 'text/plain; charset=utf8'
+        return response
+    except Exception as e:
+        logger.error("An error occurred trying to display the log.")
+        logger.error(str(e))
+        return HttpResponseRedirect(reverse("admin:index"))
+
+
+@permission_required('auth.impersonate_user')
+def impersonate_user(request):
+    post_data = request.POST
+    form = ImpersonateUserForm(id=request.user.id)
+    context_info = {'request': request, 'form': form}
+    template_path = 'impersonate_user.html'
+    if post_data:
+        impersonated_user_id = post_data.get('id')
+        form_errors = []
+        if impersonated_user_id:
+            request.session["user_impersonation"] = True
+            request.session["user_impersonator"] = serialize_user(request.user)
+            try:
+                impersonated_user = get_cache_user(impersonated_user_id)
+                request.session["user_impersonated"] = serialize_user(impersonated_user)
+                return redirect('home')
+            except Exception as e:
+                logger.error("An error occurred trying to impersonate user.")
+                logger.error(str(e))
+                form_errors.append("Invalid user for impersonation.")
+        else:
+            form_errors.append("User is required for impersonation.")
+        context_info["form_errors"] = form_errors
+        return _render_response(request, context_info, template_path)
+    else:
+        return _render_response(request, context_info, template_path)
+
+
+@bypass_impersonation_login_required
+def stop_impersonate_user(request):
+    if request.session:
+        user_impersonation = request.session.get("user_impersonation", False)
+        if user_impersonation:
+            request.session["user_impersonation"] = False
+            request.session["user_impersonated"] = None
+            request.session["user_impersonator"] = None
+            return redirect('home')
+        else:
+            logger.error("An error occurred trying to stop impersonating user.")
+            logger.error("There is no user being impersonated.")
+            pass  # TODO: Return error no user impersonated
+
+
+@bypass_impersonation_login_required
+def erase_log(request):
+    try:
+        if request.POST:
+            log_file_path = os.path.join(settings.PROJECT_ROOT, 'log/sundog.log')
+            with open(log_file_path, 'w'):
+                pass
+            return JsonResponse({'result': 'OK'})
+    except Exception as e:
+        logger.error("An error occurred trying to delete the log.")
+        logger.error(str(e))
+        return JsonResponse({'result': 'An error occurred!'})
+
+
+@bypass_impersonation_login_required
+def file_detail(request, file_id):
+    my_file = services.get_file_by_id_for_user(file_id, request.user)
+    if my_file is None:
+        raise Http404()
+    else:
+        if my_file == "Unavailable":
+            context_info = {'request': request, 'user': request.user, 'file_id': file_id}
+            template_path = 'file/file_disabled.html'
+        else:
+            documents = Document.objects.filter(file__file_id=file_id)
+            client = Contact.objects.get(client_id=my_file.client.client_id)
+            # print
+            form_client = ContactForm(instance=client)
+            documents_json = []
+            if documents:
+                documents_json = [
+                    {
+                        'size': t.document.size,
+                        'name': t.document.name,
+                        'url': t.document.url,
+                        'id': t.pk
+                    } for t in documents
+                    ]
+            context_info = {
+                'request': request,
+                'user': request.user,
+                'opts': MyFile._meta,
+                'file': my_file,
+                'documents': documents_json,
+                'form_client': form_client
+            }
+            template_path = 'file/file.html'
+        return _render_response(request, context_info, template_path)
 
 
 @permission_required('sundog.change_myfile')

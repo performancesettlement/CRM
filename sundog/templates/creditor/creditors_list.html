@@ -1,0 +1,93 @@
+{% extends "app-base.html" %}
+{% load staticfiles my_filters admin_urls %}
+{% block extrahead %}
+    <link href="{% static "css/plugins/dataTables/dataTables.bootstrap.css" %}" rel="stylesheet">
+    <link href="{% static "css/plugins/dataTables/dataTables.responsive.css" %}" rel="stylesheet">
+{% endblock extrahead %}
+{% block content %}
+    <div class="row wrapper border-bottom white-bg page-heading">
+        <div class="col-lg-10 m-t-md">
+            <ol class="breadcrumb">
+                <li class="active">
+                    <a href="">Creditors</a>
+                </li>
+            </ol>
+        </div>
+    </div>
+    <div class="col-xs-12 m-t-md m-b-md">
+        <div class="inline"><a class="btn btn-primary" href="{% url "add_creditor" %}">Add Creditor</a></div>
+        <div class="inline"><a class="btn btn-primary" href="">Summons</a></div>
+        <div class="inline"><a class="btn btn-primary" href="">Merge Creditors</a></div>
+    </div>
+    <div class="hidden">
+        <form id="search-form" action="{% url 'list_contacts' %}" method="get">
+            <input type="hidden" name="page" value="{{ page.number }}"/>
+        </form>
+    </div>
+    <div class="contact-list">
+        <table id="dataTable" class="table table-hover dataTable no-footer">
+            <thead>
+                <tr>
+                    <th class="{{ sort|get_sort_class:'name' }}"><a href="?order_by={{ order_by_list.0 }}">Company</a></th>
+                    <th class="{{ sort|get_sort_class:'address_1' }}"><a href="?order_by={{ order_by_list.1 }}">Address</a></th>
+                    <th class="{{ sort|get_sort_class:'city' }}"><a href="?order_by={{ order_by_list.2 }}">City</a></th>
+                    <th class="{{ sort|get_sort_class:'state' }}"><a href="?order_by={{ order_by_list.3 }}">State</a></th>
+                    <th class="{{ sort|get_sort_class:'zip_code' }}"><a href="?order_by={{ order_by_list.4 }}">Zip</a></th>
+                    <th class="{{ sort|get_sort_class:'debtors' }}"><a href="?order_by={{ order_by_list.5 }}">Debtors</a></th>
+                    <th class="{{ sort|get_sort_class:'total_debts' }}"><a href="?order_by={{ order_by_list.6 }}">Total Debts</a></th>
+                    <th class="{{ sort|get_sort_class:'avg' }}"><a href="?order_by={{ order_by_list.7 }}">Avg</a></th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% if page.object_list %}
+                {% for result in page.object_list %}
+                    <tr>
+                        <td>{% if result.name %}{{ result.name }}{% endif %}</td>
+                        <td>{% if result.address_1 %}{{ result.address_1 }}{% endif %}</td>
+                        <td>{% if result.city %}{{ result.city }}{% endif %}</td>
+                        <td>{% if result.state %}{{ result.state|stateName }}{% endif %}</td>
+                        <td>{% if result.zip_code %}{{ result.zip_code }}{% endif %}</td>
+                        <td>{% if result.debtors_count %}{{ result.debtors_count }}{% endif %}</td>
+                        <td>{% if result.total_debts %}{{ result.total_debts }}{% endif %}</td>
+                        <td>{% if result.avg_settled %}{{ result.avg_settled }}{% endif %}</td>
+                        <td class="contact-actions">
+                            <a id="{{ result.creditor_id }}-view" href="" class="view-creditor"><span title="View" class="glyphicon glyphicon-arrow-right"></span></a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="12"><strong>No creditor to display!</strong></td>
+                </tr>
+            {% endif %}
+            </tbody>
+        </table>
+    </div>
+    <div class="ibox-footer">
+        {% if page.object_list %}
+            <div class="text-center">
+                <div class="btn-group">
+                    <button class="btn btn-white prev-page" type="button" {% if page.number == 1 %}
+                            disabled="disabled"
+                    {% endif %} ><i class="fa fa-chevron-left"></i></button>
+                    {% for number in paginator|paginatorRange:page.number %}
+                        {% if number == page.number %}
+                            <button class="btn btn-white active">{{ number }}</button>
+                        {% else %}
+                            <button class="btn btn-white move-page">{{ number }}</button>
+                        {% endif %}
+                    {% endfor %}
+                    <button class="btn btn-white next-page" type="button" {% if page.number == paginator.num_pages %}
+                            disabled="disabled"
+                    {% endif %}><i class="fa fa-chevron-right"></i></button>
+                </div>
+                <div class="col-xs-12 m-t-sm">
+                    {{ page.object_list|length }} of {{ paginator.count }}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <script src="{% static "js/creditor/creditors_list.js" %}"></script>
+{% endblock %}

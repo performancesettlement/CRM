@@ -1,14 +1,9 @@
 import hashlib
-import inspect
-import uuid
-from colorfield.fields import ColorField
 from colorful.fields import RGBColorField
 from decimal import Decimal
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from multi_email_field.fields import MultiEmailField
-import pytz
 from wagtail.wagtailcore.models import Page
 from wagtail.wagtailcore.fields import RichTextField
 from wagtail.wagtailadmin.edit_handlers import FieldPanel
@@ -185,12 +180,12 @@ class Company(models.Model):
     company_code = models.CharField(max_length=100, blank=True, null=True)
     ein = models.CharField(max_length=100, blank=True, null=True)
     address = models.CharField(max_length=1000, blank=True, null=True)
-    address_2 = models.CharField(max_length=100, blank=True, null=True)
+    address_2 = models.CharField(max_length=1000, blank=True, null=True)
     city = models.CharField(max_length=100, blank=True, null=True)
     state = models.CharField(max_length=4, choices=enums.US_STATES, blank=True, null=True)
     zip = models.CharField(max_length=100, blank=True, null=True)
-    phone = models.CharField(max_length=100, blank=True, null=True)
-    fax = models.CharField(max_length=100, blank=True, null=True)
+    phone = models.CharField(max_length=10, blank=True, null=True)
+    fax = models.CharField(max_length=10, blank=True, null=True)
     email = models.CharField(max_length=100, blank=True, null=True)
     domain = models.CharField(max_length=100, blank=True, null=True)
     timezone = models.CharField(choices=TIMEZONE_CHOICES, max_length=100, blank=True, null=True)
@@ -272,7 +267,7 @@ class Contact(models.Model):
     middle_name = models.CharField(max_length=100, blank=True, null=True)
     last_name = models.CharField(max_length=100, default="")
     previous_name = models.CharField(max_length=100, blank=True, null=True)
-    phone_number = models.CharField(max_length=50, blank=True, null=True)
+    phone_number = models.CharField(max_length=10, blank=True, null=True)
     mobile_number = models.CharField(max_length=50, default="")
     email = models.CharField(max_length=100, blank=True, null=True)
     birth_date = models.DateField(blank=True, null=True)
@@ -282,7 +277,7 @@ class Contact(models.Model):
     co_applicant_middle_name = models.CharField(max_length=100, blank=True, null=True)
     co_applicant_last_name = models.CharField(max_length=100, blank=True, null=True)
     co_applicant_previous_name = models.CharField(max_length=100, blank=True, null=True)
-    co_applicant_phone_number = models.CharField(max_length=50, blank=True, null=True)
+    co_applicant_phone_number = models.CharField(max_length=10, blank=True, null=True)
     co_applicant_mobile_number = models.CharField(max_length=50, blank=True, null=True)
     co_applicant_email = models.CharField(max_length=100, blank=True, null=True)
     co_applicant_birth_date = models.DateField(blank=True, null=True)
@@ -305,12 +300,12 @@ class Contact(models.Model):
     employment_status = models.CharField(max_length=100, choices=EMPLOYMENT_STATUS_CHOICES, blank=True, null=True)
     position = models.CharField(max_length=100, blank=True, null=True)
     length_of_employment = models.CharField(max_length=100, blank=True, null=True)
-    work_phone = models.CharField(max_length=50, blank=True, null=True)
+    work_phone = models.CharField(max_length=10, blank=True, null=True)
     co_applicant_employer = models.CharField(max_length=100, blank=True, null=True)
     co_applicant_employment_status = models.CharField(max_length=100, choices=EMPLOYMENT_STATUS_CHOICES, blank=True, null=True)
     co_applicant_position = models.CharField(max_length=100, blank=True, null=True)
     co_applicant_length_of_employment = models.CharField(max_length=100, blank=True, null=True)
-    co_applicant_work_phone = models.CharField(max_length=50, blank=True, null=True)
+    co_applicant_work_phone = models.CharField(max_length=10, blank=True, null=True)
 
     hardships = models.CharField(max_length=100, choices=HARDSHIPS_CHOICES, blank=True, null=True)
     hardship_description = models.CharField(max_length=300, blank=True, null=True)
@@ -413,7 +408,7 @@ class BankAccount(models.Model):
     city = models.CharField(max_length=20, blank=True, null=True)
     state = models.CharField(max_length=4, choices=enums.US_STATES, blank=True, null=True)
     zip_code = models.CharField(max_length=10, blank=True, null=True)
-    phone = models.CharField(max_length=20, blank=True, null=True)
+    phone = models.CharField(max_length=10, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 
@@ -825,6 +820,86 @@ class Expenses(models.Model):
         for attr in attrs:
             total += getattr(self, attr)
         return total
+
+
+class Creditor(models.Model):
+    creditor_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=100)
+    first_name = models.CharField(max_length=100, blank=True, null=True)
+    last_name = models.CharField(max_length=100, blank=True, null=True)
+    address_1 = models.CharField(max_length=1000, blank=True, null=True)
+    address_2 = models.CharField(max_length=1000, blank=True, null=True)
+    city = models.CharField(max_length=100, blank=True, null=True)
+    state = models.CharField(max_length=4, choices=enums.US_STATES, blank=True, null=True)
+    zip_code = models.CharField(max_length=100, blank=True, null=True)
+    phone_1 = models.CharField(max_length=10, blank=True, null=True)
+    phone_2 = models.CharField(max_length=10, blank=True, null=True)
+    fax = models.CharField(max_length=10, blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
+    url = models.URLField(blank=True, null=True)
+
+    def total_debts(self):
+        total_debts = Decimal('0.00')
+        all_debts = self.creditor_debts.all()
+        for debt in all_debts:
+            all_debts += debt.current_debt_amount if debt.current_debt_amount else Decimal('0.00')
+        return total_debts
+
+    def total_debtors(self):
+        all_debts = self.creditor_debts.all()
+        return len(all_debts)
+
+    def avg_settled(self):
+        avg = Decimal('0.00')
+        all_owed_money = Decimal('0.00')
+        all_settled_money = Decimal('0.00')
+        all_debts = self.creditor_debts.all()
+        for debt in all_debts:
+            all_owed_money += debt.original_debt_amount
+            all_settled_money += debt.original_debt_amount - debt.current_debt_amount
+        if all_owed_money and all_settled_money:
+            avg = (all_settled_money * 100) / all_owed_money
+        return avg
+
+    def __str__(self):
+        return '%s' % self.name
+
+
+DEBT_ACCOUNT_TYPE_CHOICES = (
+    (None, '--Select--'),
+    ('difficult_creditor', 'Difficult Creditor'),
+    ('payday_loan', 'Payday Loan'),
+    ('standard', 'Standard'),
+)
+
+WHOSE_DEBT_CHOICES = (
+    ('applicant', 'Applicant'),
+    ('co_applicant', 'Co-Applicant'),
+    ('joint', 'Joint'),
+)
+
+
+class Debt(models.Model):
+    debt_id = models.AutoField(primary_key=True)
+    contact = models.ForeignKey(Contact, related_name='contact_debts', blank=True, null=True)
+    original_creditor = models.ForeignKey(Creditor, related_name='creditor_debts', blank=True, null=True)
+    account_number = models.CharField(max_length=32)
+    debt_buyer = models.ForeignKey(Creditor, related_name='debt_buyers', blank=True, null=True)
+    account_type = models.CharField(max_length=20, choices=DEBT_ACCOUNT_TYPE_CHOICES, blank=True, null=True)
+    original_debt_amount = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    current_debt_amount = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    current_payment = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    whose_debt = models.CharField(max_length=20, choices=WHOSE_DEBT_CHOICES, blank=True, null=True)
+    last_payment_date = models.DateTimeField(blank=True, null=True)
+    has_summons = models.CharField(max_length=20, choices=DEBT_ACCOUNT_TYPE_CHOICES, blank=True, null=True)
+    summons_date = models.DateTimeField(blank=True, null=True)
+    court_date = models.DateTimeField(blank=True, null=True)
+    discovery_date = models.DateTimeField(blank=True, null=True)
+    answer_date = models.DateTimeField(blank=True, null=True)
+    service_date = models.DateTimeField(blank=True, null=True)
+    paperwork_received_date = models.DateTimeField(blank=True, null=True)
+    poa_sent_date = models.DateTimeField(blank=True, null=True)
+    notes = models.CharField(max_length=2000, blank=True, null=True)
 
 
 class Source(models.Model):

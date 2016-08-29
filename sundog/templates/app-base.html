@@ -28,6 +28,9 @@
                         <li class="menu-elem {% ifequal menu_page "contacts" %}menu-active{% endifequal %}">
                             <a href="{% url 'list_contacts' %}">Contacts</a>
                         </li>
+                        <li class="menu-elem {% ifequal menu_page "creditors" %}menu-active{% endifequal %}">
+                            <a href="{% url 'creditors_list' %}">Creditors</a>
+                        </li>
                         <li class="menu-elem {% ifequal menu_page "admin" %}menu-active{% endifequal %}">
                             <a href="">Admin</a>
                         </li>
