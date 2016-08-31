@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django.core.validators import validate_email
 from sundog.models import MyFile, FileStatus, Contact, Tag, Stage, Status, Campaign, Source, BankAccount, Note, Call,\
-    Email, DEBT_SETTLEMENT, Uploaded, Incomes, Expenses, Creditor
+    Email, DEBT_SETTLEMENT, Uploaded, Incomes, Expenses, Creditor, Debt
 from sundog import services
 from haystack.forms import SearchForm
 from sundog.constants import RADIO_FILTER_CHOICES, SHORT_DATE_FORMAT
@@ -415,3 +415,35 @@ class CreditorForm(forms.ModelForm):
             'creditor_id': forms.HiddenInput(),
         }
         fields = '__all__'
+
+
+DATE_INPUT_SETTINGS = {
+    'format': SHORT_DATE_FORMAT,
+    'attrs': {'placeholder': 'mm/dd/yyyy', 'data-provide': 'datepicker', 'data-date-autoclose': 'true'},
+}
+
+
+class DebtForm(forms.ModelForm):
+    note = forms.CharField(required=False, widget=forms.Textarea(
+        attrs={'style': 'resize: none;', 'class': 'form-control', 'maxlength': 2000}))
+
+    class Meta:
+        model = Debt
+        widgets = {
+            'debt_id': forms.HiddenInput(),
+            'contact': forms.HiddenInput(),
+            'last_payment_date': forms.DateInput(**DATE_INPUT_SETTINGS),
+            'summons_date': forms.DateInput(**DATE_INPUT_SETTINGS),
+            'court_date': forms.DateInput(**DATE_INPUT_SETTINGS),
+            'discovery_date': forms.DateInput(**DATE_INPUT_SETTINGS),
+            'answer_date': forms.DateInput(**DATE_INPUT_SETTINGS),
+            'service_date': forms.DateInput(**DATE_INPUT_SETTINGS),
+            'paperwork_received_date': forms.DateInput(**DATE_INPUT_SETTINGS),
+            'poa_sent_date': forms.DateInput(**DATE_INPUT_SETTINGS),
+        }
+        fields = '__all__'
+
+    def __init__(self, contact, *args, **kwargs):
+        super(DebtForm, self).__init__(*args, **kwargs)
+        self.fields['contact'].initial = contact
+

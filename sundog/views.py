@@ -27,11 +27,11 @@ from haystack.generic_views import SearchView
 from sundog.decorators import bypass_impersonation_login_required
 from sundog.forms import FileCustomForm, FileSearchForm, ContactForm, ImpersonateUserForm, StageForm, StatusForm, \
     CampaignForm, SourceForm, ContactStatusForm, BankAccountForm, NoteForm, CallForm, EmailForm, UploadedForm, \
-    ExpensesForm, IncomesForm, CreditorForm
+    ExpensesForm, IncomesForm, CreditorForm, DebtForm
 from datetime import datetime
 from sundog.messages import MESSAGE_REQUEST_FAILED_CODE, CODES_TO_MESSAGE
 from sundog.models import MyFile, Message, Document, FileStatusHistory, Contact, Stage, STAGE_TYPE_CHOICES, Status, \
-    Campaign, BankAccount, Activity, Uploaded, Expenses, Incomes, Creditor
+    Campaign, BankAccount, Activity, Uploaded, Expenses, Incomes, Creditor, Debt, DebtNote
 from sundog.services import reorder_stages, reorder_status
 
 logger = logging.getLogger(__name__)
@@ -812,23 +812,24 @@ def creditors_list(request):
     if order_by in order_by_list:
         i = order_by_list.index(order_by)
         order_by_list[i] = '-' + order_by
+    query = Creditor.objects.prefetch_related('creditor_debts').prefetch_related('bought_debts')
     if order_by.replace('-', '') not in ['debtors', 'total_debts', 'avg']:
         order_by = [order_by]
-        contacts = Creditor.objects.all().order_by(*order_by)
+        contacts = query.all().order_by(*order_by)
     else:
-        contacts = Creditor.objects.prefetch_related('creditor_debts').all()
+        contacts = query.all()
         if order_by == 'total_debts':
-            sorted(contacts, key=lambda c: c.total_debts())
+            contacts.sort(key=lambda c: c.total_debts())
         elif order_by == '-total_debts':
-            sorted(contacts, key=lambda c: -c.total_debts())
+            contacts.sort(key=lambda c: -c.total_debts())
         elif order_by == 'debtors':
-            sorted(contacts, key=lambda c: c.total_debtors())
+            contacts.sort(key=lambda c: c.total_debtors())
         elif order_by == '-debtors':
-            sorted(contacts, key=lambda c: -c.total_debtors())
+            contacts.sort(key=lambda c: -c.total_debtors())
         elif order_by == 'avg':
-            sorted(contacts, key=lambda c: c.avg_settled())
+            contacts.sort(key=lambda c: c.avg_settled())
         elif order_by == '-avg':
-            sorted(contacts, key=lambda c: -c.avg_settled())
+            contacts.sort(key=lambda c: -c.avg_settled())
 
     paginator = Paginator(contacts, 20)
     page = paginator.page(page)
@@ -871,6 +872,110 @@ def add_creditor(request):
     }
     template_path = 'creditor/add_creditor.html'
     return _render_response(request, context_info, template_path)
+
+
+@login_required
+def contact_debts(request, contact_id):
+    contact = Contact.objects.get(contact_id=contact_id)
+    order_by_list = [
+        'original_creditor',
+        'debt_buyer',
+        'account_number',
+        'account_type',
+        'current_debt_amount',
+        'whose_debts',
+        'current_payment',
+        'last_payment',
+        'notes',
+        'enrolled',
+    ]
+    page = int(request.GET.get('page', '1'))
+    order_by = request.GET.get('order_by', 'original_creditor')
+
+    if order_by in order_by_list:
+        i = order_by_list.index(order_by)
+        order_by_list[i] = '-' + order_by
+
+    sort = {'name': order_by.replace('-', ''), 'class': 'sorting_desc' if order_by.find('-') else 'sorting_asc'}
+    query = Debt.objects.prefetch_related('notes').filter(contact__contact_id=contact_id)
+    if order_by.replace('-', '') != 'notes':
+        order_by = [order_by]
+        debts = list(query.order_by(*order_by))
+    else:
+        debts = list(query)
+        if order_by == 'notes':
+            debts.sort(key=lambda d: d.notes_count())
+        elif order_by == '-notes':
+            debts.sort(key=lambda d: -d.notes_count())
+
+    form_debt = DebtForm(contact)
+    form_edit_debt = DebtForm(contact)
+    paginator = Paginator(debts, 20)
+    page = paginator.page(page)
+
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'contact': contact,
+        'sort': sort,
+        'order_by_list': order_by_list,
+        'form_debt': form_debt,
+        'form_edit_debt': form_edit_debt,
+        'paginator': paginator,
+        'page': page,
+        'menu_page': 'contacts'
+    }
+    template_path = 'contact/contact_debts.html'
+    return _render_response(request, context_info, template_path)
+
+
+@login_required
+def add_debt(request, contact_id):
+    if request.method == 'POST' and request.POST:
+        contact = Contact.objects.get(contact_id=contact_id)
+        form = DebtForm(contact, request.POST)
+        if form.is_valid():
+            note_content = form.cleaned_data['note']
+            debt = form.save()
+            debt_note = DebtNote(content=note_content, debt=debt)
+            debt_note.save()
+            response_data = 'Ok'
+            response = {'result': response_data}
+        else:
+            form_errors = []
+            for field in form:
+                if field.errors:
+                    for field_error in field.errors:
+                        error = strip_tags(field.html_name.replace("_", " ").title()) + ": " + field_error
+                        form_errors.append(error)
+            for non_field_error in form.non_field_errors():
+                form_errors.append(non_field_error)
+            response = {'errors': form_errors}
+        return JsonResponse(response)
+
+
+@login_required
+def edit_debt(request, contact_id):
+    if request.method == 'POST' and request.POST:
+        debt_id = request.POST.get('debt_id')
+        contact = Contact.objects.get(contact_id=contact_id)
+        instance = Debt.objects.get(debt_id=debt_id)
+        form = DebtForm(contact, request.POST, instance=instance)
+        if form.is_valid():
+            form.save()
+            response_data = 'Ok'
+            response = {'result': response_data}
+        else:
+            form_errors = []
+            for field in form:
+                if field.errors:
+                    for field_error in field.errors:
+                        error = strip_tags(field.html_name.replace("_", " ").title()) + ": " + field_error
+                        form_errors.append(error)
+            for non_field_error in form.non_field_errors():
+                form_errors.append(non_field_error)
+            response = {'errors': form_errors}
+        return JsonResponse(response)
 
 #######################################################################
 
