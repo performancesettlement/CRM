@@ -31,12 +31,11 @@ $(document).ready(function(){
                             showSuccessPopup('Budget info deleted.');
                         }
                         else {
-                            showErrorPopup('An error occurred deleting the file.');
+                            showErrorPopup('An error occurred deleting the the budget info.');
                         }
                     }
                 });
             }
         );
-
     });
 });

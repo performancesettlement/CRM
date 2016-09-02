@@ -179,7 +179,7 @@ class ContactStatusForm(forms.ModelForm):
         self.fields['stage'].empty_label = EMPTY_LABEL
         self.fields['status'].required = True
 
-        if 'instance' in kwargs and kwargs['instance']:
+        if args == (None,) and 'instance' in kwargs and kwargs['instance']:
             instance = kwargs['instance']
             self.fields['status'].queryset = Status.objects.filter(stage=instance.stage)
         elif args and args[0] and 'stage' in args[0]:

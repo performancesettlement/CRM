@@ -20,11 +20,33 @@ function showErrorToast(message){
     toastr["error"](message)
 }
 
+function showSuccessToast(message) {
+    toastr.options = {
+        "closeButton": true,
+        "debug": false,
+        "newestOnTop": false,
+        "progressBar": true,
+        "positionClass": "toast-bottom-center",
+        "preventDuplicates": false,
+        "onclick": null,
+        "showDuration": "300",
+        "hideDuration": "1000",
+        "timeOut": "1500",
+        "extendedTimeOut": "1000",
+        "showEasing": "swing",
+        "hideEasing": "linear",
+        "showMethod": "fadeIn",
+        "hideMethod": "fadeOut"
+    };
+
+    toastr["success"](message)
+}
+
 function showErrorPopup(error){
-    if(error!=null){
-        if(typeof error == "string"){
+    if (error != null) {
+        if (typeof error == "string") {
             swal("Error!", error, "error");
-        }else{
+        } else {
             var errors = error;
             var errorText = "<div align='left' class='sweet-alert-body-scroll'>";
             for(var i=0; i<errors.length; i++){
@@ -72,6 +94,10 @@ function resetForm($form) {
     $form.find('.chosen-select').find('option:first-child').prop('selected', true).end().trigger('chosen:updated');
 }
 
+function redirect(location) {
+    window.location.replace(location);
+}
+
 function refreshScreen() {
-    window.location.replace(window.location);
+    redirect(window.location);
 }

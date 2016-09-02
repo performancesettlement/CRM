@@ -30,7 +30,11 @@
         </div>
         <div class="form-group">
             <label> City, State, Zip Code </label>
-            <div class="inline">{{ form_bank_account.city }}{{ form_bank_account.state }} {{ form_bank_account.zip_code }}</div>
+            <div class="inline">
+                {{ form_bank_account.city }}&nbsp;
+                {{ form_bank_account.state }}&nbsp;
+                {{ form_bank_account.zip_code }}
+            </div>
         </div>
         <div class="form-group">
             <label> Phone </label>

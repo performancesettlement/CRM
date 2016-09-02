@@ -1,4 +1,4 @@
-<div id="edit-debt" class="col-xs-12 no-padding">
+<div id="edit-debt" class="col-xs-12 well">
     <h3>Edit Debt</h3>
     <form id="edit-debt-form" action="{% url 'edit_debt' contact_id=contact.contact_id%}" method="post" class="form">
         {% csrf_token %}
@@ -78,7 +78,7 @@
                 <div class="col-sm-8">{{ form_edit_debt.poa_sent_date }}</div>
             </div>
         </div>
-        <div class="col-xs-12 m-t-md" style="padding-bottom: 95px;">
+        <div class="col-xs-12 m-t-md">
             <button class="btn btn-primary" type="submit">Save</button>
             <button class="btn btn-primary cancel" type="button">Cancel</button>
         </div>

@@ -19,6 +19,11 @@
                 <td class="col-xs-7">{{ activity.description|cut_string_at }}</td>
             </tr>
         {% endfor %}
+        {% if not activities %}
+            <tr>
+                <td class="text-center border-bottom p-xs" colspan="12">No Activities to display.</td>
+            </tr>
+        {% endif %}
         </tbody>
     </table>
 </div>

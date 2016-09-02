@@ -358,6 +358,38 @@ class Contact(models.Model):
     def __str__(self):
         return '%s' % self.first_name
 
+    def debts_count(self):
+        return len(self.contact_debts.all())
+
+    def total_original_debts(self):
+        total = Decimal('0.00')
+        for debt in list(self.contact_debts.all()):
+            if debt.enrolled and debt.original_debt_amount:
+                total += debt.original_debt_amount
+        return total
+
+    def total_current_debts(self):
+        total = Decimal('0.00')
+        for debt in list(self.contact_debts.all()):
+            if debt.enrolled and debt.current_debt_amount:
+                total += debt.current_debt_amount
+        return total
+
+    def total_current_payments(self):
+        total = Decimal('0.00')
+        for debt in list(self.contact_debts.all()):
+            if debt.enrolled and debt.current_payment:
+                total += debt.current_payment
+        return total
+
+    def total_settled(self):
+        # TODO: implement logic
+        return Decimal('0.00')
+
+    def client_balance(self):
+        # TODO: implement logic
+        return Decimal('0.00')
+
     def get_time_in_status(self):
         time_in_status = 'N/A'
         if self.last_status_change:
@@ -380,10 +412,10 @@ class Contact(models.Model):
             orig = Contact.objects.get(contact_id=self.contact_id)
             if orig.status != self.status:
                 self.last_status_change = datetime.now()
-        if self.identification:
-            self.identification.strip()
-            if not self.identification.isupper():
-                self.identification = self.identification.upper()
+        if self.identification == '':
+            self.identification = None
+        if self.co_applicant_identification == '':
+            self.co_applicant_identification = None
         super(Contact, self).save(*args, **kwargs)
 
 
@@ -838,31 +870,39 @@ class Creditor(models.Model):
     email = models.EmailField(blank=True, null=True)
     url = models.URLField(blank=True, null=True)
 
+    def __str__(self):
+        return '%s' % self.name
+
     def total_debts(self):
         total_debts = Decimal('0.00')
-        all_debts = self.creditor_debts.all()
+        all_debts = list(self.creditor_debts.all()) + list(self.bought_debts.all())
         for debt in all_debts:
-            all_debts += debt.current_debt_amount if debt.current_debt_amount else Decimal('0.00')
+            if (not debt.debt_buyer or (debt.debt_buyer and debt.debt_buyer.creditor_id == self.creditor_id)) and debt.current_debt_amount:
+                total_debts += debt.current_debt_amount
         return total_debts
 
     def total_debtors(self):
         all_debts = list(self.creditor_debts.all()) + list(self.bought_debts.all())
-        return len(all_debts)
+        count = len(all_debts)
+        for debt in all_debts:
+            if debt.debt_buyer and debt.debt_buyer.creditor_id != self.creditor_id:
+                count -= 1
+        return count
 
     def avg_settled(self):
         avg = Decimal('0.00')
         all_owed_money = Decimal('0.00')
         all_settled_money = Decimal('0.00')
         all_debts = list(self.creditor_debts.all()) + list(self.bought_debts.all())
+        # TODO: check rule for settled amount!
         for debt in all_debts:
-            all_owed_money += debt.original_debt_amount
-            all_settled_money += debt.original_debt_amount - debt.current_debt_amount
+            if not debt.debt_buyer or (debt.debt_buyer and debt.debt_buyer.creditor_id == self.creditor_id):
+                if debt.original_debt_amount:
+                    all_owed_money += debt.original_debt_amount
+                    all_settled_money += debt.original_debt_amount - debt.current_debt_amount
         if all_owed_money and all_settled_money:
-            avg = (all_settled_money * 100) / all_owed_money
-        return avg
-
-    def __str__(self):
-        return '%s' % self.name
+            avg = (all_settled_money * Decimal('100')) / all_owed_money
+        return format_price(avg)
 
 
 DEBT_ACCOUNT_TYPE_CHOICES = (

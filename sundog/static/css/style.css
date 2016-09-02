@@ -8210,3 +8210,7 @@ input {
     padding-left: 5px !important;
     border: 1px solid #E5E6E7 !important;
 }
+
+.padding-for-footer {
+    padding-bottom: 95px;
+}

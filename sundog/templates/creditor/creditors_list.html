@@ -49,8 +49,8 @@
                         <td>{% if result.state %}{{ result.state|stateName }}{% endif %}</td>
                         <td>{% if result.zip_code %}{{ result.zip_code }}{% endif %}</td>
                         <td>{% if result.debtors_count %}{{ result.debtors_count }}{% endif %}</td>
-                        <td>{% if result.total_debts %}{{ result.total_debts }}{% endif %}</td>
-                        <td>{% if result.avg_settled %}{{ result.avg_settled }}{% endif %}</td>
+                        <td>{% if result.total_debts %}{{ result.total_debts|currency }}{% endif %}</td>
+                        <td>{% if result.avg_settled %}{{ result.avg_settled|percent }}{% endif %}</td>
                         <td class="contact-actions">
                             <a id="{{ result.creditor_id }}-view" href="" class="view-creditor"><span title="View" class="glyphicon glyphicon-arrow-right"></span></a>
                         </td>

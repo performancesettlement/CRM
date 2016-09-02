@@ -35,7 +35,7 @@
     <script type="text/javascript">
         var getStageStatusesUrl = "{% url 'get_stage_statuses' %}";
         var csrf = '{{ csrf_token }}';
-        var form_errors = {{ form_errors|jsonify }};
+        var formErrors = {{ form_errors|jsonify }};
     </script>
     <script src="{% static "js/contact/edit-contact-status.js" %}"></script>
 

@@ -13,6 +13,9 @@
                 <li>
                     <a href="{% url 'list_contacts' %}">Contacts</a>
                 </li>
+                <li>
+                    <a href="{% url 'contact_dashboard' contact_id=contact.contact_id %}">{{ contact.full_name_straight }}</a>
+                </li>
                 <li class="active">
                     <strong>Debts</strong>
                 </li>
@@ -25,12 +28,38 @@
         </form>
     </div>
     <div id="debts" class="col-xs-8 debt-list">
+        <div id="totals" class="m-b-md m-t-md border-bottom" style="padding-bottom: 20px;">
+            <div class="inline m-r-md">
+                <div class="m-b-xs font-bold">Total Accounts</div>
+                <div class="blue font-medium font-bold">{{ contact.debts_count }}</div>
+            </div>
+            <div class="inline m-r-md">
+                <div class="m-b-xs font-bold">Current Debt Amount</div>
+                <div id="current-debt-amount" class="blue font-medium font-bold">{{ contact.total_current_debts|currency }}</div>
+            </div>
+            <div class="inline m-r-md">
+                <div class="m-b-xs font-bold">Original Debt Amount</div>
+                <div id="original-debt-amount" class="blue font-medium font-bold">{{ contact.total_original_debts|currency }}</div>
+            </div>
+            <div class="inline m-r-md">
+                <div class="m-b-xs font-bold">Total Current Payments</div>
+                <div id="current-payment" class="blue font-medium font-bold">{{ contact.total_current_payments|currency }}</div>
+            </div>
+            <div class="inline m-r-md">
+                <div class="m-b-xs font-bold">Total Settled</div>
+                <div class="blue font-medium font-bold">{{ contact.total_settled|currency }}</div>
+            </div>
+            <div class="inline">
+                <div class="m-b-xs font-bold">Client Balance</div>
+                <div class="blue font-medium font-bold">{{ contact.client_balance|currency }}</div>
+            </div>
+        </div>
         <table id="dataTable" class="table table-hover dataTable no-footer">
             <thead>
             <tr>
                 <th class="{{ sort|get_sort_class:'original_creditor' }}"><a href="?order_by={{ order_by_list.0 }}">Creditor</a></th>
                 <th class="{{ sort|get_sort_class:'debt_buyer' }}"><a href="?order_by={{ order_by_list.1 }}">Collection</a></th>
-                <th class="{{ sort|get_sort_class:'account_number' }}"><a href="?order_by={{ order_by_list.2 }}">Account #</a></th>
+                <th class="{{ sort|get_sort_class:'original_creditor_account_number' }}"><a href="?order_by={{ order_by_list.2 }}">Account #</a></th>
                 <th class="{{ sort|get_sort_class:'account_type' }}"><a href="?order_by={{ order_by_list.3 }}">Type</a></th>
                 <th class="{{ sort|get_sort_class:'current_debt_amount' }}"><a href="?order_by={{ order_by_list.4 }}">Current Debt Amount</a></th>
                 <th class="{{ sort|get_sort_class:'whose_debts' }}"><a href="?order_by={{ order_by_list.5 }}">Whose Debt</a></th>
@@ -48,15 +77,17 @@
                         <td id="{{ debt.debt_id }}-original-creditor" value="{% if debt.original_creditor and debt.original_creditor.creditor_id %}{{ debt.original_creditor.creditor_id }}{% endif %}">{% if debt.original_creditor %} {{ debt.original_creditor }} {% endif %}</td>
                         <td id="{{ debt.debt_id }}-debt-buyer" value="{% if debt.debt_buyer and debt.debt_buyer.creditor_id %}{{ debt.debt_buyer }}{% endif %}">{% if debt.debt_buyer %}{{ debt.debt_buyer }}{% endif %}</td>
                         <td id="{{ debt.debt_id }}-original-creditor-account-number" value="{{ debt.original_creditor_account_number }}">{% if debt.original_creditor_account_number %}{{ debt.original_creditor_account_number }}{% endif %}</td>
-                        <td id="{{ debt.debt_id }}-account-type" value="{{ debt.account_type }}">{% if debt.account_type %}{{ debt.account_type_label }}{% endif %}</td>
+                        <td id="{{ debt.debt_id }}-account-type" value="{% if debt.account_type %}{{ debt.account_type }}{% endif %}">{% if debt.account_type %}{{ debt.account_type_label }}{% endif %}</td>
                         <td id="{{ debt.debt_id }}-original-debt-amount" style="display: none;" value="{{ debt.original_debt_amount }}"></td>
                         <td id="{{ debt.debt_id }}-current-debt-amount" value="{{ debt.current_debt_amount }}">{% if debt.current_debt_amount %}{{ debt.current_debt_amount|currency }}{% endif %}</td>
-                        <td id="{{ debt.debt_id }}-whose-debt" value="{{ debt.whose_debt }}">{% if debt.whose_debt %}{{ debt.whose_debt_label }}{% endif %}</td>
-                        <td id="{{ debt.debt_id }}-current-payment" value="{{ debt.current_payment }}">{% if debt.current_payment %}{{ debt.current_payment|currency }}{% endif %}</td>
+                        <td id="{{ debt.debt_id }}-whose-debt" value="{% if debt.whose_debt %}{{ debt.whose_debt }}{% endif %}">{% if debt.whose_debt %}{{ debt.whose_debt_label }}{% endif %}</td>
+                        <td id="{{ debt.debt_id }}-current-payment" value="{{ debt.current_payment }}">{% if debt.current_payment != None %}{{ debt.current_payment|currency }}{% endif %}</td>
                         <td id="{{ debt.debt_id }}-last-payment-date" value="{{ debt.last_payment_date|date:'SHORT_DATE_FORMAT' }}">{% if debt.last_payment_date %}{{ debt.last_payment_date }}{% endif %}</td>
                         <td id="{{ debt.debt_id }}-notes">{{ debt.notes_count }}</td>
-                        <td id="{{ debt.debt_id }}-enrolled" value={{ debt.enrolled }}><input id="{{ debt.debt_id }}-enrolled-checkbox" type="checkbox" {% if debt.enrolled %}checked="checked"{% endif %}></td>
-                        <td id="{{ debt.debt_id }}-has-summons" style="display: none;" value="{{ debt.has_summons }}"></td>
+                        <td id="{{ debt.debt_id }}-enrolled" value={{ debt.enrolled }}>
+                            <input id="{{ debt.debt_id }}-enrolled-checkbox" class="enrolled-checkbox" type="checkbox" {% if debt.enrolled %}checked="checked"{% endif %}>
+                        </td>
+                        <td id="{{ debt.debt_id }}-has-summons" style="display: none;" value="{% if debt.has_summons %}{{ debt.has_summons }}{% endif %}"></td>
                         <td id="{{ debt.debt_id }}-summons-date" style="display: none;" value="{{ debt.summons_date|date:'SHORT_DATE_FORMAT' }}"></td>
                         <td id="{{ debt.debt_id }}-court-date" style="display: none;" value="{{ debt.court_date|date:'SHORT_DATE_FORMAT' }}"></td>
                         <td id="{{ debt.debt_id }}-discovery-date" style="display: none;" value="{{ debt.discovery_date|date:'SHORT_DATE_FORMAT' }}"></td>
@@ -108,12 +139,16 @@
         </div>
         <div class="col-xs-12 m-t-md">
             <h3>Current Action: </h3>
-            <div id="forms">
+            <div id="forms" class="col-xs-12 no-padding-sides padding-for-footer">
                 {% include "contact/partials/contact_debts/add_debt_form.html" %}
                 {% include "contact/partials/contact_debts/edit_debt_form.html" %}
             </div>
         </div>
     </div>
+    <script type="text/javascript">
+        var editDebtEnrolledUrl = "{% url "edit_debt_enrolled" contact_id=contact.contact_id %}";
+        var csrfToken = "{{ csrf_token }}";
+    </script>
     <script src="{% static "js/plugins/datapicker/bootstrap-datepicker.js" %}"></script>
     <script src="{% static "js/contact/contact_debts.js" %}"></script>
 {% endblock %}

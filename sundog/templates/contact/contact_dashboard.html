@@ -12,7 +12,7 @@
         <div class="col-xs-12 m-t-md">
             <ol class="breadcrumb">
                 <li>
-                    <a href="{% url 'list_contacts' %}">Contacts</a>
+                    <a id="list-contacts-link" href="{% url 'list_contacts' %}">Contacts</a>
                 </li>
                 <li class="active">
                     <strong>{{ contact.full_name_straight }}</strong>
@@ -22,7 +22,7 @@
     </div>
     <div class="col-xs-12 m-t-md m-b-md">
         <div class="inline"><a class="btn btn-primary" href="{% url "edit_contact" contact_id=contact.contact_id %}">Edit</a></div>
-        <div class="inline"><a class="btn btn-primary" href="">Delete</a></div>
+        <div class="inline"><a id="delete-contact" class="btn btn-primary" href="{% url "delete_contact" contact_id=contact.contact_id %}">Delete</a></div>
         <div class="inline"><a class="btn btn-primary" href="{% url "budget_analysis" contact_id=contact.contact_id %}">Budget Analysis</a></div>
         <div class="inline"><a class="btn btn-primary" href="{% url "contact_debts" contact_id=contact.contact_id %}">Creditors</a></div>
     </div>
@@ -83,7 +83,6 @@
             <a id="activity-btn" class="btn btn-primary inline dashboard-button" href="">Activity</a>
             <a id="docs-btn" class="btn btn-default inline dashboard-button" href="">Docs</a>
             <a id="bank-account-btn" class="btn btn-default inline dashboard-button" href="">Bank Account</a>
-            <a id="debts-btn" class="btn btn-default inline dashboard-button" href="">Debts</a>
         </div>
         <div id="contents" class="col-xs-12 no-padding border">
             <div id="activity" style="display: none;">
@@ -95,9 +94,6 @@
             <div id="docs" style="display: none;">
                 {% include 'contact/partials/contact_dashboard/documents_list.html' %}
             </div>
-            <div id="debts" style="display: none;">
-                Debts
-            </div>
         </div>
     </div>
     <div id="modals">
@@ -106,7 +102,7 @@
         {% include "contact/partials/contact_dashboard/add_email_modal.html" %}
         {% include "contact/partials/contact_dashboard/upload_files_modal.html" %}
     </div>
-    <script type="text/javascript" >
+    <script type="text/javascript">
         var csrfToken = '{{ csrf_token }}';
     </script>
     <script src="{% static "js/contact/contact_dashboard.js" %}"></script>

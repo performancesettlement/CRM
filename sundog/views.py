@@ -711,6 +711,19 @@ def edit_contact(request, contact_id):
 
 
 @login_required
+def delete_contact(request, contact_id):
+    if request.method == 'DELETE':
+        try:
+            contact = Contact.objects.get(contact_id=contact_id)
+            contact.delete()
+        except Contact.DoesNotExist as e:
+            pass
+        except Exception:
+            return JsonResponse({'result': 'error'})
+        return JsonResponse({'result': 'Ok'})
+
+
+@login_required
 def get_stage_statuses(request):
     if request.POST and 'stage_id' in request.POST:
         stage_id = request.POST['stage_id']
@@ -876,11 +889,11 @@ def add_creditor(request):
 
 @login_required
 def contact_debts(request, contact_id):
-    contact = Contact.objects.get(contact_id=contact_id)
+    contact = Contact.objects.prefetch_related('contact_debts').get(contact_id=contact_id)
     order_by_list = [
         'original_creditor',
         'debt_buyer',
-        'account_number',
+        'original_creditor_account_number',
         'account_type',
         'current_debt_amount',
         'whose_debts',
@@ -937,8 +950,9 @@ def add_debt(request, contact_id):
         if form.is_valid():
             note_content = form.cleaned_data['note']
             debt = form.save()
-            debt_note = DebtNote(content=note_content, debt=debt)
-            debt_note.save()
+            if note_content:
+                debt_note = DebtNote(content=note_content, debt=debt)
+                debt_note.save()
             response_data = 'Ok'
             response = {'result': response_data}
         else:
@@ -975,6 +989,22 @@ def edit_debt(request, contact_id):
             for non_field_error in form.non_field_errors():
                 form_errors.append(non_field_error)
             response = {'errors': form_errors}
+        return JsonResponse(response)
+
+
+@login_required
+def edit_debt_enrolled(request, contact_id):
+    if request.method == 'POST' and request.POST:
+        debt_id = request.POST.get('debt_id')
+        enrolled_string = request.POST.get('enrolled')
+        response = {}
+        if enrolled_string is not None:
+            enrolled = True if enrolled_string == 'true' else False
+            debt = Debt.objects.get(debt_id=debt_id)
+            debt.enrolled = enrolled
+            debt.save()
+            response_data = 'Ok'
+            response['result'] = response_data
         return JsonResponse(response)
 
 #######################################################################

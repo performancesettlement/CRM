@@ -246,6 +246,32 @@ $(document).ready(function() {
         );
     });
 
+    $('#delete-contact').click(function(event){
+        event.preventDefault();
+        var url = $(this).prop('href');
+        showConfirmationPopup(
+            'You will not be able to recover this data!',
+            function() {
+                $.ajax({
+                    url: url,
+                    beforeSend: function(xhr) {
+                        xhr.setRequestHeader("X-CSRFToken", csrfToken);
+                    },
+                    type: 'DELETE',
+                    success: function(response) {
+                        if (response && response.result == 'Ok') {
+                            var location = $('#list-contacts-link').prop('href');
+                            redirect(location);
+                        }
+                        else {
+                            showErrorPopup('An error occurred deleting the contact.');
+                        }
+                    }
+                });
+            }
+        );
+    });
+
     showContents();
     switchRadiosData('local');
 });
