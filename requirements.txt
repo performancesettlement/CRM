@@ -20,3 +20,5 @@ django-colorfield==0.1.10
 django-multi-email-field==0.4
 brotlipy==0.5.1
 whitenoise==3.2.1
+django-colorful==1.2
+chardet==2.3.0
