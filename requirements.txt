@@ -18,3 +18,5 @@ mock==2.0.0
 django-allauth
 django-colorfield==0.1.10
 django-multi-email-field==0.4
+brotlipy==0.5.1
+whitenoise==3.2.1
