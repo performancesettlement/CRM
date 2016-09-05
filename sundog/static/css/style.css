@@ -8183,7 +8183,7 @@ tr {
 }
 
 .blue {
-    color: blue;
+    color: #337ab7;
 }
 
 .green {
@@ -8213,4 +8213,17 @@ input {
 
 .padding-for-footer {
     padding-bottom: 95px;
+}
+
+.activity-type {
+    color: white;
+    margin-bottom: 0;
+    border-radius: 5px;
+    padding-top: 3px;
+    padding-bottom: 3px;
+}
+
+.table-footer-cell {
+    background-color: darkgray;
+    border-right: 1px solid white;
 }

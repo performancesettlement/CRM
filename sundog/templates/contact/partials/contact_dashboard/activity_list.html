@@ -11,7 +11,9 @@
         {% for activity in activities %}
             {# TODO: Add detail on click #}
             <tr class="activity-row">
-                <td class="col-xs-2 text-right" style="background: {{ activity.get_color }}; color: white;">{{ activity.get_type }}</td>
+                <td class="col-xs-2 text-right">
+                    <p class="text-center activity-type" style="background: {{ activity.get_color }}">{{ activity.get_type }}</p>
+                </td>
                 <td class="col-xs-3">
                     <p class="m-b-none">{{ activity.created_at|date:'SHORT_DATETIME_FORMAT' }}</p>
                     <p class="font-bold m-b-none">{{ activity.created_by.get_full_name }} - {{ activity.created_by.username }}</p>

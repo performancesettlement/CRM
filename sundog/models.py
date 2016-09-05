@@ -361,28 +361,54 @@ class Contact(models.Model):
     def debts_count(self):
         return len(self.contact_debts.all())
 
-    def total_original_debts(self):
+    def total_enrolled_original_debts(self):
         total = Decimal('0.00')
         for debt in list(self.contact_debts.all()):
             if debt.enrolled and debt.original_debt_amount:
                 total += debt.original_debt_amount
         return total
 
-    def total_current_debts(self):
+    def total_enrolled_current_debts(self):
         total = Decimal('0.00')
         for debt in list(self.contact_debts.all()):
             if debt.enrolled and debt.current_debt_amount:
                 total += debt.current_debt_amount
         return total
 
-    def total_current_payments(self):
+    def total_not_enrolled_current_debts(self):
+        total = Decimal('0.00')
+        for debt in list(self.contact_debts.all()):
+            if not debt.enrolled and debt.current_debt_amount:
+                total += debt.current_debt_amount
+        return total
+
+    def total_enrolled_current_payments(self):
         total = Decimal('0.00')
         for debt in list(self.contact_debts.all()):
             if debt.enrolled and debt.current_payment:
                 total += debt.current_payment
         return total
 
+    def total_not_enrolled_current_payments(self):
+        total = Decimal('0.00')
+        for debt in list(self.contact_debts.all()):
+            if not debt.enrolled and debt.current_payment:
+                total += debt.current_payment
+        return total
+
     def total_settled(self):
+        # TODO: implement logic
+        return Decimal('0.00')
+
+    def average_settled(self):
+        # TODO: implement logic
+        return Decimal('0.00')
+
+    def highest_settled(self):
+        # TODO: implement logic
+        return Decimal('0.00')
+
+    def lowest_settled(self):
         # TODO: implement logic
         return Decimal('0.00')
 

@@ -100,7 +100,7 @@ def list_contacts(request):
 
 @login_required
 def contact_dashboard(request, contact_id):
-    contact = Contact.objects.get(contact_id=contact_id)
+    contact = Contact.objects.prefetch_related('contact_debts').get(contact_id=contact_id)
     bank_account = contact.bank_account.all() if contact else None
     bank_account = bank_account[0] if bank_account else None
     form_bank_account = BankAccountForm(instance=bank_account)
@@ -114,6 +114,8 @@ def contact_dashboard(request, contact_id):
     e_signed_docs = list(contact.e_signed_docs.all())
     generated_docs = list(contact.generated_docs.all())
     uploaded_docs = list(contact.uploaded_docs.all())
+    enrolled_debts = contact.contact_debts.filter(enrolled=True)
+    not_enrolled_debts = contact.contact_debts.filter(enrolled=False)
     activities = Activity.objects.filter(contact__contact_id=contact_id)
     context_info = {
         'request': request,
@@ -130,6 +132,8 @@ def contact_dashboard(request, contact_id):
         'e_signed_docs': e_signed_docs,
         'generated_docs': generated_docs,
         'uploaded_docs': uploaded_docs,
+        'enrolled_debts': enrolled_debts,
+        'not_enrolled_debts': not_enrolled_debts,
         'menu_page': 'contacts',
     }
     template_path = 'contact/contact_dashboard.html'

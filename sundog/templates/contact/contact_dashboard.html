@@ -83,8 +83,9 @@
             <a id="activity-btn" class="btn btn-primary inline dashboard-button" href="">Activity</a>
             <a id="docs-btn" class="btn btn-default inline dashboard-button" href="">Docs</a>
             <a id="bank-account-btn" class="btn btn-default inline dashboard-button" href="">Bank Account</a>
+            <a id="debts-btn" class="btn btn-default inline dashboard-button" href="">Debts</a>
         </div>
-        <div id="contents" class="col-xs-12 no-padding border">
+        <div id="contents" class="col-xs-12 no-padding-sides border padding-for-footer">
             <div id="activity" style="display: none;">
                 {% include 'contact/partials/contact_dashboard/activity_list.html' %}
             </div>
@@ -93,6 +94,9 @@
             </div>
             <div id="docs" style="display: none;">
                 {% include 'contact/partials/contact_dashboard/documents_list.html' %}
+            </div>
+            <div id="debts" style="display: none;">
+                {% include 'contact/partials/contact_dashboard/debts.html' %}
             </div>
         </div>
     </div>
