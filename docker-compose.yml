@@ -1,0 +1,30 @@
+version: "2"
+
+services:
+
+  web:
+    build: .
+    expose:
+      - "80"
+    links:
+      - sundog_db
+      - elasticsearch
+    environment:
+      DEBUG: 'true'
+    restart: always
+
+  elasticsearch:
+    image: elasticsearch
+    volumes:
+      - "./data/elasticsearch/data:/usr/share/elasticsearch/data"
+      - "./data/elasticsearch/log:/usr/share/elasticsearch/log"
+
+  sundog_db:
+    image: postgres
+    environment:
+      POSTGRES_DB: "sundog_db"
+      POSTGRES_USER: "sundog_db"
+      POSTGRES_PASSWORD: "sundog_db"
+    volumes:
+      - "./data/postgres/data:/var/lib/postgresql/data"
+      - "./data/postgres/log:/var/log/postgresql"

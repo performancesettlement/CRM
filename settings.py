@@ -81,6 +81,8 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
 
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+
     'wagtail.wagtailcore.middleware.SiteMiddleware',
     'wagtail.wagtailredirects.middleware.RedirectMiddleware',
     'sundog.middleware.TimezoneMiddleware',
@@ -291,3 +293,5 @@ CRONJOBS = [
 SEED_FILE_ID = 1
 
 SHORT_DATETIME_FORMAT = 'm/d/Y h:i a'
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
