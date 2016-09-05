@@ -2,9 +2,9 @@
 .pydevproject
 __pycache__
 /static/
-*.pyc
-*.pid
-*.sock
+**/*.pyc
+**/*.pid
+**/*.sock
 /media
 /bin/
 /lib/
@@ -14,12 +14,11 @@ django_app_nginx.conf
 /media/
 /.idea/*
 /app/build/*
-*.iml
+**/*.iml
 /log/*
 django_auth_app/migrations/0*
 sundog/migrations/0*
-local_config.py
 import/history/*
 
-# Docker service persistent data:
-/data/
+# Docker service data
+data/
