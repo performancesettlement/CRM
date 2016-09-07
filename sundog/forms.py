@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django.core.validators import validate_email
 from sundog.models import MyFile, FileStatus, Contact, Tag, Stage, Status, Campaign, Source, BankAccount, Note, Call,\
-    Email, DEBT_SETTLEMENT, Uploaded, Incomes, Expenses, Creditor, Debt
+    Email, DEBT_SETTLEMENT, Uploaded, Incomes, Expenses, Creditor, Debt, DebtNote
 from sundog import services
 from haystack.forms import SearchForm
 from sundog.constants import RADIO_FILTER_CHOICES, SHORT_DATE_FORMAT
@@ -447,3 +447,13 @@ class DebtForm(forms.ModelForm):
         super(DebtForm, self).__init__(*args, **kwargs)
         self.fields['contact'].initial = contact
 
+
+class DebtNoteForm(forms.ModelForm):
+    class Meta:
+        model = DebtNote
+        widgets = {
+            'debt_id': forms.HiddenInput(),
+            'debt': forms.HiddenInput(),
+            'content': forms.Textarea(attrs={'class': 'col-xs-12 no-padding', 'style': 'resize: none;', 'maxlength': 2000}),
+        }
+        fields = '__all__'

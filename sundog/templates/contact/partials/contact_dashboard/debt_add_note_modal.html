@@ -1,0 +1,24 @@
+<div class="modal fade" id="debt-add-note" tabindex="-1" role="dialog" aria-labelledby="debt-add-note-label">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="debt-add-note-label">Add a Debt Note For: {{ contact.full_name_straight }}</h4>
+            </div>
+            <div class="row modal-body">
+                <form id="debt-add-note-form" class="form" method="post">
+                    {% csrf_token %}
+                    <input id="id_debt" name="debt" type="hidden">
+                    <div class="col-xs-12 form-group no-padding">
+                        <label class="col-xs-12 no-padding"> Note: </label>
+                        {{ form_debt_note.content }}
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="debt-add-note-submit" type="button" class="btn btn-primary">Save Note</button>
+            </div>
+        </div>
+    </div>
+</div>

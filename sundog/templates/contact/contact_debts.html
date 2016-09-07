@@ -35,15 +35,15 @@
             </div>
             <div class="inline m-r-md">
                 <div class="m-b-xs font-bold">Current Debt Amount</div>
-                <div id="current-debt-amount" class="blue font-medium font-bold">{{ contact.total_current_debts|currency }}</div>
+                <div id="current-debt-amount" class="blue font-medium font-bold">{{ contact.total_enrolled_current_debts|currency }}</div>
             </div>
             <div class="inline m-r-md">
                 <div class="m-b-xs font-bold">Original Debt Amount</div>
-                <div id="original-debt-amount" class="blue font-medium font-bold">{{ contact.total_original_debts|currency }}</div>
+                <div id="original-debt-amount" class="blue font-medium font-bold">{{ contact.total_enrolled_original_debts|currency }}</div>
             </div>
             <div class="inline m-r-md">
                 <div class="m-b-xs font-bold">Total Current Payments</div>
-                <div id="current-payment" class="blue font-medium font-bold">{{ contact.total_current_payments|currency }}</div>
+                <div id="current-payment" class="blue font-medium font-bold">{{ contact.total_enrolled_current_payments|currency }}</div>
             </div>
             <div class="inline m-r-md">
                 <div class="m-b-xs font-bold">Total Settled</div>

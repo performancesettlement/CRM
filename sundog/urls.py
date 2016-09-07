@@ -79,6 +79,7 @@ urlpatterns = [
     url(r'^contact/(?P<contact_id>\d+)/creditors/debt/add/$', views.add_debt, name='add_debt'),
     url(r'^contact/(?P<contact_id>\d+)/creditors/debt/edit/$', views.edit_debt, name='edit_debt'),
     url(r'^contact/(?P<contact_id>\d+)/creditors/debt/edit/enrolled/$', views.edit_debt_enrolled, name='edit_debt_enrolled'),
+    url(r'^debtNote/add/$', views.debt_add_note, name='debt_add_note'),
     url(r'^stage/statuses/$', views.get_stage_statuses, name='get_stage_statuses'),
     url(r'^contacts/$', views.list_contacts, name='list_contacts'),
     url(r'^contacts/lists/$', views.list_contacts, name='new_list'),  # TODO: Create proper view and template.

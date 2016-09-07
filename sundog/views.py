@@ -27,7 +27,7 @@ from haystack.generic_views import SearchView
 from sundog.decorators import bypass_impersonation_login_required
 from sundog.forms import FileCustomForm, FileSearchForm, ContactForm, ImpersonateUserForm, StageForm, StatusForm, \
     CampaignForm, SourceForm, ContactStatusForm, BankAccountForm, NoteForm, CallForm, EmailForm, UploadedForm, \
-    ExpensesForm, IncomesForm, CreditorForm, DebtForm
+    ExpensesForm, IncomesForm, CreditorForm, DebtForm, DebtNoteForm
 from datetime import datetime
 from sundog.messages import MESSAGE_REQUEST_FAILED_CODE, CODES_TO_MESSAGE
 from sundog.models import MyFile, Message, Document, FileStatusHistory, Contact, Stage, STAGE_TYPE_CHOICES, Status, \
@@ -111,6 +111,7 @@ def contact_dashboard(request, contact_id):
     form_upload = UploadedForm(contact, request.user)
     form_expenses = ExpensesForm(contact)
     form_incomes = IncomesForm(contact)
+    form_debt_note = DebtNoteForm()
     e_signed_docs = list(contact.e_signed_docs.all())
     generated_docs = list(contact.generated_docs.all())
     uploaded_docs = list(contact.uploaded_docs.all())
@@ -128,6 +129,7 @@ def contact_dashboard(request, contact_id):
         'form_upload': form_upload,
         'form_incomes': form_incomes,
         'form_expenses': form_expenses,
+        'form_debt_note': form_debt_note,
         'activities': activities,
         'e_signed_docs': e_signed_docs,
         'generated_docs': generated_docs,
@@ -1011,6 +1013,25 @@ def edit_debt_enrolled(request, contact_id):
             response['result'] = response_data
         return JsonResponse(response)
 
+
+def debt_add_note(request):
+    if request.method == 'POST' and request.POST:
+        form = DebtNoteForm(request.POST)
+        if form.is_valid():
+            form.save()
+            response_data = 'Ok'
+            response = {'result': response_data}
+        else:
+            form_errors = []
+            for field in form:
+                if field.errors:
+                    for field_error in field.errors:
+                        error = strip_tags(field.html_name.replace("_", " ").title()) + ": " + field_error
+                        form_errors.append(error)
+            for non_field_error in form.non_field_errors():
+                form_errors.append(non_field_error)
+            response = {'errors': form_errors}
+        return JsonResponse(response)
 #######################################################################
 
 

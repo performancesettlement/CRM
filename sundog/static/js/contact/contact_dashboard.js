@@ -272,6 +272,35 @@ $(document).ready(function() {
         );
     });
 
+    $('.debt-add-note').click(function(event){
+        event.preventDefault();
+        var url = $(this).attr('href');
+        var debtId = parseInt($(this).attr('id').replace('debt-add-note-', ''));
+        var form = $('#debt-add-note-form');
+        form.attr('action', url);
+        form.find('#id_debt').val(debtId);
+        $('#debt-add-note').modal('show');
+    });
+
+    $('#debt-add-note-submit').click(function() {
+        var formSelector = '#' + $(this).attr('id').replace('submit', 'form');
+        var form = $(formSelector);
+        var formData = form.serializeArray();
+        $.post(form.attr('action'), formData, function(response) {
+            if (response.errors) {
+                showErrorPopup(response.errors);
+            }
+            if (response.result == 'Ok') {
+                $('#debt-add-note').modal('hide');
+                showSuccessPopup('Note added successfully.');
+            }
+        });
+    });
+
+    $('#debt-add-note').on('hidden.bs.modal', function() {
+        $('#debt-add-note-form').find('#id_debt, #id_content').val('');
+    });
+
     showContents();
     switchRadiosData('local');
 });

@@ -22,25 +22,30 @@
             <tbody>
                 {% for debt in enrolled_debts %}
                 <tr>
-                    <td><img src="{{STATIC_URL}}img/bullet_green.png"></td>
+                    <td class="text-center"><img src="{{STATIC_URL}}img/bullet_green.png"></td>
                     <td>{{ debt.original_creditor }}</td>
                     <td>{{ debt.original_creditor_account_number }}</td>
                     <td>{{ debt.current_debt_amount|currency }}</td>
                     <td>{{ debt.whose_debt_label }}</td>
                     <td>{{ debt.current_payment|currency }}</td>
                     <td>{{ debt.settlement }}</td>
-                    <td><a>Add note</a></td>
+                    <td><a id="debt-add-note-{{ debt.debt_id }}" href="{% url "debt_add_note" %}" class="debt-add-note">Add note</a></td>
                 </tr>
                 {% endfor %}
+                {% if not enrolled_debts %}
+                    <tr>
+                        <td class="text-center" colspan="12"><strong>No debts to display!</strong></td>
+                    </tr>
+                {% endif %}
             </tbody>
             <tfoot>
                 <tr>
                     <td class="table-footer-cell"></td>
                     <td class="table-footer-cell"></td>
                     <td class="table-footer-cell"></td>
-                    <td class="table-footer-cell"><strong>{{ contact.total_enrolled_current_debts }}</strong></td>
+                    <td class="table-footer-cell"><strong>{{ contact.total_enrolled_current_debts|currency }}</strong></td>
                     <td class="table-footer-cell"></td>
-                    <td class="table-footer-cell"><strong>{{ contact.total_enrolled_current_payments }}</strong></td>
+                    <td class="table-footer-cell"><strong>{{ contact.total_enrolled_current_payments|currency }}</strong></td>
                     <td class="table-footer-cell"></td>
                     <td class="table-footer-cell"></td>
                 </tr>
@@ -66,7 +71,7 @@
             <tbody>
             {% for debt in not_enrolled_debts %}
                 <tr>
-                    <td><img src="{{STATIC_URL}}img/bullet_red.png"></td>
+                    <td class="text-center"><img src="{{STATIC_URL}}img/bullet_red.png"></td>
                     <td>{{ debt.original_creditor }}</td>
                     <td>{{ debt.original_creditor_account_number }}</td>
                     <td>{{ debt.current_debt_amount|currency }}</td>
@@ -75,6 +80,11 @@
                     <td>{{ debt.settlement }}</td>
                 </tr>
             {% endfor %}
+            {% if not not_enrolled_debts %}
+                <tr>
+                    <td class="text-center" colspan="12"><strong>No debts to display!</strong></td>
+                </tr>
+            {% endif %}
             </tbody>
             <tfoot>
             <tr>
@@ -93,7 +103,7 @@
 </div>
 <div class="col-xs-12">
     <h3 class="m-b-xs">Settled Debts</h3>
-    <div class="col-xs-12 no-padding-sides border-top">
+    <div class="col-xs-12 border m-t-xs m-b-xs p-xs">
         <div class="inline m-r-md">
             <div class="m-b-xs font-bold">Average</div>
             <div class="blue font-medium font-bold">{{ contact.average_settled|percent }}</div>
@@ -109,6 +119,7 @@
     </div>
     <div class="col-xs-12 no-padding-sides">
         <table class="table table-hover">
+            {# TODO: Implement as soon as settlement has been implemented. #}
             <thead>
             <tr>
                 <th>Creditor</th>
