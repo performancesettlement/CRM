@@ -155,7 +155,7 @@ CACHES = {
 
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': True,
+    'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
             'format': "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
@@ -199,30 +199,58 @@ LOGGING = {
             'backupCount': 10,
             'formatter': 'verbose',
         },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+        'logstash': {
+            'level': 'DEBUG',
+            'class': 'logstash.TCPLogstashHandler',
+            'host': 'logstash',
+            'port': 5000,
+            'version': 1,
+        },
+    },
+    'root': {
+        'handlers': ['info_file', 'mail', 'syslog', 'console', 'logstash'],
+        'level': 'DEBUG',
     },
     'loggers': {
+        'root': {
+            'handlers': ['console', 'logstash'],
+            'level': 'DEBUG',
+        },
         'sundog': {
-            'handlers': ['info_file', 'mail', 'syslog'],
+            'handlers': ['info_file', 'mail', 'syslog', 'console', 'logstash'],
             'level': 'DEBUG',
         },
         'django_auth_app': {
-            'handlers': ['info_file', 'mail', 'syslog'],
+            'handlers': ['info_file', 'mail', 'syslog', 'console', 'logstash'],
             'level': 'DEBUG',
         },
         'django': {
-            'handlers': ['syslog', 'django'],
-            'level': 'WARNING',
-            'propagate': True,
+            'handlers': ['syslog', 'django', 'console', 'logstash'],
+            'level': 'DEBUG',
         },
         'django.db.backends': {
-            'handlers': ['syslog', 'django'],
-            'level': 'INFO',
-            'propagate': True,
+            'handlers': ['syslog', 'django', 'console', 'logstash'],
+            'level': 'DEBUG',
         },
         'django.request': {
-            'handlers': ['syslog', 'mail', 'django'],
-            'level': 'INFO',
-            'propagate': True,
+            'handlers': ['syslog', 'mail', 'django', 'console', 'logstash'],
+            'level': 'DEBUG',
+        },
+        'django.server': {
+            'handlers': ['syslog', 'mail', 'django', 'console', 'logstash'],
+            'level': 'DEBUG',
+        },
+        'gunicorn.access': {
+            'handlers': ['syslog', 'mail', 'django', 'console', 'logstash'],
+            'level': 'DEBUG',
+        },
+        'gunicorn.error': {
+            'handlers': ['syslog', 'mail', 'django', 'console', 'logstash'],
+            'level': 'DEBUG',
         },
     }
 }

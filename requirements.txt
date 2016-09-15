@@ -23,3 +23,5 @@ whitenoise==3.2.1
 django-colorful==1.2
 chardet==2.3.0
 gunicorn==19.6.0
+python-logstash==0.4.6
+json-logging-py==0.2
