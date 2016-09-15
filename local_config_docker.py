@@ -3,7 +3,7 @@ SITE_DOMAIN = ''
 SITE_HOST = ''
 HOST = 'localhost'
 
-# Disabled if running in debugging mode, so this is probably not important for now:
+# Disabled if running in debugging mode; this is probably not important for now:
 ALLOWED_HOSTS = []
 
 DEBUG = True
@@ -12,7 +12,7 @@ DEBUG = True
 ADDRESS_API_KEY = ''
 
 # Database connection setup:
-DATABASE_HOST = 'sundog_db'
+DATABASE_HOST = 'postgres'
 DATABASE_PORT = '5432'
 DATABASE_NAME = 'sundog_db'
 DATABASE_USER = 'sundog_db'

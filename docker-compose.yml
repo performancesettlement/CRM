@@ -4,23 +4,35 @@ services:
 
   web:
     build: .
-    expose:
-      - "80"
     links:
-      - sundog_db
+      - postgres
       - elasticsearch
+      - logstash
     environment:
       DEBUG: 'true'
     restart: always
 
   elasticsearch:
-    image: elasticsearch
+    image: "elasticsearch"
     volumes:
       - "./data/elasticsearch/data:/usr/share/elasticsearch/data"
       - "./data/elasticsearch/log:/usr/share/elasticsearch/log"
 
-  sundog_db:
-    image: postgres
+  logstash:
+    image: "logstash"
+    links:
+      - "elasticsearch"
+    command: "logstash -f /etc/logstash/conf.d/"
+    volumes:
+      - "./conf/logstash:/etc/logstash/conf.d"
+
+  kibana:
+    image: "kibana"
+    links:
+      - "elasticsearch"
+
+  postgres:
+    image: "postgres"
     environment:
       POSTGRES_DB: "sundog_db"
       POSTGRES_USER: "sundog_db"
