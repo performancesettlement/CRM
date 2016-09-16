@@ -13,7 +13,7 @@ services:
     restart: always
 
   elasticsearch:
-    image: "elasticsearch"
+    build: "services/elasticsearch"
     volumes:
       - "./data/elasticsearch/data:/usr/share/elasticsearch/data"
       - "./data/elasticsearch/log:/usr/share/elasticsearch/log"
