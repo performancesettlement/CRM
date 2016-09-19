@@ -15,7 +15,8 @@ Including another URLconf
     1. Add an import:  from blog import urls as blog_urls
     2. Add a URL to urlpatterns:  url(r'^blog/', include(blog_urls))
 """
-from django.conf.urls import include, url, patterns
+from django.conf.urls import include, url
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.auth.decorators import login_required
 from sundog.views import FileSearchView
@@ -122,7 +123,8 @@ urlpatterns = [
 handler404 = 'sundog.views.render404'
 
 if settings.DEBUG:
-    urlpatterns += patterns('',
-                   url(r'^media/(?P<path>.*)$', 'django.views.static.serve',  # NOQA
-                       {'document_root': settings.MEDIA_ROOT, 'show_indexes': True}),
-                   )
+    urlpatterns += static(
+        settings.MEDIA_URL,
+        document_root=settings.MEDIA_ROOT,
+        show_indexes=True
+    )

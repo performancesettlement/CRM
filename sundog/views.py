@@ -6,8 +6,7 @@ from django.core import mail
 from django.core.paginator import Paginator
 import sys
 from django_auth_app.utils import serialize_user
-from django.shortcuts import render_to_response, redirect
-from django.template.context import RequestContext
+from django.shortcuts import render, render_to_response, redirect
 from django.contrib.auth.decorators import permission_required, user_passes_test, login_required
 from django.http import Http404, StreamingHttpResponse
 from django.http.response import HttpResponse, HttpResponseRedirect, JsonResponse
@@ -42,8 +41,7 @@ logger = logging.getLogger(__name__)
 
 
 def _render_response(request, context_info, template_path):
-    context = RequestContext(request, context_info)
-    return render_to_response(template_path, context_instance=context)
+    return render(request, template_path, context_info)
 
 
 def index(request):
