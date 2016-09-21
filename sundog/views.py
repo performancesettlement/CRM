@@ -1058,7 +1058,7 @@ def add_enrollment_plan(request):
                 fee_2 = form_fee_2.save(commit=False)
                 fee_2.enrollment_plan = enrollment_plan
                 fee_2.save()
-            return redirect('add_enrollment_plan')
+            return redirect('edit_enrollment_plan', enrollment_plan_id=enrollment_plan.enrollment_plan_id)
         else:
             form_errors = get_form_errors(form) + get_form_errors(form_fee_1)
             if fee_data_2:
@@ -1095,7 +1095,7 @@ def edit_enrollment_plan(request, enrollment_plan_id):
             form_fee_2 = FeeForm(request.POST, prefix='2')
         elif fee_count > 1 and fee_data_2:
             form_fee_2 = FeeForm(request.POST, instance=fees[1], prefix='2')
-        if form.is_valid() and form_fee_1.is_valid() and (fee_data_2 and form_fee_2.is_valid()):
+        if form.is_valid() and form_fee_1.is_valid() and (not fee_data_2 or (fee_data_2 and form_fee_2.is_valid())):
             enrollment_plan = form.save()
             fee_1 = form_fee_1.save(commit=False)
             fee_1.enrollment_plan = enrollment_plan
@@ -1106,11 +1106,14 @@ def edit_enrollment_plan(request, enrollment_plan_id):
                 fee_2.save()
             elif fee_count == 2 and not fee_data_2:
                 fees[1].delete()
-            return redirect('edit_enrollment_plan', enrollment_plan_id=enrollment_plan_id)
+            response_data = 'Ok'
+            response = {'result': response_data}
         else:
             form_errors = get_form_errors(form) + get_form_errors(form_fee_1)
             if fee_data_2:
                 form_errors += get_form_errors(form_fee_2)
+            response = {'errors': form_errors}
+        return JsonResponse(response)
     plans = [('', '--New Plan--')] + [(plan.enrollment_plan_id, plan.name) for plan in enrollment_plans]
     form_fee_2 = FeeForm(prefix='2')
     if len(fees) > 1:
@@ -1130,6 +1133,17 @@ def edit_enrollment_plan(request, enrollment_plan_id):
     }
     template_path = 'enrollment/edit_enrollment_plan.html'
     return _render_response(request, context_info, template_path)
+
+
+def delete_enrollment_plan(request, enrollment_plan_id):
+    if request.method == 'DELETE':
+        try:
+            EnrollmentPlan.objects.get(enrollment_plan_id=enrollment_plan_id).delete()
+        except EnrollmentPlan.DoesNotExist as e:
+            pass
+        except Exception:
+            return JsonResponse({'result': 'error'})
+        return JsonResponse({'result': 'Ok'})
 
 
 def add_fee_profile(request):
@@ -1202,10 +1216,13 @@ def edit_fee_profile(request, fee_profile_id):
                 rule.save()
             if remove_rules:
                 FeeProfileRule.objects.filter(fee_profile_rule_id__in=remove_rules).delete()
-            return redirect('edit_fee_profile', fee_profile_id=fee_profile.fee_profile_id)
+            response_data = 'Ok'
+            response = {'result': response_data}
         else:
             list_of_error_lists = list((get_form_errors(form) for form in received_profile_rules_forms))
             form_errors = get_form_errors(form) + list(error for sub_list in list_of_error_lists for error in sub_list)
+            response = {'errors': form_errors}
+        return JsonResponse(response)
     profile_rules_forms += [FeeProfileRuleForm(get_data(str(i), request.POST), prefix=str(i)) for i in range(number_of_previous_rule_count + 1, 11)]
     profiles = [('', '--Add Profile--')] + [(profile.fee_profile_id, profile.name) for profile in fee_profiles]
     context_info = {
@@ -1220,6 +1237,17 @@ def edit_fee_profile(request, fee_profile_id):
     }
     template_path = 'enrollment/edit_fee_profile.html'
     return _render_response(request, context_info, template_path)
+
+
+def delete_fee_profile(request, fee_profile_id):
+    if request.method == 'DELETE':
+        try:
+            FeeProfile.objects.get(fee_profile_id=fee_profile_id).delete()
+        except FeeProfile.DoesNotExist as e:
+            pass
+        except Exception:
+            return JsonResponse({'result': 'error'})
+        return JsonResponse({'result': 'Ok'})
 
 
 def enrollments_list(request):

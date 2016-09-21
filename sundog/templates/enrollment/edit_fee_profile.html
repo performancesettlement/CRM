@@ -27,7 +27,7 @@
         </select>
     </div>
     <div id="add-fee-profile" class="form-template col-xs-12 no-padding">
-        <form id="fee-profile-form" class="col-xs-12 no-padding" action="{% url 'edit_fee_profile' fee_profile_id=fee_profile_id %}" method="post">
+        <form id="edit-fee-profile-form" class="col-xs-12 no-padding" action="{% url 'edit_fee_profile' fee_profile_id=fee_profile_id %}" method="post">
             {% csrf_token %}
             <input type="hidden" id="id_fee_profile_id" name="fee_profile_id" value={{ fee_profile_id }}>
             <div class="col-xs-12 border-bottom m-b-md m-r-xs p-md no-padding-left">
@@ -36,7 +36,8 @@
                     <div>{{ form.name }}</div>
                 </div>
                 <div class="col-xs-6 m-t-md">
-                    <button class="btn btn-primary pull-right" type="submit">Save Profile</button>
+                    <a id="delete-fee-profile" class="btn btn-danger pull-right" href="{% url "delete_fee_profile" fee_profile_id=fee_profile_id %}">Delete Profile</a>
+                    <button class="btn btn-primary pull-right m-r-xs" type="submit">Save Profile</button>
                 </div>
             </div>
             <div class="col-xs-12 no-padding-sides padding-for-footer">
@@ -158,6 +159,7 @@
         var formErrors = {{ form_errors|jsonify }};
         var addFeeProfileUrl = "{% url "add_fee_profile" %}";
         var editFeeProfileUrl = "{% url "edit_fee_profile" fee_profile_id=0 %}";
+        var csrfToken = "{{ csrf_token }}";
     </script>
     <script src="{% static "js/enrollment/fee_profile.js" %}"></script>
 

@@ -18,15 +18,23 @@
         </div>
     </div>
     <div class="m-t-md">
-        <select id="plan-chooser">
+        <select id="plan-chooser" class="col-xs-2 no-padding-sides">
             {% for plan in plans %}
                 <option {% if enrollment_plan_id == plan.0 %}selected="selected"{% endif %} value="{{plan.0}}" >{{plan.1}}</option>
             {% endfor %}
         </select>
     </div>
-    <div id="edit_enrollment_plan" class="form-template m-t-md">
-        <h2>Enrollment Program Settings</h2>
-        <form id="enrollment-plan-form" action="{% url 'edit_enrollment_plan' enrollment_plan_id=enrollment_plan_id %}" method="post">
+    <div id="edit_enrollment_plan" class="form-template col-xs-12 no-padding-sides">
+        <form id="edit-enrollment-plan-form" action="{% url 'edit_enrollment_plan' enrollment_plan_id=enrollment_plan_id %}" method="post">
+            <div class="col-xs-12 border-bottom m-b-md m-r-xs p-md no-padding-sides">
+                <div class="col-xs-6 no-padding-sides">
+                    <h2>Enrollment Program Settings</h2>
+                </div>
+                <div class="col-xs-6 m-t-md no-padding-sides">
+                    <a id="delete-enrollment-plan" class="btn btn-danger pull-right" href="{% url "delete_enrollment_plan" enrollment_plan_id=enrollment_plan_id %}">Delete Plan</a>
+                    <button class="btn btn-primary pull-right m-r-xs" type="submit">Save Plan</button>
+                </div>
+            </div>
             {% csrf_token %}
             <input type="hidden" id="id_enrollment_plan_id" name="enrollment_plan_id" value={{ enrollment_plan_id }}>
             <div class="col-xs-12 no-padding-sides m-b-md">
@@ -315,7 +323,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xs-12 no-padding-sides m-b-md">
+            <div class="col-xs-12 no-padding-sides m-b-md padding-for-footer">
                 <h3>Client Savings</h3>
                 <div class="col-xs-12 border no-padding-sides">
                     <div class="col-xs-1 m-t-xs m-b-xs">
@@ -347,9 +355,6 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xs-12 m-t-md padding-for-footer">
-                <button class="btn btn-primary" type="submit">Save Plan</button>
-            </div>
         </form>
     </div>
     <script type="text/javascript">
@@ -357,6 +362,7 @@
         var hasSecondFee = {% if has_second_fee %} true {% else %} false {% endif %};
         var addEnrollmentPlanUrl = "{% url "add_enrollment_plan" %}";
         var editEnrollmentPlanUrl = "{% url "edit_enrollment_plan" enrollment_plan_id=0 %}";
+        var csrfToken = "{{ csrf_token }}";
     </script>
 
     <script src="{% static "js/enrollment/enrollment_plan.js" %}"></script>
