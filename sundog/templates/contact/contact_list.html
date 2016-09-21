@@ -67,9 +67,9 @@
                         <td>{% if result.email %}{{ result.email }}{% endif %}</td>
                         <td id="{{ result.contact_id }}-stage">{% if result.stage %}{{ result.stage }}{% endif %}</td>
                         <td id="{{ result.contact_id }}-status" value="{{ result.status.status_id }}">{% if result.status %}{{ result.status }}{% endif %}</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        <td>{# TODO: add data source info #}</td>
+                        <td>{# TODO: add last call Activity #}</td>
+                        <td>{# TODO: add time in status #}</td>
                         <td class="contact-actions">
                             <a id="{{ result.contact_id }}-edit-contact-status" href="{% url 'edit_contact_status' contact_id=result.contact_id %}" class="edit-contact-status"><span title="Edit Status" class="glyphicon glyphicon-th"></span></a>
                             <a id="{{ result.contact_id }}-edit-contact-info" href="{% url 'edit_contact' contact_id=result.contact_id %}" class="edit-contact-info"><span title="Edit Info" class="glyphicon glyphicon-edit"></span></a>
@@ -79,7 +79,7 @@
                 {% endfor %}
             {% else %}
                 <tr>
-                    <td colspan="7"><strong>No contacts to display!</strong></td>
+                    <td colspan="12"><strong>No contacts to display!</strong></td>
                 </tr>
             {% endif %}
             </tbody>
@@ -110,8 +110,8 @@
         {% endif %}
     </div>
 
-    <script src="{% static "js/contact/contact_list.js" %}"></script>
     <script type="text/javascript">
         var contacts_list_url = '{% url 'list_contacts' %}';
     </script>
+    <script src="{% static "js/contact/contact_list.js" %}"></script>
 {% endblock %}

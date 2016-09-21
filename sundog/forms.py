@@ -1,8 +1,10 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.core.validators import validate_email
+from django_auth_app import enums
 from sundog.models import MyFile, FileStatus, Contact, Tag, Stage, Status, Campaign, Source, BankAccount, Note, Call,\
-    Email, DEBT_SETTLEMENT, Uploaded, Incomes, Expenses, Creditor, Debt, DebtNote
+    Email, DEBT_SETTLEMENT, Uploaded, Incomes, Expenses, Creditor, Debt, DebtNote, EnrollmentPlan, Fee, FeeProfile,\
+    FeeProfileRule
 from sundog import services
 from haystack.forms import SearchForm
 from sundog.constants import RADIO_FILTER_CHOICES, SHORT_DATE_FORMAT
@@ -455,5 +457,65 @@ class DebtNoteForm(forms.ModelForm):
             'debt_id': forms.HiddenInput(),
             'debt': forms.HiddenInput(),
             'content': forms.Textarea(attrs={'class': 'col-xs-12 no-padding', 'style': 'resize: none;', 'maxlength': 2000}),
+        }
+        fields = '__all__'
+
+
+class EnrollmentPlanForm(forms.ModelForm):
+    class Meta:
+        model = EnrollmentPlan
+        widgets = {
+            'enrollment_plan_id': forms.HiddenInput(),
+            'active': forms.CheckboxInput(),
+            'two_monthly_drafts': forms.CheckboxInput(),
+            'select_first_payment_date': forms.CheckboxInput(),
+            'performance_plan': forms.CheckboxInput(),
+            'draft_fee_separate': forms.CheckboxInput(),
+            'includes_veritas_legal': forms.CheckboxInput(),
+            'legal_plan_flag': forms.CheckboxInput(),
+            'debt_amount_flag': forms.CheckboxInput(),
+            'debt_to_income_flag': forms.CheckboxInput(),
+            'states_flag': forms.CheckboxInput(),
+            'show_fee_subtotal_column': forms.CheckboxInput(),
+            'savings_adjustment': forms.CheckboxInput(),
+            'show_savings_accumulation': forms.CheckboxInput(),
+            'states': forms.SelectMultiple(choices=enums.US_STATES, attrs={'class': 'col-xs-2 no-padding-sides', 'style': 'height: 200px;'}),
+            'fee_profile': forms.Select(choices=FeeProfile.objects.all(), attrs={'class': 'col-xs-2 no-padding-sides'})
+        }
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        if kwargs and 'instance' in kwargs and  kwargs['instance'].states:
+            kwargs['instance'].states = kwargs['instance'].states.replace('\'', '').replace('[', '').replace(']', '').split(', ')
+        super(EnrollmentPlanForm, self).__init__(*args, **kwargs)
+
+
+class FeeForm(forms.ModelForm):
+    enrollment_plan = forms.ModelChoiceField(required=False, queryset=EnrollmentPlan.objects.all(),
+                                             widget=forms.HiddenInput())
+
+    class Meta:
+        model = Fee
+        widgets = {
+            'fee_id': forms.HiddenInput(),
+            'name': forms.TextInput(attrs={'style': 'max-width: 140px;'})
+        }
+        fields = '__all__'
+
+
+class FeeProfileForm(forms.ModelForm):
+    class Meta:
+        model = FeeProfile
+        widgets = {
+
+        }
+        fields = '__all__'
+
+
+class FeeProfileRuleForm(forms.ModelForm):
+    class Meta:
+        model = FeeProfileRule
+        widgets = {
+
         }
         fields = '__all__'

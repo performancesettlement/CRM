@@ -8169,6 +8169,10 @@ tr {
   padding-left: 0 !important;
 }
 
+.no-padding-right {
+  padding-right: 0 !important;
+}
+
 .activity-row {
     background-color: lightgrey;
 }
@@ -8226,4 +8230,36 @@ input {
 .table-footer-cell {
     background-color: darkgray;
     border-right: 1px solid white;
+}
+
+.after-checkbox {
+    position: absolute;
+    top: 5px;
+    left: 80px;
+}
+
+.checkbox-label-after {
+    position: absolute;
+    top: 10px;
+    left: 40px;
+}
+
+.checkbox-label-after-small {
+  position: absolute;
+  top: 10px;
+  left: 25px;
+}
+
+.fee-profile-rule div {
+    width: 114px;
+    min-width: 114px;
+}
+
+.fee-profile-rule input {
+    width: 90px;
+}
+
+.fee-profile-rule label {
+  width: 114px !important;
+  min-width: 114px !important;
 }

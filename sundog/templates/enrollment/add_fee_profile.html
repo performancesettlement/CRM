@@ -1,0 +1,163 @@
+{% extends "app-base.html" %}
+{% load staticfiles my_filters %}
+{% block extrahead %}
+    <link href="{% static "css/plugins/datapicker/datepicker3.css" %}" rel="stylesheet">
+    <link href="{% static "css/plugins/chosen/chosen.css" %}" rel="stylesheet">
+{% endblock extrahead %}
+{% block content %}
+    <div class="row wrapper border-bottom white-bg page-heading">
+        <div class="col-lg-10 m-t-md">
+            <ol class="breadcrumb">
+                <li>
+                    <a href="{% url 'enrollments_list' %}">Enrollments</a>
+                </li>
+                <li class="active">
+                    <strong>Add Fee Profile</strong>
+                </li>
+            </ol>
+        </div>
+    </div>
+    <div class="m-t-md">
+        <select id="profile-chooser" class="col-xs-2 no-padding-sides">
+            {% for profile in profiles %}
+                <option {% if "" == profile.0 %}selected="selected"{% endif %} value="{{profile.0}}">
+                    {{profile.1}}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div id="add-fee-profile" class="form-template col-xs-12 no-padding">
+        <form id="fee-profile-form" class="col-xs-12 no-padding" action="{% url 'add_fee_profile' %}" method="post">
+            {% csrf_token %}
+            <div class="col-xs-12 border-bottom m-b-md m-r-xs p-md no-padding-left">
+                <div class="col-xs-6 no-padding-sides">
+                    <label>Profile Name: </label>
+                    <div>{{ form.name }}</div>
+                </div>
+                <div class="col-xs-6 m-t-md">
+                    <button class="btn btn-primary pull-right" type="submit">Save Profile</button>
+                </div>
+            </div>
+            <div class="col-xs-12 no-padding-sides padding-for-footer">
+                <div class="col-xs-12 no-padding-sides m-b-xs">
+                    <div class="col-xs-6 no-padding-sides">
+                        <div class="inline fee-profile-rule">
+                            <label>Accts Low</label>
+                        </div>
+                        <div class="inline fee-profile-rule">
+                            <label>Accts High</label>
+                        </div>
+                        <div class="inline fee-profile-rule">
+                            <label>Debt Low</label>
+                        </div>
+                        <div class="inline fee-profile-rule">
+                            <label>Debt High</label>
+                        </div>
+                        <div class="inline fee-profile-rule">
+                            <label>Fixed Low</label>
+                        </div>
+                        <div class="inline fee-profile-rule">
+                            <label>Fixed High</label>
+                        </div>
+                        <div class="inline fee-profile-rule">
+                            <label>Fixed Inc</label>
+                        </div>
+                        <div class="inline fee-profile-rule">
+                            <label>Monthly Low</label>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 no-padding-sides">
+                        <div class="inline fee-profile-rule">
+                            <label>Monthly High</label>
+                        </div>
+                        <div class="inline fee-profile-rule">
+                            <label>Monthly Inc</label>
+                        </div>
+                        <div class="inline fee-profile-rule">
+                            <label>Min Term</label>
+                        </div>
+                        <div class="inline fee-profile-rule">
+                            <label>Max Term</label>
+                        </div>
+                        <div class="inline fee-profile-rule">
+                            <label>Inc</label>
+                        </div>
+                        <div class="inline fee-profile-rule">
+                            <label>Sett Fee Low</label>
+                        </div>
+                        <div class="inline fee-profile-rule">
+                            <label>Sett Fee High</label>
+                        </div>
+                        <div class="inline fee-profile-rule">
+                            <label>Sett Inc</label>
+                        </div>
+                    </div>
+                </div>
+                {% for form in profile_rules_forms %}
+                <div class="col-xs-12 no-padding-sides m-b-md">
+                    <div class="col-xs-6 no-padding-sides">
+                        <div class="inline fee-profile-rule">
+                            <div>{{ form.accts_low }}</div>
+                        </div>
+                        <div class="inline fee-profile-rule">
+                            <div>{{ form.accts_high }}</div>
+                        </div>
+                        <div class="inline fee-profile-rule">
+                            <div>{{ form.debt_low }}</div>
+                        </div>
+                        <div class="inline fee-profile-rule">
+                            <div>{{ form.debt_high }}</div>
+                        </div>
+                        <div class="inline fee-profile-rule">
+                            <div>{{ form.fixed_low }}</div>
+                        </div>
+                        <div class="inline fee-profile-rule">
+                            <div>{{ form.fixed_high }}</div>
+                        </div>
+                        <div class="inline fee-profile-rule">
+                            <div>{{ form.fixed_inc }}</div>
+                        </div>
+                        <div class="inline fee-profile-rule">
+                            <div>{{ form.monthly_low }}</div>
+                        </div>
+                    </div>
+                    <div class="col-xs-6 no-padding-sides">
+                        <div class="inline fee-profile-rule">
+                            <div>{{ form.monthly_high }}</div>
+                        </div>
+                        <div class="inline fee-profile-rule">
+                            <div>{{ form.monthly_inc }}</div>
+                        </div>
+                        <div class="inline fee-profile-rule">
+                            <div>{{ form.min_term }}</div>
+                        </div>
+                        <div class="inline fee-profile-rule">
+                            <div>{{ form.max_term }}</div>
+                        </div>
+                        <div class="inline fee-profile-rule">
+                            <div>{{ form.inc }}</div>
+                        </div>
+                        <div class="inline fee-profile-rule">
+                            <div>{{ form.sett_fee_low }}</div>
+                        </div>
+                        <div class="inline fee-profile-rule">
+                            <div>{{ form.sett_fee_high }}</div>
+                        </div>
+                        <div class="inline fee-profile-rule">
+                            <div>{{ form.sett_inc }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </form>
+    </div>
+
+    <script type="text/javascript">
+        var formErrors = {{ form_errors|jsonify }};
+        var addFeeProfileUrl = "{% url "add_fee_profile" %}";
+        var editFeeProfileUrl = "{% url "edit_fee_profile" fee_profile_id=0 %}";
+    </script>
+    <script src="{% static "js/enrollment/fee_profile.js" %}"></script>
+
+{% endblock content %}

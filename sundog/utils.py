@@ -2,6 +2,7 @@ from datetime import datetime
 import os
 from decimal import Decimal
 import uuid
+from django.utils.html import strip_tags
 import pytz
 from django_auth_app.services import get_user_timezone
 import settings
@@ -72,3 +73,25 @@ def hash_password(bank_account):
     bank_account.account_number = hashlib.sha512((password + salt).encode('utf-8')).hexdigest()
     bank_account.account_number_salt = salt
     bank_account.account_number_last_4_digits = password[-4:]
+
+
+def get_form_errors(form):
+    form_errors = []
+    for field in form:
+        if field.errors:
+            for field_error in field.errors:
+                error = strip_tags(field.html_name.replace("_", " ").title()) + ": " + field_error
+                form_errors.append(error)
+    for non_field_error in form.non_field_errors():
+        form_errors.append(non_field_error)
+    return form_errors
+
+
+def get_data(prefix, post_data):
+    data = {}
+    for data_key in post_data.keys():
+        if data_key.startswith(prefix + '-') and post_data[data_key]:
+            data[data_key] = post_data[data_key]
+    if not data:
+        data = None
+    return data

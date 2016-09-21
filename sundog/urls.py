@@ -79,6 +79,11 @@ urlpatterns = [
     url(r'^contact/(?P<contact_id>\d+)/creditors/debt/add/$', views.add_debt, name='add_debt'),
     url(r'^contact/(?P<contact_id>\d+)/creditors/debt/edit/$', views.edit_debt, name='edit_debt'),
     url(r'^contact/(?P<contact_id>\d+)/creditors/debt/edit/enrolled/$', views.edit_debt_enrolled, name='edit_debt_enrolled'),
+    url(r'^enrollment/plan/add/$', views.add_enrollment_plan, name='add_enrollment_plan'),
+    url(r'^enrollment/plan/(?P<enrollment_plan_id>\d+)/edit/$', views.edit_enrollment_plan, name='edit_enrollment_plan'),
+    url(r'^enrollments/feeProfiles/add/$', views.add_fee_profile, name='add_fee_profile'),
+    url(r'^enrollments/feeProfiles/(?P<fee_profile_id>\d+)/edit/$', views.edit_fee_profile, name='edit_fee_profile'),
+    url(r'^enrollments/$', views.enrollments_list, name='enrollments_list'),
     url(r'^debtNote/add/$', views.debt_add_note, name='debt_add_note'),
     url(r'^stage/statuses/$', views.get_stage_statuses, name='get_stage_statuses'),
     url(r'^contacts/$', views.list_contacts, name='list_contacts'),
@@ -117,4 +122,3 @@ if settings.DEBUG:
                    url(r'^media/(?P<path>.*)$', 'django.views.static.serve',  # NOQA
                        {'document_root': settings.MEDIA_ROOT, 'show_indexes': True}),
                    )
-

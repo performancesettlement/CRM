@@ -4,6 +4,7 @@ import smtplib
 import chardet
 from django.core import mail
 from django.core.paginator import Paginator
+import sys
 from django_auth_app.utils import serialize_user
 from django.shortcuts import render_to_response, redirect
 from django.template.context import RequestContext
@@ -27,12 +28,15 @@ from haystack.generic_views import SearchView
 from sundog.decorators import bypass_impersonation_login_required
 from sundog.forms import FileCustomForm, FileSearchForm, ContactForm, ImpersonateUserForm, StageForm, StatusForm, \
     CampaignForm, SourceForm, ContactStatusForm, BankAccountForm, NoteForm, CallForm, EmailForm, UploadedForm, \
-    ExpensesForm, IncomesForm, CreditorForm, DebtForm, DebtNoteForm
+    ExpensesForm, IncomesForm, CreditorForm, DebtForm, DebtNoteForm, EnrollmentPlanForm, FeeForm, FeeProfileForm, \
+    FeeProfileRuleForm
 from datetime import datetime
 from sundog.messages import MESSAGE_REQUEST_FAILED_CODE, CODES_TO_MESSAGE
 from sundog.models import MyFile, Message, Document, FileStatusHistory, Contact, Stage, STAGE_TYPE_CHOICES, Status, \
-    Campaign, BankAccount, Activity, Uploaded, Expenses, Incomes, Creditor, Debt, DebtNote
+    Campaign, BankAccount, Activity, Uploaded, Expenses, Incomes, Creditor, Debt, DebtNote, Enrollment, EnrollmentPlan, \
+    FeeProfile, FeeProfileRule
 from sundog.services import reorder_stages, reorder_status
+from sundog.utils import get_form_errors, get_data
 
 logger = logging.getLogger(__name__)
 
@@ -1032,6 +1036,240 @@ def debt_add_note(request):
                 form_errors.append(non_field_error)
             response = {'errors': form_errors}
         return JsonResponse(response)
+
+
+def add_enrollment_plan(request):
+    form_errors = None
+    form_fee_1 = FeeForm(prefix='1')
+    form_fee_2 = FeeForm(prefix='2')
+    form = EnrollmentPlanForm(request.POST)
+    enrollment_plans = EnrollmentPlan.objects.all()
+    if request.method == 'POST' and request.POST:
+        form_fee_1 = FeeForm(get_data('1', request.POST), prefix='1')
+        fee_data_2 = get_data('2', request.POST)
+        if fee_data_2:
+            form_fee_2 = FeeForm(request.POST, prefix='2')
+        if form.is_valid() and form_fee_1.is_valid() and (not fee_data_2 or (fee_data_2 and form_fee_2.is_valid())):
+            enrollment_plan = form.save()
+            fee_1 = form_fee_1.save(commit=False)
+            fee_1.enrollment_plan = enrollment_plan
+            fee_1.save()
+            if fee_data_2:
+                fee_2 = form_fee_2.save(commit=False)
+                fee_2.enrollment_plan = enrollment_plan
+                fee_2.save()
+            return redirect('add_enrollment_plan')
+        else:
+            form_errors = get_form_errors(form) + get_form_errors(form_fee_1)
+            if fee_data_2:
+                form_errors += get_form_errors(form_fee_2)
+    plans = [('', '--New Plan--')] + [(plan.enrollment_plan_id, plan.name) for plan in enrollment_plans]
+    has_second_fee = form_errors and next((x for x in form_errors if '2-' in x), False)
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'form': form,
+        'form_fee_1': form_fee_1,
+        'form_fee_2': form_fee_2,
+        'form_errors': form_errors,
+        'has_second_fee': has_second_fee,
+        'plans': plans,
+        'menu_page': 'enrollments',
+    }
+    template_path = 'enrollment/add_enrollment_plan.html'
+    return _render_response(request, context_info, template_path)
+
+
+def edit_enrollment_plan(request, enrollment_plan_id):
+    form_errors = None
+    instance = EnrollmentPlan.objects.get(enrollment_plan_id=int(enrollment_plan_id))
+    form = EnrollmentPlanForm(request.POST or None, instance=instance)
+    fees = list(instance.fees.all())
+    fee_count = len(fees)
+    form_fee_1 = FeeForm(prefix='1', instance=fees[0])
+    enrollment_plans = EnrollmentPlan.objects.all()
+    if request.method == 'POST' and request.POST:
+        form_fee_1 = FeeForm(get_data('1', request.POST), prefix='1', instance=fees[0])
+        fee_data_2 = get_data('2', request.POST)
+        if fee_data_2 and fee_count == 1:
+            form_fee_2 = FeeForm(request.POST, prefix='2')
+        elif fee_count > 1 and fee_data_2:
+            form_fee_2 = FeeForm(request.POST, instance=fees[1], prefix='2')
+        if form.is_valid() and form_fee_1.is_valid() and (fee_data_2 and form_fee_2.is_valid()):
+            enrollment_plan = form.save()
+            fee_1 = form_fee_1.save(commit=False)
+            fee_1.enrollment_plan = enrollment_plan
+            fee_1.save()
+            if fee_data_2:
+                fee_2 = form_fee_2.save(commit=False)
+                fee_2.enrollment_plan = enrollment_plan
+                fee_2.save()
+            elif fee_count == 2 and not fee_data_2:
+                fees[1].delete()
+            return redirect('edit_enrollment_plan', enrollment_plan_id=enrollment_plan_id)
+        else:
+            form_errors = get_form_errors(form) + get_form_errors(form_fee_1)
+            if fee_data_2:
+                form_errors += get_form_errors(form_fee_2)
+    plans = [('', '--New Plan--')] + [(plan.enrollment_plan_id, plan.name) for plan in enrollment_plans]
+    form_fee_2 = FeeForm(prefix='2')
+    if len(fees) > 1:
+        form_fee_2 = FeeForm(prefix='2', instance=fees[1])
+    has_second_fee = (form_errors and next((x for x in form_errors if '2-' in x), False)) or (len(fees) > 1)
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'enrollment_plan_id': int(enrollment_plan_id),
+        'form': form,
+        'form_fee_1': form_fee_1,
+        'form_fee_2': form_fee_2,
+        'form_errors': form_errors,
+        'has_second_fee': has_second_fee,
+        'plans': plans,
+        'menu_page': 'enrollments',
+    }
+    template_path = 'enrollment/edit_enrollment_plan.html'
+    return _render_response(request, context_info, template_path)
+
+
+def add_fee_profile(request):
+    form_errors = None
+    forms_range = range(1, 11)
+    profile_rules_forms = [FeeProfileRuleForm(get_data(str(i), request.POST), prefix=str(i)) for i in forms_range]
+    form = FeeProfileForm(request.POST or None)
+    fee_profiles = FeeProfile.objects.all()
+    if request.method == 'POST' and request.POST:
+        received_profile_rules_forms = []
+        for i in forms_range:
+            prefix = str(i)
+            data = get_data(prefix, request.POST)
+            if data:
+                received_profile_rules_forms.append(FeeProfileRuleForm(data, prefix=prefix))
+        if form.is_valid() and all([form.is_valid() for form in received_profile_rules_forms]):
+            fee_profile = form.save()
+            for form_rule in received_profile_rules_forms:
+                rule = form_rule.save(commit=False)
+                rule.fee_profile = fee_profile
+                rule.save()
+            return redirect('edit_fee_profile', fee_profile_id=fee_profile.fee_profile_id)
+        else:
+            list_of_error_lists = list((get_form_errors(form) for form in received_profile_rules_forms))
+            form_errors = get_form_errors(form) + list(error for sub_list in list_of_error_lists for error in sub_list)
+    profiles = [('', '--Add Profile--')] + [(profile.fee_profile_id, profile.name) for profile in fee_profiles]
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'form': form,
+        'profile_rules_forms': profile_rules_forms,
+        'form_errors': form_errors,
+        'profiles': profiles,
+        'menu_page': 'enrollments',
+    }
+    template_path = 'enrollment/add_fee_profile.html'
+    return _render_response(request, context_info, template_path)
+
+
+def edit_fee_profile(request, fee_profile_id):
+    form_errors = None
+    instance = FeeProfile.objects.prefetch_related('rules').get(fee_profile_id=fee_profile_id)
+    rules = list(instance.rules.all())
+    form = FeeProfileForm(request.POST or None, instance=instance)
+    fee_profiles = FeeProfile.objects.all()
+    profile_rules_forms = []
+    remove_rules = []
+    number_of_previous_rule_count = 0
+    for rule in rules:
+        number_of_previous_rule_count += 1
+        prefix = str(number_of_previous_rule_count)
+        data = get_data(prefix, request.POST)
+        if not request.POST or (request.POST and data):
+            profile_rules_forms.append(FeeProfileRuleForm(data, instance=rule, prefix=prefix))
+        elif request.POST and not data:
+            remove_rules.append(rule.fee_profile_rule_id)
+    if request.method == 'POST' and request.POST:
+        received_profile_rules_forms = []
+        for i in range(number_of_previous_rule_count + 1, 11):
+            prefix = str(i)
+            data = get_data(prefix, request.POST)
+            if data:
+                received_profile_rules_forms.append(FeeProfileRuleForm(data, prefix=prefix))
+        received_profile_rules_forms.extend(profile_rules_forms)
+        if form.is_valid() and all([form.is_valid() for form in received_profile_rules_forms]):
+            fee_profile = form.save()
+            for form_rule in received_profile_rules_forms:
+                rule = form_rule.save(commit=False)
+                rule.fee_profile = fee_profile
+                rule.save()
+            if remove_rules:
+                FeeProfileRule.objects.filter(fee_profile_rule_id__in=remove_rules).delete()
+            return redirect('edit_fee_profile', fee_profile_id=fee_profile.fee_profile_id)
+        else:
+            list_of_error_lists = list((get_form_errors(form) for form in received_profile_rules_forms))
+            form_errors = get_form_errors(form) + list(error for sub_list in list_of_error_lists for error in sub_list)
+    profile_rules_forms += [FeeProfileRuleForm(get_data(str(i), request.POST), prefix=str(i)) for i in range(number_of_previous_rule_count + 1, 11)]
+    profiles = [('', '--Add Profile--')] + [(profile.fee_profile_id, profile.name) for profile in fee_profiles]
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'form': form,
+        'profile_rules_forms': profile_rules_forms,
+        'fee_profile_id': int(fee_profile_id),
+        'form_errors': form_errors,
+        'profiles': profiles,
+        'menu_page': 'enrollments',
+    }
+    template_path = 'enrollment/edit_fee_profile.html'
+    return _render_response(request, context_info, template_path)
+
+
+def enrollments_list(request):
+    order_by_list = ['full_name', 'state', 'next_payment', 'payments_made', 'balance', 'created_at']
+    page = int(request.GET.get('page', '1'))
+    order_by = request.GET.get('order_by', 'full_name')
+
+    if order_by in order_by_list:
+        i = order_by_list.index(order_by)
+        order_by_list[i] = '-' + order_by
+
+    sort = {'name': order_by.replace('-', ''), 'class': 'sorting_desc' if order_by.find('-') else 'sorting_asc'}
+    query = Enrollment.objects.prefetch_related('contact')
+    if order_by.replace('-', '') == 'created_at':
+        order_by = [order_by]
+        enrollments = list(query.order_by(*order_by))
+    else:
+        enrollments = list(query)
+        if order_by == 'full_name':
+            enrollments.sort(key=lambda d: d.contact.full_name_straight())
+        elif order_by == '-full_name':
+            enrollments.sort(key=lambda d: -d.contact.full_name_straight())
+        elif order_by == 'next_payment':
+            enrollments.sort(key=lambda d: d.next_payment().total_seconds() if d.next_payment() else 0)
+        elif order_by == '-next_payment':
+            enrollments.sort(key=lambda d: -d.next_payment().total_seconds() if d.next_payment() else sys.maxsize)
+        elif order_by == 'payments_made':
+            enrollments.sort(key=lambda d: d.payments_made())
+        elif order_by == '-payments_made':
+            enrollments.sort(key=lambda d: -d.payments_made())
+        elif order_by == 'balance':
+            enrollments.sort(key=lambda d: d.balance())
+        elif order_by == '-balance':
+            enrollments.sort(key=lambda d: -d.balance())
+
+    paginator = Paginator(enrollments, 100)
+    page = paginator.page(page)
+
+    context_info = {
+        'sort': sort,
+        'order_by_list': order_by_list,
+        'request': request,
+        'user': request.user,
+        'page': page,
+        'paginator': paginator,
+        'menu_page': 'enrollments'
+    }
+    template_path = 'enrollment/enrollments_list.html'
+    return _render_response(request, context_info, template_path)
+
 #######################################################################
 
 

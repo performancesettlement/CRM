@@ -1,0 +1,95 @@
+{% extends "app-base.html" %}
+{% load staticfiles my_filters admin_urls %}
+{% block extrahead %}
+    <link href="{% static "css/plugins/datapicker/datepicker3.css" %}" rel="stylesheet">
+    <link href="{% static "css/plugins/morris/morris-0.4.3.min.css" %}" rel="stylesheet">
+    <link href="{% static "css/plugins/dataTables/dataTables.bootstrap.css" %}" rel="stylesheet">
+    <link href="{% static "css/plugins/dataTables/dataTables.responsive.css" %}" rel="stylesheet">
+{% endblock extrahead %}
+{% block content %}
+    <div class="row wrapper border-bottom white-bg page-heading">
+        <div class="col-lg-12 m-t-md">
+            <ol class="breadcrumb">
+                <li>
+                    <a href="">Enrollments</a>
+                </li>
+            </ol>
+        </div>
+    </div>
+    <div class="col-xs-12 m-t-md m-b-md">
+        <div class="inline"><a class="btn btn-primary" href="{% url "add_enrollment_plan" %}">Plans</a></div>
+        <div class="inline"><a class="btn btn-primary" href="">Preview Plans</a></div>
+        <div class="inline"><a class="btn btn-primary" href="">Reports</a></div>
+        <div class="inline"><a class="btn btn-primary" href="">Statistics</a></div>
+        <div class="inline"><a class="btn btn-primary" href="">Transactions</a></div>
+        <div class="inline"><a class="btn btn-primary" href="">Settings</a></div>
+    </div>
+    <div class="hidden">
+        <form id="search-form" action="{% url 'enrollments_list' %}" method="get">
+            <input type="hidden" name="page" value="{{ page.number }}"/>
+        </form>
+    </div>
+    <div class="contact-list">
+        <table class="table table-hover no-footer">
+            <thead>
+                <tr>
+                    <th class="{{ sort|get_sort_class:'full_name' }}"><a href="?order_by={{ order_by_list.0 }}">Full Name</a></th>
+                    <th class="{{ sort|get_sort_class:'state' }}"><a href="?order_by={{ order_by_list.1 }}">State</a></th>
+                    <th class="{{ sort|get_sort_class:'next_payment' }}"><a href="?order_by={{ order_by_list.2 }}">Next Payment</a></th>
+                    <th class="{{ sort|get_sort_class:'payments_made' }}"><a href="?order_by={{ order_by_list.3 }}">Payments Made</a></th>
+                    <th class="{{ sort|get_sort_class:'balance' }}"><a href="?order_by={{ order_by_list.4 }}">Balance</a></th>
+                    <th class="{{ sort|get_sort_class:'created_at' }}"><a href="?order_by={{ order_by_list.5 }}">Enrolled Date</a></th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% if page.object_list %}
+                {% for result in page.object_list %}
+                <tr>
+                    <td>{% if result.contact %}{{ result.contact.full_name_straight }}{% endif %}</td>
+                    <td>{% if result.contact and result.contact.state %}{{ result.contact.state }}{% endif %}</td>
+                    <td>{% if result.next_payment %}{{ result.next_payment }}{% endif %}</td>
+                    <td>{% if result.payments_made %}{{ result.payments_made }}{% endif %}</td>
+                    <td>{% if result.balance %}{{ result.balance }}{% endif %}</td>
+                    <td>{% if result.created_at|date:'SHORT_DATETIME_FORMAT' %}{{ result.created_at }}{% endif %}</td>
+                    <td class="contact-actions">
+                        <a id="{{ result.contact_id }}-view" href=""><span title="View" class="glyphicon glyphicon-arrow-right"></span></a>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td class="text-center" colspan="12"><strong>No enrollments to display!</strong></td>
+                </tr>
+            {% endif %}
+            </tbody>
+        </table>
+    </div>
+    <div class="ibox-footer">
+        {% if page.object_list %}
+            <div class="text-center">
+                <div class="btn-group">
+                    <button class="btn btn-white prev-page" type="button" {% if page.number == 1 %}
+                            disabled="disabled"
+                    {% endif %} ><i class="fa fa-chevron-left"></i></button>
+                    {% for number in paginator|paginatorRange:page.number %}
+                        {% if number == page.number %}
+                            <button class="btn btn-white active">{{ number }}</button>
+                        {% else %}
+                            <button class="btn btn-white move-page">{{ number }}</button>
+                        {% endif %}
+                    {% endfor %}
+                    <button class="btn btn-white next-page" type="button" {% if page.number == paginator.num_pages %}
+                            disabled="disabled"
+                    {% endif %}><i class="fa fa-chevron-right"></i></button>
+                </div>
+                <div class="col-xs-12 m-t-sm">
+                    {{ page.object_list|length }} of {{ paginator.count }}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <script src="{% static "js/enrollment/enrollments_list.js" %}"></script>
+    <script type="text/javascript"></script>
+{% endblock %}

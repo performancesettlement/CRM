@@ -1,3 +1,4 @@
+import copy
 import hashlib
 from colorful.fields import RGBColorField
 from decimal import Decimal
@@ -155,13 +156,15 @@ TIMEZONE_CHOICES = (
     ('pacific', 'Pacific')
 )
 
+NONE_CHOICE_LABEL = '--Select--'
+
 ACCOUNT_EXEC_CHOICES = (
-    (None, '--Select--'),
+    (None, NONE_CHOICE_LABEL),
     ('user_test', 'User, Test'),
 )
 
 THEME_CHOICES = (
-    (None, '--Select--'),
+    (None, NONE_CHOICE_LABEL),
     ('default', 'Default'),
     ('light', 'Light'),
     ('perf_sett', 'PerfSett'),
@@ -204,7 +207,7 @@ class Company(models.Model):
 
 
 MARITAL_STATUS_CHOICES = (
-    (None, '--Select--'),
+    (None, NONE_CHOICE_LABEL),
     ('single', 'Single'),
     ('married', 'Married'),
     ('separated', 'Separated'),
@@ -212,14 +215,14 @@ MARITAL_STATUS_CHOICES = (
 )
 
 RESIDENTIAL_STATUS_CHOICES = (
-    (None, '--Select--'),
+    (None, NONE_CHOICE_LABEL),
     ('renter', 'Renter'),
     ('home_owner', 'Homeowner'),
     ('lives_with_f', 'Lives with family/friends'),
 )
 
 EMPLOYMENT_STATUS_CHOICES = (
-    (None, '--Select--'),
+    (None, NONE_CHOICE_LABEL),
     ('employed', 'Employed'),
     ('unemployed', 'Unemployed'),
     ('disabled', 'Disabled'),
@@ -227,7 +230,7 @@ EMPLOYMENT_STATUS_CHOICES = (
 )
 
 DEPENDANTS_CHOICES = (
-    (None, '--Select--'),
+    (None, NONE_CHOICE_LABEL),
     ('0', 'None'),
     ('1', '1'),
     ('2', '2'),
@@ -242,7 +245,7 @@ DEPENDANTS_CHOICES = (
 )
 
 HARDSHIPS_CHOICES = (
-    (None, '--Select--'),
+    (None, NONE_CHOICE_LABEL),
     ('divorce_or_separation', 'Divorce or Separation'),
     ('disability', 'Disability'),
     ('death_in_family', 'Death In Family'),
@@ -256,7 +259,7 @@ HARDSHIPS_CHOICES = (
 )
 
 AUTHORIZATION_FORM_ON_FILE_CHOICES = (
-    (None, '--Select--'),
+    (None, NONE_CHOICE_LABEL),
     ('yes', 'Yes'),
 )
 
@@ -445,8 +448,136 @@ class Contact(models.Model):
         super(Contact, self).save(*args, **kwargs)
 
 
+class FeeProfile(models.Model):
+    fee_profile_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+
+class FeeProfileRule(models.Model):
+    fee_profile_rule_id = models.AutoField(primary_key=True)
+    fee_profile = models.ForeignKey(FeeProfile, related_name='rules', blank=True, null=True)
+    accts_low = models.DecimalField(max_digits=14, decimal_places=2)
+    accts_high = models.DecimalField(max_digits=14, decimal_places=2)
+    debt_low = models.DecimalField(max_digits=14, decimal_places=2)
+    debt_high = models.DecimalField(max_digits=14, decimal_places=2)
+    fixed_low = models.DecimalField(max_digits=14, decimal_places=2)
+    fixed_high = models.DecimalField(max_digits=14, decimal_places=2)
+    fixed_inc = models.DecimalField(max_digits=14, decimal_places=2)
+    monthly_low = models.DecimalField(max_digits=14, decimal_places=2)
+    monthly_high = models.DecimalField(max_digits=14, decimal_places=2)
+    monthly_inc = models.DecimalField(max_digits=14, decimal_places=2)
+    min_term = models.PositiveSmallIntegerField()
+    max_term = models.PositiveSmallIntegerField()
+    inc	= models.PositiveSmallIntegerField()
+    sett_fee_low = models.DecimalField(max_digits=14, decimal_places=2)
+    sett_fee_high = models.DecimalField(max_digits=14, decimal_places=2)
+    sett_inc = models.DecimalField(max_digits=14, decimal_places=2)
+
+    class Meta:
+        ordering = ['fee_profile_rule_id']
+
+
+MONTH_CHOICES = [(str(x), str(x) + ' Month') for x in range(1, 301)]
+
+AMOUNT_CHOICES = [(0, '0.0%')] + [(str(x/2), str(x/2) + '%') for x in range(1, 102)]
+
+WITH_AFTER_FEE_CHOICES = copy.copy(MONTH_CHOICES) + [('after_1', 'After Fee 1'), ('after_2', 'After Fee 2')]
+
+
+class EnrollmentPlan(models.Model):
+    enrollment_plan_id = models.AutoField(primary_key=True)
+    active = models.NullBooleanField()
+    file_type = models.CharField(max_length=15, choices=STAGE_TYPE_CHOICES)
+    name = models.CharField(max_length=128)
+    two_monthly_drafts = models.NullBooleanField()
+    select_first_payment_date = models.NullBooleanField()
+    program_length_default = models.CharField(max_length=10, choices=WITH_AFTER_FEE_CHOICES, blank=True, null=True)
+    program_length_minimum = models.CharField(max_length=10, choices=WITH_AFTER_FEE_CHOICES, blank=True, null=True)
+    program_length_maximum = models.CharField(max_length=10, choices=WITH_AFTER_FEE_CHOICES, blank=True, null=True)
+    program_length_increment = models.PositiveSmallIntegerField(null=True, blank=True)
+    est_settlement_perc = models.PositiveSmallIntegerField(null=True, blank=True)
+    est_settlement_perc_minimum = models.PositiveSmallIntegerField(null=True, blank=True)
+    est_settlement_perc_maximum = models.PositiveSmallIntegerField(null=True, blank=True)
+    est_settlement_perc_increment = models.PositiveSmallIntegerField(null=True, blank=True)
+    performance_plan = models.NullBooleanField()
+    draft_fee_separate = models.NullBooleanField()
+    includes_veritas_legal = models.NullBooleanField()
+    legal_plan_flag = models.NullBooleanField()
+    debt_amount_flag = models.NullBooleanField()
+    debt_amount_from = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
+    debt_amount_to = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
+    debt_to_income_flag = models.NullBooleanField()
+    debt_to_income_ratio_from = models.PositiveSmallIntegerField(default=0, null=True, blank=True)
+    debt_to_income_ratio_to = models.PositiveSmallIntegerField(default=0, null=True, blank=True)
+    states_flag = models.NullBooleanField()
+    states = models.CharField(max_length=120, blank=True, null=True)
+    fee_profile = models.ForeignKey(FeeProfile, related_name='enrollment_plans_linked', blank=True, null=True)
+    show_fee_subtotal_column = models.NullBooleanField()
+    exceed_notification = models.PositiveSmallIntegerField(null=True, blank=True)
+    savings_start = models.CharField(max_length=10, choices=WITH_AFTER_FEE_CHOICES, blank=True, null=True)
+    savings_end = models.CharField(max_length=10, choices=[('entire', 'Entire Program')] + WITH_AFTER_FEE_CHOICES, blank=True, null=True)
+    savings_adjustment = models.NullBooleanField()
+    show_savings_accumulation = models.NullBooleanField()
+
+
+YES_NO_CHOICES = (
+    ('yes', 'Yes'),
+    ('no', 'No'),
+)
+
+FEE_TYPE_CHOICES = (
+    (None, NONE_CHOICE_LABEL),
+    ('percent', 'Debt Percent'),
+    ('fixed', 'Fixed Amount'),
+    ('savings', 'Sett Savings'),
+    ('fixedamort', 'Fixed Amort'),
+    ('perdebt', 'Per Debt'),
+)
+
+WITH_HALF_FULL_CHOICES = [('half', 'Half'), ('full', 'Full')] + copy.copy(MONTH_CHOICES)
+
+
+class Fee(models.Model):
+    fee_id = models.AutoField(primary_key=True)
+    enrollment_plan = models.ForeignKey(EnrollmentPlan, related_name='fees')
+    active = models.BooleanField(default=False)
+    name = models.CharField(max_length=100)
+    type = models.CharField(max_length=128, choices=FEE_TYPE_CHOICES)
+    amount = models.CharField(max_length=4, choices=AMOUNT_CHOICES, default='0')
+    defer = models.CharField(max_length=3, choices=YES_NO_CHOICES, default='no')
+    discount = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    starts = models.CharField(max_length=10, choices=WITH_AFTER_FEE_CHOICES)
+    ends = models.CharField(max_length=10, choices=WITH_HALF_FULL_CHOICES)
+    weighted_fee_perc = models.PositiveSmallIntegerField(null=True, blank=True)
+    weighted_fee_in_first = models.CharField(max_length=3, choices=WITH_AFTER_FEE_CHOICES)
+    paid_by_check = models.CharField(max_length=3, choices=YES_NO_CHOICES, default='no')
+    hide = models.CharField(max_length=3, choices=YES_NO_CHOICES, default='no')
+
+
+class Enrollment(models.Model):
+    enrollment_id = models.AutoField(primary_key=True)
+    enrollment_plan = models.ForeignKey(EnrollmentPlan, related_name='enrollments_linked', blank=True, null=True)
+    contact = models.ForeignKey(Contact, related_name='enrollments', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+
+    def next_payment(self):
+        # TODO: implement logic.
+        return None
+
+    def payments_made(self):
+        # TODO: implement logic.
+        return 0
+
+    def balance(self):
+        # TODO: implement logic.
+        return 0
+
 ACCOUNT_TYPE_CHOICES = (
-    (None, '--Select--'),
+    (None, NONE_CHOICE_LABEL),
     ('checking', 'Checking'),
     ('savings', 'Savings'),
 )
@@ -528,13 +659,13 @@ CALL_TYPE_CHOICES = (
 )
 
 CALL_EVENT_TYPE_CHOICES = (
-    (None, '--Select--'),
+    (None, NONE_CHOICE_LABEL),
     ('ppr', 'PPR'),
     ('welcome_call', 'Welcome Call'),
 )
 
 CALL_RESULT_TYPE_CHOICES = (
-    (None, '--Select--'),
+    (None, NONE_CHOICE_LABEL),
     ('already_in_program', 'Already In Program'),
     ('busy', 'Busy'),
     ('connected', 'Connected'),
@@ -589,7 +720,7 @@ class Email(models.Model):
 
 
 NOTE_TYPE_CHOICES = (
-    (None, '--Select--'),
+    (None, NONE_CHOICE_LABEL),
     ('client_communication', 'Client Communication'),
     ('cancellation', 'Cancellation'),
     ('draft_change', 'Draft Change'),
@@ -682,7 +813,7 @@ class Signer(models.Model):
 
 
 DOCUMENT_TYPE_CHOICES = (
-    (None, '--Select--'),
+    (None, NONE_CHOICE_LABEL),
     ('1099c', '1099-C'),
     ('30_day_notice', '30 Day Notice (debt has moved)'),
     ('3rd_party_auth', '3rd Party Speaker Authorization'),
@@ -932,7 +1063,7 @@ class Creditor(models.Model):
 
 
 DEBT_ACCOUNT_TYPE_CHOICES = (
-    (None, '--Select--'),
+    (None, NONE_CHOICE_LABEL),
     ('difficult_creditor', 'Difficult Creditor'),
     ('payday_loan', 'Payday Loan'),
     ('standard', 'Standard'),
@@ -946,7 +1077,7 @@ WHOSE_DEBT_CHOICES = (
 
 
 HAS_SUMMONS_TYPE_CHOICES = (
-    (None, '--Select--'),
+    (None, NONE_CHOICE_LABEL),
     ('yes', 'Yes'),
     ('no', 'No'),
 )
@@ -1031,7 +1162,7 @@ class DataSource(models.Model):
 
 
 CAMPAIGN_PRIORITY_CHOICES = (
-    (None, '--Select--'),
+    (None, NONE_CHOICE_LABEL),
     (0, '0'),
     (1, '1'),
     (2, '2'),
@@ -1046,7 +1177,7 @@ CAMPAIGN_PRIORITY_CHOICES = (
 )
 
 CAMPAIGN_SOURCES_CHOICES = (
-    (None, '--Select--'),
+    (None, NONE_CHOICE_LABEL),
     ('billboard', 'Billboard'),
     ('directmail', 'DirectMail'),
     ('email', 'Email'),
