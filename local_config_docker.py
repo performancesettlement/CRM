@@ -1,15 +1,18 @@
+from os import environ
+
 # Apparently unused options for django.contrib.sites:
 SITE_DOMAIN = ''
 SITE_HOST = ''
-HOST = 'localhost'
+HOST = environ.get('HOST', 'localhost')
 
 # Disabled if running in debugging mode; this is probably not important for now:
 ALLOWED_HOSTS = []
 
-DEBUG = True
+DEBUG = environ.get('DEBUG', True)
 
 # Secrets:
 ADDRESS_API_KEY = ''
+SECRET_KEY = environ.get('SECRET_KEY', 'xyzzy')
 
 # Database connection setup:
 DATABASE_HOST = 'postgres'

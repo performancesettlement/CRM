@@ -5,13 +5,11 @@ services:
   web:
     build: .
     restart: always
+    env_file: .env
     links:
       - "postgres"
       - "elasticsearch"
       - "logstash"
-    environment:
-      DEBUG: 'true'
-    restart: always
 
   elasticsearch:
     build: "services/elasticsearch"

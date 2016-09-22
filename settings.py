@@ -13,13 +13,11 @@ PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'u&7+n(-uzr!7zif38%(722jr@+j^170_)q(&%+kc5v6x@%v505'
-
 SITE_DOMAIN = local_config.SITE_DOMAIN
 ALLOWED_HOSTS = local_config.ALLOWED_HOSTS
 SITE_HOST = local_config.HOST
 DEBUG = local_config.DEBUG
+SECRET_KEY = local_config.SECRET_KEY
 ADDRESS_API_KEY = local_config.ADDRESS_API_KEY
 DATABASE_NAME = local_config.DATABASE_NAME
 DATABASE_USER = local_config.DATABASE_USER
