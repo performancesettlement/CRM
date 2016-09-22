@@ -5,6 +5,7 @@ services:
   web:
     environment:
       DEBUG: "False"
+    command: ['production']
 
   haproxy:
     image: "bradjonesllc/docker-haproxy-letsencrypt"
