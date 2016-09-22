@@ -5,7 +5,7 @@ services:
   web:
     environment:
       DEBUG: "False"
-    command: ["docker-entrypoint.sh", "production"]
+    command: ["./docker-entrypoint.sh", "production"]
 
   haproxy:
     image: "bradjonesllc/docker-haproxy-letsencrypt"
