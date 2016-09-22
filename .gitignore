@@ -28,3 +28,6 @@ import/history/*
 
 # Docker service persistent data:
 /data/
+
+# Local environment variables:
+.env
