@@ -8,7 +8,7 @@ HOST = environ.get('HOST', 'localhost')
 # Disabled if running in debugging mode; this is probably not important for now:
 ALLOWED_HOSTS = []
 
-DEBUG = environ.get('DEBUG', True)
+DEBUG = environ.get('DEBUG', 'True') == 'True'
 
 # Secrets:
 ADDRESS_API_KEY = ''
