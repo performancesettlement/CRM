@@ -19,7 +19,7 @@ RUN mkdir -p log && touch log/django.log log/sundog.log
 
 COPY docker-entrypoint.sh .
 
-ENTRYPOINT ["docker-entrypoint.sh"]
+ENTRYPOINT ["./docker-entrypoint.sh"]
 
 EXPOSE 80
 
