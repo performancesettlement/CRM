@@ -1,0 +1,135 @@
+{% extends "app-base.html" %}
+{% load staticfiles my_filters admin_urls %}
+{% block content %}
+    <div class="row wrapper border-bottom white-bg page-heading">
+        <div class="col-lg-12 m-t-md">
+            <ol class="breadcrumb">
+                <li>
+                    <a href="{% url "enrollments_list" %}">Enrollments</a>
+                </li>
+                <li class="active">
+                    <a href=""><strong>Enrollment Settings</strong></a>
+                </li>
+            </ol>
+        </div>
+    </div>
+    <div class="col-xs-12 m-t-md">
+        <div class="col-xs-6 no-padding-sides">
+            <select id="type-chooser" class="col-xs-4 no-padding-sides">
+                {% for type in types %}
+                    <option {% if selected_type == type.0 %}selected="selected"{% endif %} value="{{type.0}}">
+                        {{type.1}}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-xs-6">
+            <button id="save-settings" class="btn btn-primary pull-right">Save Settings</button>
+        </div>
+    </div>
+    <div class="col-xs-12 m-t-md">
+        <form id="workflow-settings-form" action="{% url "workflow_settings_save" %}" method="post">
+            {% csrf_token %}
+            <div class="col-xs-12 no-padding-sides border-top m-b-md">
+                <h3>Status Changes</h3>
+                <div class="col-xs-4 border-right">
+                    <label class="col-xs-6 no-padding-sides">On Submission</label>
+                    {{ form.on_submission }}
+                    <label class="col-xs-6 no-padding-sides">On Returned</label>
+                    {{ form.on_returned }}
+                    <label class="col-xs-6 no-padding-sides">On Reject</label>
+                    {{ form.on_reject }}
+                    <label class="col-xs-6 no-padding-sides">On Approval</label>
+                    {{ form.on_approval }}
+                    <label class="col-xs-6 no-padding-sides">On Second Approval</label>
+                    {{ form.on_second_approval }}
+                </div>
+                <div class="col-xs-4 border-right">
+                    <label class="col-xs-6 no-padding-sides">On Enrollment</label>
+                    {{ form.on_enrollment }}
+                    <label class="col-xs-6 no-padding-sides">On De-Enroll</label>
+                    {{ form.on_de_enroll }}
+                    <label class="col-xs-6 no-padding-sides">On Graduation</label>
+                    {{ form.on_graduation }}
+                    <label class="col-xs-6 no-padding-sides">On Un-Graduate</label>
+                    {{ form.on_un_graduate }}
+                    <label class="col-xs-6 no-padding-sides">On Dropped</label>
+                    {{ form.on_dropped }}
+                </div>
+                <div class="col-xs-4">
+                    <label class="col-xs-6 no-padding-sides">On Contract Upload</label>
+                    {{ form.on_contract_upload }}
+                    <label class="col-xs-6 no-padding-sides">On First Payment Processed</label>
+                    {{ form.on_first_payment_processed }}
+                    <label class="col-xs-6 no-padding-sides">On First Payment Cleared</label>
+                    {{ form.on_first_payment_cleared }}
+                    <label class="col-xs-6 no-padding-sides">On First Payment Return</label>
+                    {{ form.on_first_payment_return }}
+                    <label class="col-xs-6 no-padding-sides">On Final Payment</label>
+                    {{ form.on_final_payment }}
+                </div>
+            </div>
+            <div class="col-xs-12 no-padding-sides border-top m-b-md">
+                <h3>Workflow Settings</h3>
+                <div class="col-xs-3 border-right">
+                    <label class="col-xs-9 no-padding-sides">Require Plan</label>
+                    {{ form.require_plan }}
+                    <label class="col-xs-9 no-padding-sides">Require Bank</label>
+                    {{ form.require_bank }}
+                    <label class="col-xs-9 no-padding-sides">Require Credit Card</label>
+                    {{ form.require_credit_card }}
+                    <label class="col-xs-9 no-padding-sides">Require Either Bank or CC</label>
+                    {{ form.require_bank_or_cc }}
+                </div>
+                <div class="col-xs-3">
+                    <label class="col-xs-9 no-padding-sides">Require Debts</label>
+                    {{ form.require_debts }}
+                    <label class="col-xs-9 no-padding-sides">Require Submit</label>
+                    {{ form.require_submit }}
+                    <label class="col-xs-9 no-padding-sides">Require Contract to Submit</label>
+                    {{ form.require_contract_to_submit }}
+                </div>
+                <div class="col-xs-3 border-left-right">
+                    <label class="col-xs-9 no-padding-sides">Require Contract to Enroll</label>
+                    {{ form.require_contract_to_enroll }}
+                    <label class="col-xs-9 no-padding-sides">Allow Reject</label>
+                    {{ form.allow_reject }}
+                    <label class="col-xs-9 no-padding-sides">Require Approval</label>
+                    {{ form.require_approval }}
+                    <label class="col-xs-9 no-padding-sides">Require Secondary Approval</label>
+                    {{ form.require_secondary_approval }}
+                </div>
+                <div class="col-xs-3">
+                    <label class="col-xs-9 no-padding-sides">Require Inc/Exp</label>
+                    {{ form.require_inc_exp }}
+                    <label class="col-xs-9 no-padding-sides">Enforce Required Fields</label>
+                    {{ form.enforce_required_fields }}
+                    <label class="col-xs-9 no-padding-sides">Require Comp Template</label>
+                    {{ form.require_comp_template }}
+                </div>
+            </div>
+            <div class="col-xs-12 border-top border-bottom p-md no-padding-sides no-padding-top">
+                <h3>Payment Settings</h3>
+                <div class="col-xs-3">
+                    <label class="col-xs-9 no-padding-sides">Pause On NSF</label>
+                    {{ form.pause_on_nsf }}
+                </div>
+                <div class="col-xs-4 border-left-right">
+                    <label class="col-xs-6 no-padding-sides">On Pause</label>
+                    {{ form.on_pause }}
+                    <label class="col-xs-6 no-padding-sides">On Resume</label>
+                    {{ form.on_resume }}
+                </div>
+                <div class="col-xs-4">
+                    <label class="col-xs-6 no-padding-sides">On Returned Payment</label>
+                    {{ form.on_returned_payment }}
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script type="text/javascript">
+        var workflowSettingsUrl = '{% url "workflow_settings" %}';
+    </script>
+    <script src="{% static "js/enrollment/workflow_settings.js" %}"></script>
+{% endblock %}

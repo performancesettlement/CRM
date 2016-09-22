@@ -115,7 +115,7 @@ STAGE_TYPE_CHOICES = (
 
 
 class Stage(models.Model):
-    type = models.CharField(max_length=100, choices=STAGE_TYPE_CHOICES, default='debt_settlement')
+    type = models.CharField(max_length=15, choices=STAGE_TYPE_CHOICES, default=DEBT_SETTLEMENT)
     stage_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
     order = models.IntegerField(blank=True, null=True)
@@ -139,6 +139,45 @@ class Status(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class WorkflowSettings(models.Model):
+    workflow_settings_id = models.AutoField(primary_key=True)
+    type = models.CharField(max_length=15, choices=STAGE_TYPE_CHOICES, default='debt_settlement')
+    require_plan = models.BooleanField(default=False)
+    require_bank = models.BooleanField(default=False)
+    require_credit_card = models.BooleanField(default=False)
+    require_bank_or_cc = models.BooleanField(default=False)
+    require_debts = models.BooleanField(default=False)
+    require_submit = models.BooleanField(default=False)
+    require_contract_to_submit = models.BooleanField(default=False)
+    require_contract_to_enroll = models.BooleanField(default=False)
+    allow_reject = models.BooleanField(default=False)
+    require_approval = models.BooleanField(default=False)
+    require_secondary_approval = models.BooleanField(default=False)
+    require_inc_exp = models.BooleanField(default=False)
+    enforce_required_fields = models.BooleanField(default=False)
+    require_comp_template = models.BooleanField(default=False)
+    pause_on_nsf = models.BooleanField(default=False)
+    on_submission = models.ForeignKey(Status, related_name='on_submission', blank=True, null=True)
+    on_returned = models.ForeignKey(Status, related_name='on_returned', blank=True, null=True)
+    on_reject = models.ForeignKey(Status, related_name='on_reject', blank=True, null=True)
+    on_approval = models.ForeignKey(Status, related_name='on_approval', blank=True, null=True)
+    on_second_approval = models.ForeignKey(Status, related_name='on_second_approval', blank=True, null=True)
+    on_enrollment = models.ForeignKey(Status, related_name='on_enrollment', blank=True, null=True)
+    on_de_enroll = models.ForeignKey(Status, related_name='on_de_enroll', blank=True, null=True)
+    on_re_enroll = models.ForeignKey(Status, related_name='on_re_enroll', blank=True, null=True)
+    on_graduation = models.ForeignKey(Status, related_name='on_graduation', blank=True, null=True)
+    on_un_graduate = models.ForeignKey(Status, related_name='on_un_graduate', blank=True, null=True)
+    on_dropped = models.ForeignKey(Status, related_name='on_dropped', blank=True, null=True)
+    on_contract_upload = models.ForeignKey(Status, related_name='on_contract_upload', blank=True, null=True)
+    on_first_payment_processed = models.ForeignKey(Status, related_name='on_first_payment_processed', blank=True, null=True)
+    on_first_payment_cleared = models.ForeignKey(Status, related_name='on_first_payment_cleared', blank=True, null=True)
+    on_first_payment_return = models.ForeignKey(Status, related_name='on_first_payment_return', blank=True, null=True)
+    on_final_payment = models.ForeignKey(Status, related_name='on_final_payment', blank=True, null=True)
+    on_pause = models.ForeignKey(Status, related_name='on_pause', blank=True, null=True)
+    on_resume = models.ForeignKey(Status, related_name='on_resume', blank=True, null=True)
+    on_returned_payment = models.ForeignKey(Status, related_name='on_returned_payment', blank=True, null=True)
 
 
 COMPANY_TYPE_CHOICES = (

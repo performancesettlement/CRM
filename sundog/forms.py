@@ -4,7 +4,7 @@ from django.core.validators import validate_email
 from django_auth_app import enums
 from sundog.models import MyFile, FileStatus, Contact, Tag, Stage, Status, Campaign, Source, BankAccount, Note, Call,\
     Email, DEBT_SETTLEMENT, Uploaded, Incomes, Expenses, Creditor, Debt, DebtNote, EnrollmentPlan, Fee, FeeProfile,\
-    FeeProfileRule
+    FeeProfileRule, WorkflowSettings
 from sundog import services
 from haystack.forms import SearchForm
 from sundog.constants import RADIO_FILTER_CHOICES, SHORT_DATE_FORMAT
@@ -215,6 +215,48 @@ class StatusForm(forms.ModelForm):
         super(StatusForm, self).__init__(*args, **kwargs)
         self.fields['stage'].queryset = self.fields['stage'].queryset.filter(type=type)
         self.fields['stage'].empty_label = EMPTY_LABEL
+
+
+class WorkflowSettingsForm(forms.ModelForm):
+    class Meta:
+        model = WorkflowSettings
+        fields = '__all__'
+        widgets = {
+            'on_submission': forms.Select(attrs={'class': 'col-xs-6 no-padding-sides'}),
+            'on_returned': forms.Select(attrs={'class': 'col-xs-6 no-padding-sides'}),
+            'on_reject': forms.Select(attrs={'class': 'col-xs-6 no-padding-sides'}),
+            'on_approval': forms.Select(attrs={'class': 'col-xs-6 no-padding-sides'}),
+            'on_second_approval': forms.Select(attrs={'class': 'col-xs-6 no-padding-sides'}),
+            'on_enrollment': forms.Select(attrs={'class': 'col-xs-6 no-padding-sides'}),
+            'on_de_enroll': forms.Select(attrs={'class': 'col-xs-6 no-padding-sides'}),
+            'on_re_enroll': forms.Select(attrs={'class': 'col-xs-6 no-padding-sides'}),
+            'on_graduation': forms.Select(attrs={'class': 'col-xs-6 no-padding-sides'}),
+            'on_un_graduate': forms.Select(attrs={'class': 'col-xs-6 no-padding-sides'}),
+            'on_dropped': forms.Select(attrs={'class': 'col-xs-6 no-padding-sides'}),
+            'on_contract_upload': forms.Select(attrs={'class': 'col-xs-6 no-padding-sides'}),
+            'on_first_payment_processed': forms.Select(attrs={'class': 'col-xs-6 no-padding-sides'}),
+            'on_first_payment_cleared': forms.Select(attrs={'class': 'col-xs-6 no-padding-sides'}),
+            'on_first_payment_return': forms.Select(attrs={'class': 'col-xs-6 no-padding-sides'}),
+            'on_final_payment': forms.Select(attrs={'class': 'col-xs-6 no-padding-sides'}),
+            'require_plan': forms.CheckboxInput(attrs={'class': 'col-xs-3 no-padding-sides'}),
+            'require_bank': forms.CheckboxInput(attrs={'class': 'col-xs-3 no-padding-sides'}),
+            'require_credit_card': forms.CheckboxInput(attrs={'class': 'col-xs-3 no-padding-sides'}),
+            'require_bank_or_cc': forms.CheckboxInput(attrs={'class': 'col-xs-3 no-padding-sides'}),
+            'require_debts': forms.CheckboxInput(attrs={'class': 'col-xs-3 no-padding-sides'}),
+            'require_submit': forms.CheckboxInput(attrs={'class': 'col-xs-3 no-padding-sides'}),
+            'require_contract_to_submit': forms.CheckboxInput(attrs={'class': 'col-xs-3 no-padding-sides'}),
+            'require_contract_to_enroll': forms.CheckboxInput(attrs={'class': 'col-xs-3 no-padding-sides'}),
+            'allow_reject': forms.CheckboxInput(attrs={'class': 'col-xs-3 no-padding-sides'}),
+            'require_approval': forms.CheckboxInput(attrs={'class': 'col-xs-3 no-padding-sides'}),
+            'require_secondary_approval': forms.CheckboxInput(attrs={'class': 'col-xs-3 no-padding-sides'}),
+            'require_inc_exp': forms.CheckboxInput(attrs={'class': 'col-xs-3 no-padding-sides'}),
+            'enforce_required_fields': forms.CheckboxInput(attrs={'class': 'col-xs-3 no-padding-sides'}),
+            'require_comp_template': forms.CheckboxInput(attrs={'class': 'col-xs-3 no-padding-sides'}),
+            'pause_on_nsf': forms.CheckboxInput(attrs={'class': 'col-xs-3 no-padding-sides'}),
+            'on_pause': forms.Select(attrs={'class': 'col-xs-6 no-padding-sides'}),
+            'on_resume': forms.Select(attrs={'class': 'col-xs-6 no-padding-sides'}),
+            'on_returned_payment': forms.Select(attrs={'class': 'col-xs-6 no-padding-sides'}),
+        }
 
 
 class CampaignForm(forms.ModelForm):

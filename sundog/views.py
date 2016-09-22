@@ -29,12 +29,12 @@ from sundog.decorators import bypass_impersonation_login_required
 from sundog.forms import FileCustomForm, FileSearchForm, ContactForm, ImpersonateUserForm, StageForm, StatusForm, \
     CampaignForm, SourceForm, ContactStatusForm, BankAccountForm, NoteForm, CallForm, EmailForm, UploadedForm, \
     ExpensesForm, IncomesForm, CreditorForm, DebtForm, DebtNoteForm, EnrollmentPlanForm, FeeForm, FeeProfileForm, \
-    FeeProfileRuleForm
+    FeeProfileRuleForm, WorkflowSettingsForm
 from datetime import datetime
 from sundog.messages import MESSAGE_REQUEST_FAILED_CODE, CODES_TO_MESSAGE
 from sundog.models import MyFile, Message, Document, FileStatusHistory, Contact, Stage, STAGE_TYPE_CHOICES, Status, \
     Campaign, BankAccount, Activity, Uploaded, Expenses, Incomes, Creditor, Debt, DebtNote, Enrollment, EnrollmentPlan, \
-    FeeProfile, FeeProfileRule
+    FeeProfile, FeeProfileRule, WorkflowSettings, DEBT_SETTLEMENT
 from sundog.services import reorder_stages, reorder_status
 from sundog.utils import get_form_errors, get_data
 
@@ -1297,6 +1297,53 @@ def enrollments_list(request):
     }
     template_path = 'enrollment/enrollments_list.html'
     return _render_response(request, context_info, template_path)
+
+
+@login_required
+def workflow_settings(request):
+    workflow_type = request.GET.get('type', DEBT_SETTLEMENT)
+    try:
+        instance = WorkflowSettings.objects.get(type=workflow_type)
+    except WorkflowSettings.DoesNotExist as e:
+        instance = None
+    form = WorkflowSettingsForm(instance=instance)
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'selected_type': workflow_type,
+        'types': STAGE_TYPE_CHOICES,
+        'form': form,
+        'menu_page': 'enrollments',
+    }
+    template_path = 'enrollment/workflow_settings.html'
+    return _render_response(request, context_info, template_path)
+
+
+@login_required
+def workflow_settings_save(request):
+    if request.method == 'POST' and request.POST:
+        workflow_type = request.POST.get('type', DEBT_SETTLEMENT)
+        try:
+            instance = WorkflowSettings.objects.get(type=workflow_type)
+        except WorkflowSettings.DoesNotExist as e:
+            instance = None
+        form = WorkflowSettingsForm(request.POST, instance=instance)
+        form_errors = []
+        if not form.is_valid():
+            for field in form:
+                if field.errors:
+                    for field_error in field.errors:
+                        error = strip_tags(field.html_name.replace("_", " ").title()) + ": " + field_error
+                        form_errors.append(error)
+            for non_field_error in form.non_field_errors():
+                form_errors.append(non_field_error)
+        if not form_errors:
+            form.save()
+            response_data = 'Ok'
+            response = {'result': response_data}
+        else:
+            response = {'errors': form_errors}
+        return JsonResponse(response)
 
 #######################################################################
 

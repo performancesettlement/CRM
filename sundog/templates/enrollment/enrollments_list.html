@@ -19,7 +19,7 @@
     <div class="col-xs-12 m-t-md m-b-md">
         <div class="inline"><a class="btn btn-primary" href="{% url "add_enrollment_plan" %}">Plans</a></div>
         <div class="inline"><a class="btn btn-primary" href="">Reports</a></div>
-        <div class="inline"><a class="btn btn-primary" href="">Settings</a></div>
+        <div class="inline"><a class="btn btn-primary" href="{% url "workflow_settings" %}">Settings</a></div>
     </div>
     <div class="hidden">
         <form id="search-form" action="{% url 'enrollments_list' %}" method="get">
@@ -87,6 +87,6 @@
         {% endif %}
     </div>
 
-    <script src="{% static "js/enrollment/enrollments_list.js" %}"></script>
     <script type="text/javascript"></script>
+    <script src="{% static "js/enrollment/enrollments_list.js" %}"></script>
 {% endblock %}
