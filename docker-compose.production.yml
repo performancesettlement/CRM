@@ -13,6 +13,6 @@ services:
     environment:
       POSTGRES_DB: "sundog_db"
       CERTS: "52.38.185.134.nip.io"
-      EMAIL: "my.email@my.domain" # FIXME
+      EMAIL: "mgomez@mahisoft.com"
     volumes:
       - "./data/letsencrypt:/etc/letsencrypt"
