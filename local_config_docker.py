@@ -5,8 +5,7 @@ SITE_DOMAIN = ''
 SITE_HOST = ''
 HOST = environ.get('HOST', 'localhost')
 
-# Disabled if running in debugging mode; this is probably not important for now:
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [host for host in environ.get('ALLOWED_HOST') if host]
 
 DEBUG = environ.get('DEBUG', 'True') == 'True'
 

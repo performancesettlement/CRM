@@ -5,6 +5,7 @@ services:
   web:
     environment:
       DEBUG: "False"
+      ALLOWED_HOST: "52.38.185.134.nip.io"
     command: ["./docker-entrypoint.sh", "production"]
 
   haproxy:
