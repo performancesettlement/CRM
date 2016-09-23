@@ -22,3 +22,25 @@ services:
       EMAIL: "mgomez@mahisoft.com"
     volumes:
       - "./data/letsencrypt:/etc/letsencrypt"
+
+  consul:
+    image: "consul"
+    restart: always
+    ports:
+      - "127.0.1.5:53:8600/tcp"
+      - "127.0.1.5:53:8600/udp"
+    expose:
+      - "8400"
+      - "8500"
+      - "8600/tcp"
+      - "8600/udp"
+    command: "agent -dev -client=0.0.0.0 -bind=0.0.0.0 -domain=consul.test"
+
+  registrator:
+    image: "gliderlabs/registrator"
+    restart: always
+    links:
+      - "consul"
+    volumes:
+      - "/var/run/docker.sock:/tmp/docker.sock"
+    command: "-internal -resync=5 consul://consul:8500"
