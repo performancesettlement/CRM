@@ -1,10 +1,27 @@
-FROM django:onbuild
+FROM python:3.5
 
+RUN mkdir -p /usr/src/app
+WORKDIR /usr/src/app
+
+RUN apt-get update && apt-get install -y \
+  gcc \
+  gettext \
+  postgresql-client libpq-dev \
+  sqlite3 \
+  --no-install-recommends && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt /usr/src/app/
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . /usr/src/app
 COPY local_config_docker.py local_config.py
 RUN mkdir -p log && touch log/django.log log/sundog.log
-RUN python manage.py makemigrations
+RUN python manage.py collectstatic --noinput
 
-CMD \
-  python manage.py migrate && \
-  echo "from django.contrib.auth.models import User; User.objects.create_superuser('admin', 'admin@example.com', 'admin')" | python manage.py shell && \
-  gunicorn --bind=0.0.0.0:80 sundog.wsgi
+COPY docker-entrypoint.sh .
+
+ENTRYPOINT ["./docker-entrypoint.sh"]
+
+EXPOSE 80
+
+CMD ["development"]

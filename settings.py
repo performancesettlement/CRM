@@ -13,13 +13,11 @@ PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'u&7+n(-uzr!7zif38%(722jr@+j^170_)q(&%+kc5v6x@%v505'
-
 SITE_DOMAIN = local_config.SITE_DOMAIN
 ALLOWED_HOSTS = local_config.ALLOWED_HOSTS
 SITE_HOST = local_config.HOST
 DEBUG = local_config.DEBUG
+SECRET_KEY = local_config.SECRET_KEY
 ADDRESS_API_KEY = local_config.ADDRESS_API_KEY
 DATABASE_NAME = local_config.DATABASE_NAME
 DATABASE_USER = local_config.DATABASE_USER
@@ -69,9 +67,15 @@ INSTALLED_APPS = (
     'avatar',
     'colorful',
     'multi_email_field',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'datatableview',
 )
 
 MIDDLEWARE_CLASSES = (
+    'htmlmin.middleware.HtmlMinifyMiddleware',
+    'htmlmin.middleware.MarkRequestMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -106,13 +110,12 @@ TEMPLATES = [
             'context_processors': [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'django.core.context_processors.i18n',
-                'django.core.context_processors.debug',
-                'django.core.context_processors.request',
-                'django.core.context_processors.media',
-                'django.core.context_processors.csrf',
-                'django.core.context_processors.tz',
-                'django.core.context_processors.static',
+                'django.template.context_processors.i18n',
+                'django.template.context_processors.debug',
+                'django.template.context_processors.media',
+                'django.template.context_processors.csrf',
+                'django.template.context_processors.tz',
+                'django.template.context_processors.static',
                 'sundog.context_processors.recent_files',
                 'django.template.context_processors.request',
             ],
@@ -155,7 +158,7 @@ CACHES = {
 
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': True,
+    'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
             'format': "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
@@ -199,30 +202,58 @@ LOGGING = {
             'backupCount': 10,
             'formatter': 'verbose',
         },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+        'logstash': {
+            'level': 'DEBUG',
+            'class': 'logstash.TCPLogstashHandler',
+            'host': 'logstash',
+            'port': 5000,
+            'version': 1,
+        },
+    },
+    'root': {
+        'handlers': ['info_file', 'mail', 'syslog', 'console', 'logstash'],
+        'level': 'DEBUG',
     },
     'loggers': {
+        'root': {
+            'handlers': ['console', 'logstash'],
+            'level': 'DEBUG',
+        },
         'sundog': {
-            'handlers': ['info_file', 'mail', 'syslog'],
+            'handlers': ['info_file', 'mail', 'syslog', 'console', 'logstash'],
             'level': 'DEBUG',
         },
         'django_auth_app': {
-            'handlers': ['info_file', 'mail', 'syslog'],
+            'handlers': ['info_file', 'mail', 'syslog', 'console', 'logstash'],
             'level': 'DEBUG',
         },
         'django': {
-            'handlers': ['syslog', 'django'],
-            'level': 'WARNING',
-            'propagate': True,
+            'handlers': ['syslog', 'django', 'console', 'logstash'],
+            'level': 'DEBUG',
         },
         'django.db.backends': {
-            'handlers': ['syslog', 'django'],
-            'level': 'INFO',
-            'propagate': True,
+            'handlers': ['syslog', 'django', 'console', 'logstash'],
+            'level': 'DEBUG',
         },
         'django.request': {
-            'handlers': ['syslog', 'mail', 'django'],
-            'level': 'INFO',
-            'propagate': True,
+            'handlers': ['syslog', 'mail', 'django', 'console', 'logstash'],
+            'level': 'DEBUG',
+        },
+        'django.server': {
+            'handlers': ['syslog', 'mail', 'django', 'console', 'logstash'],
+            'level': 'DEBUG',
+        },
+        'gunicorn.access': {
+            'handlers': ['syslog', 'mail', 'django', 'console', 'logstash'],
+            'level': 'DEBUG',
+        },
+        'gunicorn.error': {
+            'handlers': ['syslog', 'mail', 'django', 'console', 'logstash'],
+            'level': 'DEBUG',
         },
     }
 }

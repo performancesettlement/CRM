@@ -1,0 +1,46 @@
+version: "2"
+
+services:
+
+  web:
+    environment:
+      DEBUG: "False"
+      ALLOWED_HOST: "52.38.185.134.nip.io"
+    command: ["./docker-entrypoint.sh", "production"]
+
+  haproxy:
+    image: "bradjonesllc/docker-haproxy-letsencrypt"
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    links:
+      - "web:www"
+    environment:
+      POSTGRES_DB: "sundog_db"
+      CERTS: "52.38.185.134.nip.io"
+      EMAIL: "mgomez@mahisoft.com"
+    volumes:
+      - "./data/letsencrypt:/etc/letsencrypt"
+
+  consul:
+    image: "consul"
+    restart: always
+    ports:
+      - "127.0.1.5:53:8600/tcp"
+      - "127.0.1.5:53:8600/udp"
+    expose:
+      - "8400"
+      - "8500"
+      - "8600/tcp"
+      - "8600/udp"
+    command: "agent -dev -client=0.0.0.0 -bind=0.0.0.0 -domain=consul.test"
+
+  registrator:
+    image: "gliderlabs/registrator"
+    restart: always
+    links:
+      - "consul"
+    volumes:
+      - "/var/run/docker.sock:/tmp/docker.sock"
+    command: "-internal -resync=5 consul://consul:8500"
