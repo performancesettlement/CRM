@@ -47,3 +47,14 @@ services:
     volumes:
       - "/var/run/docker.sock:/tmp/docker.sock"
     command: "-internal -resync=5 consul://consul:8500"
+
+  netdata:
+    image: "titpetric/netdata"
+    restart: "always"
+    network_mode: "host"
+    cap-add:
+      - "SYS_PTRACE"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "/proc:/host/proc:ro"
+      - "/sys:/host/sys:ro"
