@@ -16,7 +16,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . /usr/src/app
 COPY local_config_docker.py local_config.py
 RUN mkdir -p log && touch log/django.log log/sundog.log
-RUN python manage.py collectstatic --noinput
+
+ARG mode=production
+RUN [ "$mode" = production ] && python manage.py collectstatic --noinput || true
 
 COPY docker-entrypoint.sh .
 

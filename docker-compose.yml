@@ -3,9 +3,12 @@ version: "2"
 services:
 
   web:
-    build: .
-    restart: always
-    env_file: .env
+    build:
+      context: .
+      args:
+        mode: "development"
+    restart: "always"
+    env_file: ".env"
     links:
       - "postgres"
       - "elasticsearch"
@@ -13,14 +16,14 @@ services:
 
   elasticsearch:
     build: "services/elasticsearch"
-    restart: always
+    restart: "always"
     volumes:
       - "./data/elasticsearch/data:/usr/share/elasticsearch/data"
       - "./data/elasticsearch/log:/usr/share/elasticsearch/log"
 
   logstash:
     image: "logstash"
-    restart: always
+    restart: "always"
     links:
       - "elasticsearch"
     command: "logstash -f /etc/logstash/conf.d/"
@@ -29,13 +32,13 @@ services:
 
   kibana:
     image: "kibana"
-    restart: always
+    restart: "always"
     links:
       - "elasticsearch"
 
   postgres:
     image: "postgres"
-    restart: always
+    restart: "always"
     environment:
       POSTGRES_DB: "sundog_db"
       POSTGRES_USER: "sundog_db"

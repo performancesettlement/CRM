@@ -3,6 +3,9 @@ version: "2"
 services:
 
   web:
+    build:
+      args:
+        mode: "production"
     environment:
       DEBUG: "False"
       ALLOWED_HOST: "52.38.185.134.nip.io"
@@ -10,7 +13,7 @@ services:
 
   haproxy:
     image: "bradjonesllc/docker-haproxy-letsencrypt"
-    restart: always
+    restart: "always"
     ports:
       - "80:80"
       - "443:443"
@@ -25,7 +28,7 @@ services:
 
   consul:
     image: "consul"
-    restart: always
+    restart: "always"
     ports:
       - "127.0.1.5:53:8600/tcp"
       - "127.0.1.5:53:8600/udp"
@@ -38,7 +41,7 @@ services:
 
   registrator:
     image: "gliderlabs/registrator"
-    restart: always
+    restart: "always"
     links:
       - "consul"
     volumes:
