@@ -90,7 +90,8 @@ MIDDLEWARE_CLASSES = (
     'wagtail.wagtailcore.middleware.SiteMiddleware',
     'wagtail.wagtailredirects.middleware.RedirectMiddleware',
     'sundog.middleware.TimezoneMiddleware',
-    'sundog.middleware.ImpersonationMiddleware'
+    'sundog.middleware.ImpersonationMiddleware',
+    'sundog.middleware.ExceptionResponderMiddleware',
 )
 
 ROOT_URLCONF = 'sundog.urls'

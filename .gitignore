@@ -31,3 +31,6 @@ import/history/*
 
 # Local environment variables:
 .env
+
+# Docker Compose overrides, mostly symlinked for production:
+docker-compose.override.yml

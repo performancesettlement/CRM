@@ -1,8 +1,15 @@
 {% extends "app-base.html" %}
+
 {% load staticfiles my_filters %}
+
+
 {% block extrahead %}
-    <link href="{% static "css/plugins/chosen/chosen.css" %}" rel="stylesheet">
+  {{ block.super }}
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
+  <link href="{% static "css/plugins/chosen/chosen.css" %}" rel="stylesheet">
 {% endblock extrahead %}
+
+
 {% block content %}
     <div class="row wrapper border-bottom white-bg page-heading">
         <div class="col-lg-10 m-t-md">
@@ -61,7 +68,6 @@
             </div>
         </div>
     </div>
-    <script src="{% static "js/jquery-ui-1.10.4.min.js" %}"></script>
     <script src="{% static "js/contact/workflows.js" %}"></script>
     <script type="text/javascript" >
         var workflow_url = "{% url 'workflows' %}";
@@ -71,5 +77,4 @@
             data: {csrfmiddlewaretoken: '{{ csrf_token }}' }
         });
     </script>
-
 {% endblock content %}

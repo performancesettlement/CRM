@@ -522,7 +522,7 @@ class EnrollmentPlanForm(forms.ModelForm):
             'savings_adjustment': forms.CheckboxInput(),
             'show_savings_accumulation': forms.CheckboxInput(),
             'states': forms.SelectMultiple(choices=enums.US_STATES, attrs={'class': 'col-xs-2 no-padding-sides', 'style': 'height: 200px;'}),
-            'fee_profile': forms.Select(choices=FeeProfile.objects.all(), attrs={'class': 'col-xs-2 no-padding-sides'})
+            'fee_profile': forms.Select(attrs={'class': 'col-xs-2 no-padding-sides'})
         }
         fields = '__all__'
 

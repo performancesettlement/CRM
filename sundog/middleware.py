@@ -23,3 +23,22 @@ class ImpersonationMiddleware(object):
             user_impersonator = request.session['user_impersonator']
             request.user = get_cache_user(user_impersonated['id'])
             request.user_impersonator = get_cache_user(user_impersonator['id'])
+
+
+class Responder(Exception):
+    '''
+    Trigger a response in any part of a view by throwing an exception.
+    '''
+    def __init__(self, responder):
+        self.responder = responder
+
+
+class ExceptionResponderMiddleware:
+    def process_exception(self, request, e):
+        '''
+        This middleware checks for the ForceResponse exception and calls the
+        responder function in the exception, passing the request object.
+        '''
+        if isinstance(e, Responder):
+            return e.responder(request)
+        raise e

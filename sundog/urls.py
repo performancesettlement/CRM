@@ -21,13 +21,16 @@ from django.contrib import admin
 from django.contrib.auth.decorators import login_required
 from sundog.views import FileSearchView
 from sundog import ajax
+from sundog.routing import module_urls, package_urls
 from wagtail.wagtailadmin import urls as wagtailadmin_urls
 from wagtail.wagtaildocs import urls as wagtaildocs_urls
 from wagtail.wagtailcore import urls as wagtail_urls
 
+import sundog.view
+
 workflow_base_url = 'workflow/'
 
-urlpatterns = [
+urlpatterns = module_urls(views) + package_urls(sundog.view) + [
     url(r'^admin/', include(admin.site.urls)),
 
     url(r'^accounts/', include('allauth.urls')),
@@ -35,7 +38,7 @@ urlpatterns = [
     url(r'^account/', include('django_auth_app.urls', namespace='django_auth_app')),
 
     url(r'^cms-admin/', include(wagtailadmin_urls)),
-    url(r'^documents/', include(wagtaildocs_urls)),
+    url(r'^cms-documents/', include(wagtaildocs_urls)),
 
     url(r'^avatar/', include('avatar.urls')),
 
