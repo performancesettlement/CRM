@@ -8,7 +8,7 @@ services:
         mode: "production"
     environment:
       DEBUG: "False"
-      ALLOWED_HOST: "52.38.185.134.nip.io"
+      ALLOWED_HOST: "52.38.185.134.xip.io"
     command: ["./docker-entrypoint.sh", "production"]
 
   haproxy:
@@ -21,7 +21,7 @@ services:
       - "web:www"
     environment:
       POSTGRES_DB: "sundog_db"
-      CERTS: "52.38.185.134.nip.io"
+      CERTS: "52.38.185.134.xip.io"
       EMAIL: "mgomez@mahisoft.com"
     volumes:
       - "./data/letsencrypt:/etc/letsencrypt"
