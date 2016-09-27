@@ -20,7 +20,6 @@ services:
     links:
       - "web:www"
     environment:
-      POSTGRES_DB: "sundog_db"
       CERTS: "52.38.185.134.xip.io"
       EMAIL: "mgomez@mahisoft.com"
     volumes:
