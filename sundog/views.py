@@ -300,6 +300,7 @@ def add_call(request, contact_id):
         return JsonResponse(response)
 
 
+@login_required
 def uploaded_file_view(request, contact_id, uploaded_id):
     doc = Uploaded.objects.get(uploaded_id=uploaded_id)
     with open(doc.content.path, 'rb') as file:
@@ -311,6 +312,7 @@ def uploaded_file_view(request, contact_id, uploaded_id):
         return response
 
 
+@login_required
 def uploaded_file_download(request, contact_id, uploaded_id):
     doc = Uploaded.objects.get(uploaded_id=uploaded_id)
     response = HttpResponse(doc.content, content_type=doc.mime_type)
@@ -319,6 +321,7 @@ def uploaded_file_download(request, contact_id, uploaded_id):
     return response
 
 
+@login_required
 def uploaded_file_delete(request, contact_id, uploaded_id):
     if request.method == 'DELETE':
         doc = Uploaded.objects.get(uploaded_id=uploaded_id)
@@ -968,6 +971,7 @@ def edit_debt_enrolled(request, contact_id):
         return JsonResponse(response)
 
 
+@login_required
 def debt_add_note(request):
     if request.method == 'POST' and request.POST:
         form = DebtNoteForm(request.POST)
@@ -988,6 +992,7 @@ def debt_add_note(request):
         return JsonResponse(response)
 
 
+@login_required
 def add_enrollment_plan(request):
     form_errors = None
     form_fee_1 = FeeForm(prefix='1')
@@ -1030,6 +1035,7 @@ def add_enrollment_plan(request):
     return _render_response(request, context_info, template_path)
 
 
+@login_required
 def edit_enrollment_plan(request, enrollment_plan_id):
     form_errors = None
     instance = EnrollmentPlan.objects.get(enrollment_plan_id=int(enrollment_plan_id))
@@ -1085,6 +1091,7 @@ def edit_enrollment_plan(request, enrollment_plan_id):
     return _render_response(request, context_info, template_path)
 
 
+@login_required
 def delete_enrollment_plan(request, enrollment_plan_id):
     if request.method == 'DELETE':
         try:
@@ -1096,6 +1103,7 @@ def delete_enrollment_plan(request, enrollment_plan_id):
         return JsonResponse({'result': 'Ok'})
 
 
+@login_required
 def add_fee_profile(request):
     form_errors = None
     forms_range = range(1, 11)
@@ -1133,6 +1141,7 @@ def add_fee_profile(request):
     return _render_response(request, context_info, template_path)
 
 
+@login_required
 def edit_fee_profile(request, fee_profile_id):
     form_errors = None
     instance = FeeProfile.objects.prefetch_related('rules').get(fee_profile_id=fee_profile_id)
@@ -1189,6 +1198,7 @@ def edit_fee_profile(request, fee_profile_id):
     return _render_response(request, context_info, template_path)
 
 
+@login_required
 def delete_fee_profile(request, fee_profile_id):
     if request.method == 'DELETE':
         try:
@@ -1200,6 +1210,7 @@ def delete_fee_profile(request, fee_profile_id):
         return JsonResponse({'result': 'Ok'})
 
 
+@login_required
 def enrollments_list(request):
     order_by_list = ['full_name', 'state', 'next_payment', 'payments_made', 'balance', 'created_at']
     page = int(request.GET.get('page', '1'))
