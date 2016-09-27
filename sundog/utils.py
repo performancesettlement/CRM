@@ -1,12 +1,14 @@
 from datetime import datetime
-import os
 from decimal import Decimal
-import uuid
 from django.utils.html import strip_tags
-import pytz
 from django_auth_app.services import get_user_timezone
-import settings
+from itertools import repeat
+
 import hashlib
+import os
+import pytz
+import settings
+import uuid
 
 
 def document_directory_path(instance, filename):
@@ -95,3 +97,7 @@ def get_data(prefix, post_data):
     if not data:
         data = None
     return data
+
+
+def const(x, *_, **__):
+    return lambda *_, **__: x
