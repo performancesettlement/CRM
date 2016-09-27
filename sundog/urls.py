@@ -18,7 +18,6 @@ Including another URLconf
 from django.conf.urls import include, url
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.contrib.auth.decorators import login_required
 from sundog.views import FileSearchView
 from sundog import ajax
 from sundog.routing import module_urls, package_urls
@@ -43,8 +42,8 @@ urlpatterns = module_urls(views) + package_urls(sundog.view) + [
     url(r'^avatar/', include('avatar.urls')),
 
     url(r'^$', views.index, name='index'),
-    url(r'^home/$', login_required(FileSearchView.as_view()), name='home'),
-    url(r'^home/?$', login_required(FileSearchView.as_view()), name='home_search'),
+    url(r'^home/$', FileSearchView.as_view(), name='home'),
+    url(r'^home/?$', FileSearchView.as_view(), name='home_search'),
     url(r'^help/$', views.help, name="help"),
     url(r'^terms/$', views.terms, name="terms"),
     url(r'^display-log/$', views.display_log, name="display_log"),

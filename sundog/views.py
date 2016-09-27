@@ -34,6 +34,7 @@ from sundog.messages import MESSAGE_REQUEST_FAILED_CODE, CODES_TO_MESSAGE
 from sundog.models import MyFile, Message, Document, FileStatusHistory, Contact, Stage, STAGE_TYPE_CHOICES, Status, \
     Campaign, BankAccount, Activity, Uploaded, Expenses, Incomes, Creditor, Debt, DebtNote, Enrollment, EnrollmentPlan, \
     FeeProfile, FeeProfileRule, WorkflowSettings, DEBT_SETTLEMENT
+from sundog.routing import decorate_view
 from sundog.services import reorder_stages, reorder_status
 from sundog.utils import get_form_errors, get_data
 
@@ -1805,6 +1806,7 @@ def messages_upload(request, file_id):
     raise Http404()
 
 
+@decorate_view(login_required)
 class FileSearchView(SearchView):
     form_class = FileSearchForm
     template_name = 'home.html'
