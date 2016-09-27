@@ -53,54 +53,6 @@ def index(request):
 
 
 @login_required
-def list_contacts(request):
-    order_by_list = ['type', 'created_at', 'company', 'assigned_to', 'last_name,first_name', 'phone_number', 'email',
-                     'stage', 'status']
-    page = int(request.GET.get('page', '1'))
-    selected_list = request.GET.get('selected_list', MY_CONTACTS)
-    order_by = request.GET.get('order_by', 'created_at')
-
-    if order_by in order_by_list:
-        i = order_by_list.index(order_by)
-        order_by_list[i] = '-' + order_by
-
-    sort = {'name': order_by.replace('-', ''), 'class': 'sorting_desc' if order_by.find('-') else 'sorting_asc'}
-
-    if order_by == 'last_name,first_name':
-        order_by = ['last_name', 'first_name']
-    elif order_by == '-last_name,first_name':
-        order_by = ['-last_name', '-first_name']
-    else:
-        order_by = [order_by]
-
-    contacts_filter = {}
-    if MY_CONTACTS == selected_list:
-        contacts_filter['assigned_to'] = request.user
-
-    contacts = Contact.objects.filter(**contacts_filter).order_by(*order_by)
-    paginator = Paginator(contacts, 100)
-    page = paginator.page(page)
-    lists = [
-        ('My Contacts', MY_CONTACTS),
-        ('All Contacts', ALL_CONTACTS),
-    ]
-
-    context_info = {
-        'sort': sort,
-        'selected_list': selected_list,
-        'order_by_list': order_by_list,
-        'request': request,
-        'user': request.user,
-        'page': page,
-        'paginator': paginator,
-        'lists': lists,
-        'menu_page': 'contacts'
-    }
-    template_path = 'contact/contact_list.html'
-    return _render_response(request, context_info, template_path)
-
-
-@login_required
 def contact_dashboard(request, contact_id):
     contact = Contact.objects.prefetch_related('contact_debts').get(contact_id=contact_id)
     bank_account = contact.bank_account.all() if contact else None
