@@ -1316,7 +1316,7 @@ def terms(request):
 
 
 def render404(request):
-    return render_to_response('404.html')
+    return render(request, '404.html', status=404)
 
 
 @bypass_impersonation_login_required
