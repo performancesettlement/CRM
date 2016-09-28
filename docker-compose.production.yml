@@ -8,7 +8,7 @@ services:
         mode: "production"
     environment:
       DEBUG: "False"
-      ALLOWED_HOST: "52.38.185.134.xip.io"
+      ALLOWED_HOST: "crm.performancesettlement.com"
     command: ["./docker-entrypoint.sh", "production"]
 
   haproxy:
@@ -20,7 +20,7 @@ services:
     links:
       - "web:www"
     environment:
-      CERTS: "52.38.185.134.xip.io"
+      CERTS: "crm.performancesettlement.com"
       EMAIL: "mgomez@mahisoft.com"
     volumes:
       - "./data/letsencrypt:/etc/letsencrypt"
