@@ -36,7 +36,7 @@ from sundog.models import MyFile, Message, Document, FileStatusHistory, Contact,
     FeeProfile, FeeProfileRule, WorkflowSettings, DEBT_SETTLEMENT
 from sundog.routing import decorate_view
 from sundog.services import reorder_stages, reorder_status
-from sundog.utils import get_form_errors, get_data
+from sundog.utils import get_form_errors, get_data, get_or_404
 
 logger = logging.getLogger(__name__)
 
@@ -303,30 +303,19 @@ def add_call(request, contact_id):
 
 @login_required
 def uploaded_file_view(request, contact_id, uploaded_id):
-    doc = Uploaded.objects.get(uploaded_id=uploaded_id)
-    with open(doc.content.path, 'rb') as file:
-        if doc.get_type() == 'pdf':
-            response = HttpResponse(file.read(), content_type=doc.mime_type)
-            response['Content-Disposition'] = 'inline; filename=%s' % doc.name
-        else:
-            response = HttpResponse()
-        return response
-
-
-@login_required
-def uploaded_file_download(request, contact_id, uploaded_id):
-    doc = Uploaded.objects.get(uploaded_id=uploaded_id)
-    response = HttpResponse(doc.content, content_type=doc.mime_type)
-    response['Content-Disposition'] = 'attachment; filename=%s' % doc.name
-    response['Content-Length'] = os.path.getsize(doc.content.path)
-    return response
+    return redirect(
+        get_or_404(
+            Uploaded,
+            uploaded_id=uploaded_id
+        )
+    )
 
 
 @login_required
 def uploaded_file_delete(request, contact_id, uploaded_id):
     if request.method == 'DELETE':
         doc = Uploaded.objects.get(uploaded_id=uploaded_id)
-        os.remove(doc.content.path)
+        doc.content.delete()
         doc.delete()
         return JsonResponse({'result': 'Ok'})
 
@@ -1774,8 +1763,7 @@ def file_add_participant(request, file_id):
 def documents_delete(request, document_id):
     if request.method == 'POST' and document_id:
         db_doc = Document.objects.get(pk=document_id)
-        if os.path.isfile(db_doc.document.path):
-            os.remove(db_doc.document.path)
+        db_doc.document.delete()
         db_doc.delete()
         return JsonResponse({'result': 'OK'})
     raise Http404()

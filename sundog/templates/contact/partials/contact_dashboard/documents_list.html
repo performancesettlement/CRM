@@ -93,7 +93,6 @@
                 <td>{{ doc.description }}</td>
                 <td>
                     <a href="{% url "uploaded_file_view" contact_id=contact.contact_id uploaded_id=doc.uploaded_id %}" target="_blank" class="uploaded-doc-view"><span title="View" class="glyphicon glyphicon-zoom-in"></span></a>
-                    <a href="{% url "uploaded_file_download" contact_id=contact.contact_id uploaded_id=doc.uploaded_id %}" class="uploaded-doc-download"><span title="Download" class="glyphicon glyphicon-download"></span></a>
                     <a href="{% url "uploaded_file_delete" contact_id=contact.contact_id uploaded_id=doc.uploaded_id %}" class="uploaded-doc-delete"><span title="Delete" class="glyphicon glyphicon-trash"></span></a>
                 </td>
             </tr>

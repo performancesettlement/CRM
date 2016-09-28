@@ -10,11 +10,13 @@ from wagtail.wagtailcore.fields import RichTextField
 from wagtail.wagtailadmin.edit_handlers import FieldPanel
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
-from sundog.utils import document_directory_path, format_price, get_now
+from sundog.utils import format_price, get_now
 import logging
 from sundog import constants
 from datetime import datetime
 from django_auth_app import enums
+from settings import MEDIA_PRIVATE
+from sundog.media import S3PrivateFileField
 
 logger = logging.getLogger(__name__)
 
@@ -797,18 +799,26 @@ def add_note_activity(sender, instance, **kwargs):
     activity.save()
 
 
-def generated_directory_path(instance, filename):
-    return 'generated/{0}/{1}'.format(instance.contact.contact_id, filename)
-
+def generated_content_filename(instance, filename):
+    return '{base}generated/{identifier}/{filename}'.format(
+        base=MEDIA_PRIVATE,
+        identifier=instance.contact.contact_id,
+        filename=filename,
+    )
 
 class Generated(models.Model):
     generated_id = models.AutoField(primary_key=True)
     contact = models.ForeignKey(Contact, related_name='generated_docs', blank=True, null=True)
     title = models.CharField(max_length=300)
-    content = models.FileField(upload_to=generated_directory_path)
+    content = S3PrivateFileField(upload_to=generated_content_filename)
+
     mime_type = models.CharField(max_length=100, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     created_by = models.ForeignKey(User, related_name='generated_files', blank=True, null=True)
+
+    def get_absolute_url(self):
+        return self.content.url
+
 
 
 E_SIGNED_STATUS_CHOICES = (
@@ -818,15 +828,18 @@ E_SIGNED_STATUS_CHOICES = (
 )
 
 
-def e_signed_directory_path(instance, filename):
-    return 'esigned/{0}/{1}'.format(instance.contact.contact_id, filename)
-
+def esigned_content_filename(instance, filename):
+    return '{base}esigned/{identifier}/{filename}'.format(
+        base=MEDIA_PRIVATE,
+        identifier=instance.contact.contact_id,
+        filename=filename,
+    )
 
 class ESigned(models.Model):
     e_signed_id = models.AutoField(primary_key=True)
     contact = models.ForeignKey(Contact, related_name='e_signed_docs', blank=True, null=True)
     title = models.CharField(max_length=300)
-    content = models.FileField(upload_to=e_signed_directory_path)
+    content = S3PrivateFileField(upload_to=esigned_content_filename)
     mime_type = models.CharField(max_length=100, blank=True, null=True)
     sender_ip = models.GenericIPAddressField(blank=True, null=True)
     status = models.CharField(max_length=10, choices=E_SIGNED_STATUS_CHOICES, blank=True, null=True)
@@ -839,6 +852,9 @@ class ESigned(models.Model):
             if e_sign_status[0] == self.e_sign_status:
                 self.status_label = e_sign_status[1]
                 break
+
+    def get_absolute_url(self):
+        return self.content.url
 
 
 class Signer(models.Model):
@@ -880,9 +896,12 @@ DOCUMENT_TYPE_CHOICES = (
 )
 
 
-def uploaded_directory_path(instance, filename):
-    return 'uploaded/{0}/{1}'.format(instance.contact.contact_id, filename)
-
+def uploaded_content_filename(instance, filename):
+    return '{base}uploaded/{identifier}/{filename}'.format(
+        base=MEDIA_PRIVATE,
+        identifier=instance.contact.contact_id,
+        filename=filename,
+    )
 
 class Uploaded(models.Model):
     uploaded_id = models.AutoField(primary_key=True)
@@ -890,7 +909,7 @@ class Uploaded(models.Model):
     name = models.CharField(max_length=300)
     description = models.CharField(max_length=2000)
     type = models.CharField(max_length=50, choices=DOCUMENT_TYPE_CHOICES, blank=True, null=True)
-    content = models.FileField(upload_to=uploaded_directory_path)
+    content = S3PrivateFileField(upload_to=uploaded_content_filename)
     mime_type = models.CharField(max_length=100, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     created_by = models.ForeignKey(User, related_name='uploaded_files', blank=True, null=True)
@@ -907,6 +926,9 @@ class Uploaded(models.Model):
         if len(split_name) > 1:
             return split_name[-1]
         return ''
+
+    def get_absolute_url(self):
+        return self.content.url
 
 
 class Incomes(models.Model):
@@ -1370,12 +1392,22 @@ class MyFile(models.Model):
         return hashlib.sha1(hash_string.encode('utf-8')).hexdigest()
 
 
+def document_document_filename(instance, filename):
+    return '{base}document/{identifier}/{filename}'.format(
+        base=MEDIA_PRIVATE,
+        identifier=str(instance.file.file_id),
+        filename=filename,
+    )
+
 class Document(models.Model):
-    document = models.FileField(upload_to=document_directory_path)
+    document = S3PrivateFileField(upload_to=document_document_filename)
     file = models.ForeignKey(MyFile)
 
+    def get_absolute_url(self):
+        return self.document.url
+
     def __str__(self):
-        return '%s' % self.document.path
+        return '%s' % self.document.url
 
 
 class FileAccessHistory(models.Model):

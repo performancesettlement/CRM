@@ -2,7 +2,6 @@ from datetime import datetime
 from decimal import Decimal
 from django.utils.html import strip_tags
 from django_auth_app.services import get_user_timezone
-from itertools import repeat
 
 import hashlib
 import os
@@ -11,9 +10,16 @@ import settings
 import uuid
 
 
-def document_directory_path(instance, filename):
-    # file will be uploaded to MEDIA_ROOT/documents/<related_file_id>/<filename>
-    return os.path.join('documents', str(instance.file.file_id), filename)
+def get_or_404(classmodel, **kwargs):
+    try:
+        return classmodel.objects.get(**kwargs)
+    except classmodel.DoesNotExist:
+        return Http404(
+            '{model_name} not found'
+            .format(
+                model_name=classmodel.__name__,
+            )
+        )
 
 
 def import_file_path(f_name, date_time, user_id):

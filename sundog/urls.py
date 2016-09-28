@@ -77,7 +77,6 @@ urlpatterns = module_urls(views) + package_urls(sundog.view) + [
     url(r'^contact/(?P<contact_id>\d+)/uploadFile/$', views.upload_file, name='upload_file'),
     url(r'^contact/(?P<contact_id>\d+)/uploadedFile/(?P<uploaded_id>\d+)/view/$', views.uploaded_file_view, name='uploaded_file_view'),
     url(r'^contact/(?P<contact_id>\d+)/uploadedFile/(?P<uploaded_id>\d+)/delete/$', views.uploaded_file_delete, name='uploaded_file_delete'),
-    url(r'^contact/(?P<contact_id>\d+)/uploadedFile/(?P<uploaded_id>\d+)/download/$', views.uploaded_file_download, name='uploaded_file_download'),
     url(r'^contact/(?P<contact_id>\d+)/creditors/$', views.contact_debts, name='contact_debts'),
     url(r'^contact/(?P<contact_id>\d+)/creditors/debt/add/$', views.add_debt, name='add_debt'),
     url(r'^contact/(?P<contact_id>\d+)/creditors/debt/edit/$', views.edit_debt, name='edit_debt'),

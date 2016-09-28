@@ -71,6 +71,7 @@ INSTALLED_APPS = (
     'allauth.account',
     'allauth.socialaccount',
     'datatableview',
+    'django_s3_storage',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -278,7 +279,6 @@ WAGTAIL_SITE_NAME = 'SunDog'
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = '/static/'
-MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'media')
 STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
 
@@ -327,3 +327,18 @@ SEED_FILE_ID = 1
 SHORT_DATETIME_FORMAT = 'm/d/Y h:i a'
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Media files storage in Amazon S3:
+DEFAULT_FILE_STORAGE = 'django_s3_storage.storage.S3Storage'
+AWS_S3_CALLING_FORMAT = 'boto.s3.connection.SubdomainCallingFormat'
+AWS_S3_HOST = 's3-us-west-2.amazonaws.com'
+AWS_S3_BUCKET_NAME = (
+    'performance-settlement-crm-media-dev'
+    if DEBUG
+    else 'performance-settlement-crm-media'
+)
+S3_URL = 'https://%s.s3.amazonaws.com' % AWS_S3_BUCKET_NAME
+MEDIA_DIRECTORY = '/media/'
+MEDIA_URL = S3_URL + MEDIA_DIRECTORY
+MEDIA_PUBLIC = MEDIA_DIRECTORY + 'public/'
+MEDIA_PRIVATE = MEDIA_DIRECTORY + 'private/'
