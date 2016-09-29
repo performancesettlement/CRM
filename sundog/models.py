@@ -1399,7 +1399,7 @@ def document_document_filename(instance, filename):
         filename=filename,
     )
 
-class Document(models.Model):
+class SundogDocument(models.Model):
     document = S3PrivateFileField(upload_to=document_document_filename)
     file = models.ForeignKey(MyFile)
 

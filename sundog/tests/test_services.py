@@ -382,7 +382,7 @@ class ServiceTestCase(unittest.TestCase):
         self.assertEqual(mock_logger.error.call_count, 2)
         self.assertEqual(result, expected_result)
 
-    @mock.patch("sundog.services.Document")
+    @mock.patch("sundog.services.SundogDocument")
     @mock.patch("sundog.services.logger")
     def test_get_file_documents_success(self, mock_logger, mock_document_class):
         mock_file_id = 1
@@ -396,7 +396,7 @@ class ServiceTestCase(unittest.TestCase):
         self.assertEqual(result, expected_result)
         self.assertEqual(mock_logger.error.call_count, 0)
 
-    @mock.patch("sundog.services.Document")
+    @mock.patch("sundog.services.SundogDocument")
     @mock.patch("sundog.services.logger")
     def test_get_file_documents_exception(self, mock_logger, mock_document_class):
         mock_file_id = 1
@@ -409,7 +409,7 @@ class ServiceTestCase(unittest.TestCase):
         self.assertEqual(result, None)
         self.assertEqual(mock_document_class.objects.filter.call_count, 1)
 
-    @mock.patch("sundog.services.Document")
+    @mock.patch("sundog.services.SundogDocument")
     @mock.patch("sundog.services.logger")
     def test_get_file_documents_none_exception(self, mock_logger, mock_document_class):
         mock_file_id = None
@@ -422,7 +422,7 @@ class ServiceTestCase(unittest.TestCase):
         self.assertEqual(result, None)
         self.assertEqual(mock_document_class.objects.filter.call_count, 1)
 
-    @mock.patch("sundog.services.Document")
+    @mock.patch("sundog.services.SundogDocument")
     @mock.patch("sundog.services.logger")
     def test_get_file_documents_none_exception(self, mock_logger, mock_document_class):
         mock_file_id = None

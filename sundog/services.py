@@ -3,7 +3,7 @@ import copy
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 
-from sundog.models import MyFile, Contact, ClientType, FileStatusHistory, FileStatus, FileAccessHistory, FileStatusStat, Document, Tag, FileImportHistory, \
+from sundog.models import MyFile, Contact, ClientType, FileStatusHistory, FileStatus, FileAccessHistory, FileStatusStat, SundogDocument, Tag, FileImportHistory, \
     Stage, Status
 from django.contrib.auth.models import User, Permission
 from django.db.models import Q
@@ -239,7 +239,7 @@ def get_access_file_history(user):
 def get_file_documents(file_id):
     results = None
     try:
-        results = Document.objects.filter(file__file_id=file_id)
+        results = SundogDocument.objects.filter(file__file_id=file_id)
 
     except Exception as e:
         logger.error(messages.ERROR_GET_DOCUMENTS % file_id)

@@ -31,7 +31,7 @@ from sundog.forms import FileCustomForm, FileSearchForm, ContactForm, Impersonat
     FeeProfileRuleForm, WorkflowSettingsForm
 from datetime import datetime
 from sundog.messages import MESSAGE_REQUEST_FAILED_CODE, CODES_TO_MESSAGE
-from sundog.models import MyFile, Message, Document, FileStatusHistory, Contact, Stage, STAGE_TYPE_CHOICES, Status, \
+from sundog.models import MyFile, Message, SundogDocument, FileStatusHistory, Contact, Stage, STAGE_TYPE_CHOICES, Status, \
     Campaign, BankAccount, Activity, Uploaded, Expenses, Incomes, Creditor, Debt, DebtNote, Enrollment, EnrollmentPlan, \
     FeeProfile, FeeProfileRule, WorkflowSettings, DEBT_SETTLEMENT
 from sundog.routing import decorate_view
@@ -1402,7 +1402,7 @@ def file_detail(request, file_id):
             context_info = {'request': request, 'user': request.user, 'file_id': file_id}
             template_path = 'file/file_disabled.html'
         else:
-            documents = Document.objects.filter(file__file_id=file_id)
+            documents = SundogDocument.objects.filter(file__file_id=file_id)
             client = Contact.objects.get(client_id=my_file.client.client_id)
             # print
             form_client = ContactForm(instance=client)
@@ -1722,7 +1722,7 @@ def documents_upload(request, file_id):
     if request.method == 'POST' and request.FILES:
         my_file = services.get_file_by_id_for_user(file_id, request.user)
         if my_file:
-            document = Document(document=request.FILES['file'], file=my_file)
+            document = SundogDocument(document=request.FILES['file'], file=my_file)
             document.save()
             return JsonResponse({'document_id': document.pk})
     raise Http404()
@@ -1762,7 +1762,7 @@ def file_add_participant(request, file_id):
 @permission_required('sundog.change_file')
 def documents_delete(request, document_id):
     if request.method == 'POST' and document_id:
-        db_doc = Document.objects.get(pk=document_id)
+        db_doc = SundogDocument.objects.get(pk=document_id)
         db_doc.document.delete()
         db_doc.delete()
         return JsonResponse({'result': 'OK'})
