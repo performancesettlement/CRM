@@ -3,22 +3,20 @@
 {% load staticfiles %}
 
 
+{% load django_bootstrap_breadcrumbs %}
+
+{% block breadcrumbs %}
+  {{ block.super }}
+  {% breadcrumb "Contacts" "contact.list" %}
+{% endblock %}
+
+
 {% block title %}
   {{ block.super }} - Contacts
 {% endblock title %}
 
 
 {% block table_view_content %}
-  <div class="row wrapper border-bottom white-bg page-heading">
-    <div class="col-lg-10 m-t-md">
-      <ol class="breadcrumb">
-        <li>
-          <a href="">Contacts</a>
-        </li>
-      </ol>
-    </div>
-  </div>
-
   <div class="col-xs-12 m-t-md m-b-md">
     <div class="inline m-r-lg">
       <select id="list-chooser" style="width: 200px;">

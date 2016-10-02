@@ -1,0 +1,38 @@
+{% extends "app-base.html" %}
+
+{% load django_bootstrap_breadcrumbs %}
+
+
+{% block breadcrumbs %}
+  {% breadcrumb "Documents" "document.list" %}
+{% endblock %}
+
+
+{% block app_base_head %}
+  {% block app_view_head %}
+  {% endblock app_view_head %}
+{% endblock app_base_head %}
+
+
+{% block app_base_pre_content %}
+  <div class="row wrapper border-bottom white-bg page-heading">
+    <div class="col-lg-10 m-t-md">
+      {% render_breadcrumbs "django_bootstrap_breadcrumbs/bootstrap3.html" %}
+    </div>
+  </div>
+
+  {% block app_view_pre_content %}
+  {% endblock app_view_pre_content %}
+{% endblock app_base_pre_content %}
+
+
+{% block app_base_content %}
+  {% block app_view_content %}
+  {% endblock app_view_content %}
+{% endblock app_base_content %}
+
+
+{% block app_base_post_content %}
+  {% block app_view_post_content %}
+  {% endblock app_view_post_content %}
+{% endblock app_base_post_content %}

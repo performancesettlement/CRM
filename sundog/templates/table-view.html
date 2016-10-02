@@ -1,0 +1,46 @@
+{% extends "app-view.html" %}
+
+{% load staticfiles %}
+
+
+{% block app_view_head %}
+  {# datatables.responsive #}
+  <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.1.0/css/responsive.dataTables.min.css" crossorigin="anonymous">
+  <script type="text/javascript" src="https://cdn.datatables.net/responsive/2.1.0/js/dataTables.responsive.min.js" crossorigin="anonymous"></script>
+
+  {# bootstrap-datepicker #}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.4/css/bootstrap-datepicker3.min.css" integrity="sha256-nFp4rgCvFsMQweFQwabbKfjrBwlaebbLkE29VFR0K40=" crossorigin="anonymous">
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.4/js/bootstrap-datepicker.min.js" integrity="sha256-urCxMaTtyuE8UK5XeVYuQbm/MhnXflqZ/B9AOkyTguo=" crossorigin="anonymous"></script>
+
+  {# x-editable #}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.1/bootstrap3-editable/css/bootstrap-editable.css" integrity="sha256-YsJ7Lkc/YB0+ssBKz0c0GTx0RI+BnXcKH5SpnttERaY=" crossorigin="anonymous">
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.1/bootstrap3-editable/js/bootstrap-editable.min.js" integrity="sha256-+fnaOx6GCnrPNNkJicdgSX4Vtl5jpxdMGykaxRQjDi4=" crossorigin="anonymous"></script>
+
+  {# datatableview #}
+  <script type="text/javascript" src="{% static "js/datatableview.min.js" %}"></script>
+
+  {# Initialization for x-editable tables #}
+  <script type="text/javascript">
+      $.fn.editable.defaults.mode = 'inline';
+      datatableview.auto_initialize = false;
+      $(function() {
+        var xeditable_options = {};
+        datatableview.initialize($('.datatable'), {
+          responsive: true,
+          fnRowCallback: datatableview.make_xeditable(xeditable_options),
+        });
+      });
+  </script>
+
+  {% block table_view_head %}
+  {% endblock table_view_head %}
+{% endblock app_view_head %}
+
+
+{% block app_view_content %}
+  {% block table_view_content %}
+    <div class="data-table">
+      {{ datatable }}
+    </div>
+  {% endblock table_view_content %}
+{% endblock app_view_content %}
