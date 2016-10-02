@@ -3,9 +3,6 @@ version: "2"
 services:
 
   web:
-    build:
-      args:
-        mode: "production"
     environment:
       DEBUG: "False"
       ALLOWED_HOST: "crm.performancesettlement.com"

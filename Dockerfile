@@ -17,9 +17,6 @@ COPY . /usr/src/app
 COPY local_config_docker.py local_config.py
 RUN mkdir -p log && touch log/django.log log/sundog.log
 
-ARG mode=production
-RUN [ "$mode" = production ] && python manage.py collectstatic --noinput || true
-
 COPY docker-entrypoint.sh .
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
