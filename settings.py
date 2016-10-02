@@ -70,8 +70,11 @@ INSTALLED_APPS = (
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
+    'ckeditor',
     'datatableview',
+    'django_bootstrap_breadcrumbs',
     'django_s3_storage',
+    'multiselectfield',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -90,8 +93,9 @@ MIDDLEWARE_CLASSES = (
 
     'wagtail.wagtailcore.middleware.SiteMiddleware',
     'wagtail.wagtailredirects.middleware.RedirectMiddleware',
-    'sundog.middleware.TimezoneMiddleware',
     'sundog.middleware.ImpersonationMiddleware',
+    'sundog.middleware.TimezoneMiddleware',
+
     'sundog.middleware.ExceptionResponderMiddleware',
 )
 
@@ -342,3 +346,11 @@ MEDIA_DIRECTORY = '/media/'
 MEDIA_URL = S3_URL + MEDIA_DIRECTORY
 MEDIA_PUBLIC = MEDIA_DIRECTORY + 'public/'
 MEDIA_PRIVATE = MEDIA_DIRECTORY + 'private/'
+
+BREADCRUMBS_TEMPLATE = 'django_bootstrap_breadcrumbs/bootstrap3.html'
+
+CKEDITOR_CONFIGS = {
+    'default': {
+        'toolbar': 'full',
+    },
+}
