@@ -1,4 +1,5 @@
 from django.conf.urls import url
+from django.db.models import Model
 from django.utils.decorators import method_decorator
 from django.views import View
 from importlib import import_module
@@ -80,30 +81,41 @@ decorate_view = (
 )
 
 
-def module_urls(module):
-    return [
-        url(
-            regex=route.regex,
-            name=(
-                route.name
-                if route.name
-                else view.__module__ + '.' + view.__name__
-            ),
-            view=(
-                view.as_view()
-                if isinstance(view, type) and issubclass(view, View)
-                else view
-            ),
-        )
-        for view, routes in module.__dict__.get(Route, {}).items()
-        for route in routes
-    ]
+filter_package_modules = lambda package, filter: [
+    x
+    for loader, name, is_pkg in walk_packages(package.__path__)
+    for module in [import_module(package.__package__ + '.' + name)]
+    for x in filter(module)
+]
 
 
-def package_urls(package):
-    return [
-        url
-        for loader, name, is_pkg in walk_packages(package.__path__)
-        for module in [import_module(package.__package__ + '.' + name)]
-        for url in module_urls(module)
+module_urls = lambda module: [
+    url(
+        regex=route.regex,
+        name=(
+            route.name
+            if route.name
+            else view.__module__ + '.' + view.__name__
+        ),
+        view=(
+            view.as_view()
+            if isinstance(view, type) and issubclass(view, View)
+            else view
+        ),
+    )
+    for view, routes in module.__dict__.get(Route, {}).items()
+    for route in routes
+]
+
+
+package_urls = lambda package: filter_package_modules(package, module_urls)
+
+
+package_models = lambda package: filter_package_modules(
+    package,
+    lambda module: [
+        value
+        for name, value in module.__dict__.items()
+        if isinstance(value, type) and issubclass(value, Model)
     ]
+)
