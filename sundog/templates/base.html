@@ -1,5 +1,13 @@
 {% load staticfiles %}
 
+
+{% load django_bootstrap_breadcrumbs %}
+
+{% block breadcrumbs %}
+  {% clear_breadcrumbs %}
+{% endblock breadcrumbs %}
+
+
 <!DOCTYPE html>
 <html>
   <head>

@@ -3,11 +3,6 @@
 {% load django_bootstrap_breadcrumbs %}
 
 
-{% block breadcrumbs %}
-  {% breadcrumb "Documents" "document.list" %}
-{% endblock %}
-
-
 {% block app_base_head %}
   {% block app_view_head %}
   {% endblock app_view_head %}
@@ -17,7 +12,7 @@
 {% block app_base_pre_content %}
   <div class="row wrapper border-bottom white-bg page-heading">
     <div class="col-lg-10 m-t-md">
-      {% render_breadcrumbs "django_bootstrap_breadcrumbs/bootstrap3.html" %}
+      {% render_breadcrumbs %}
     </div>
   </div>
 

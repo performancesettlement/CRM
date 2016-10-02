@@ -16,7 +16,7 @@
 {% endblock title %}
 
 
-{% block table_view_content %}
+{% block table_view_pre_content %}
   <div class="col-xs-12 m-t-md m-b-md">
     <div class="inline m-r-lg">
       <select id="list-chooser" style="width: 200px;">
@@ -37,11 +37,12 @@
     <div class="inline"><a class="btn btn-primary" href="{% url 'campaigns' %}">Campaigns</a></div>
     <div class="inline"><a class="btn btn-primary" href="{% url 'data_sources' %}">Data Sources</a></div>
   </div>
+{% endblock table_view_pre_content %}
 
-  {{ block.super }}
 
+{% block table_view_post_content %}
   <script type="text/javascript">
     var contacts_list_url = '{% url 'list_contacts' %}';
   </script>
   <script src="{% static "js/contact/contact_list.js" %}"></script>
-{% endblock table_view_content %}
+{% endblock table_view_post_content %}

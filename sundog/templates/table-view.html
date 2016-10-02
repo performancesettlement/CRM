@@ -37,6 +37,12 @@
 {% endblock app_view_head %}
 
 
+{% block app_view_pre_content %}
+  {% block table_view_pre_content %}
+  {% endblock table_view_pre_content %}
+{% endblock app_view_pre_content %}
+
+
 {% block app_view_content %}
   {% block table_view_content %}
     <div class="data-table">
@@ -44,3 +50,9 @@
     </div>
   {% endblock table_view_content %}
 {% endblock app_view_content %}
+
+
+{% block app_view_post_content %}
+  {% block table_view_post_content %}
+  {% endblock table_view_post_content %}
+{% endblock app_view_post_content %}
