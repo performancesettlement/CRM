@@ -33,6 +33,11 @@ services:
       - "8500"
       - "8600/tcp"
       - "8600/udp"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
     command: "agent -dev -client=0.0.0.0 -bind=0.0.0.0 -domain=consul.test"
 
   registrator:
