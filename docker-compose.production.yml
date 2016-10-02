@@ -6,7 +6,7 @@ services:
     environment:
       DEBUG: "False"
       ALLOWED_HOST: "crm.performancesettlement.com"
-    command: ["./docker-entrypoint.sh", "production"]
+    command: ["production"]
 
   haproxy:
     image: "bradjonesllc/docker-haproxy-letsencrypt"
