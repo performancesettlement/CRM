@@ -17,6 +17,11 @@ from datetime import datetime
 from django_auth_app import enums
 from settings import MEDIA_PRIVATE
 from sundog.media import S3PrivateFileField
+from sundog.routing import package_models
+
+import sundog.view
+import sys
+
 
 logger = logging.getLogger(__name__)
 
@@ -867,7 +872,7 @@ class Signer(models.Model):
     signing_ip = models.GenericIPAddressField()
 
 
-DOCUMENT_TYPE_CHOICES = (
+UPLOADED_DOCUMENT_TYPE_CHOICES = (
     (None, NONE_CHOICE_LABEL),
     ('1099c', '1099-C'),
     ('30_day_notice', '30 Day Notice (debt has moved)'),
@@ -908,7 +913,7 @@ class Uploaded(models.Model):
     contact = models.ForeignKey(Contact, related_name='uploaded_docs', blank=True, null=True)
     name = models.CharField(max_length=300)
     description = models.CharField(max_length=2000)
-    type = models.CharField(max_length=50, choices=DOCUMENT_TYPE_CHOICES, blank=True, null=True)
+    type = models.CharField(max_length=50, choices=UPLOADED_DOCUMENT_TYPE_CHOICES, blank=True, null=True)
     content = S3PrivateFileField(upload_to=uploaded_content_filename)
     mime_type = models.CharField(max_length=100, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
@@ -916,7 +921,7 @@ class Uploaded(models.Model):
 
     def __init__(self, *args, **kwargs):
         super(Uploaded, self).__init__(*args, **kwargs)
-        for document_type in DOCUMENT_TYPE_CHOICES:
+        for document_type in UPLOADED_DOCUMENT_TYPE_CHOICES:
             if document_type[0] == self.type:
                 self.type_label = document_type[1]
                 break
@@ -1392,15 +1397,15 @@ class MyFile(models.Model):
         return hashlib.sha1(hash_string.encode('utf-8')).hexdigest()
 
 
-def document_document_filename(instance, filename):
-    return '{base}document/{identifier}/{filename}'.format(
+def sundogdocument_document_filename(instance, filename):
+    return '{base}sundogdocument/{identifier}/{filename}'.format(
         base=MEDIA_PRIVATE,
         identifier=str(instance.file.file_id),
         filename=filename,
     )
 
 class SundogDocument(models.Model):
-    document = S3PrivateFileField(upload_to=document_document_filename)
+    document = S3PrivateFileField(upload_to=sundogdocument_document_filename)
     file = models.ForeignKey(MyFile)
 
     def get_absolute_url(self):
@@ -1449,3 +1454,7 @@ class Terms(Page):
         FieldPanel('subtitle', classname="full"),
         FieldPanel('body', classname="full"),
     ]
+
+
+for model in package_models(sundog.view):
+    setattr(sys.modules[__name__], model.__name__, model)
