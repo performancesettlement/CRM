@@ -1,6 +1,6 @@
-{% extends "app-base.html" %}
+{% extends "table-view.html" %}
 
-{% load staticfiles my_filters admin_urls %}
+{% load staticfiles %}
 
 
 {% block title %}
@@ -8,45 +8,7 @@
 {% endblock title %}
 
 
-{% block extrahead %}
-  {{ block.super }}
-
-  {# datatables #}
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.12/css/dataTables.bootstrap.min.css" integrity="sha256-7MXHrlaY+rYR1p4jeLI23tgiUamQVym2FWmiUjksFDc=" crossorigin="anonymous">
-  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.12/js/jquery.dataTables.min.js" integrity="sha256-TX6POJQ2u5/aJmHTJ/XUL5vWCbuOw0AQdgUEzk4vYMc=" crossorigin="anonymous"></script>
-  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.12/js/dataTables.bootstrap.min.js" integrity="sha256-90YqnHom4j8OhcEQgyUI2IhmGYTBO54Adcf3YDZU9xM=" crossorigin="anonymous"></script>
-
-  {# datatables.responsive #}
-  <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.1.0/css/responsive.dataTables.min.css" crossorigin="anonymous">
-  <script type="text/javascript" src="https://cdn.datatables.net/responsive/2.1.0/js/dataTables.responsive.min.js" crossorigin="anonymous"></script>
-
-  {# bootstrap-datepicker #}
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.4/css/bootstrap-datepicker3.min.css" integrity="sha256-nFp4rgCvFsMQweFQwabbKfjrBwlaebbLkE29VFR0K40=" crossorigin="anonymous">
-  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.4/js/bootstrap-datepicker.min.js" integrity="sha256-urCxMaTtyuE8UK5XeVYuQbm/MhnXflqZ/B9AOkyTguo=" crossorigin="anonymous"></script>
-
-  {# x-editable #}
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.1/bootstrap3-editable/css/bootstrap-editable.css" integrity="sha256-YsJ7Lkc/YB0+ssBKz0c0GTx0RI+BnXcKH5SpnttERaY=" crossorigin="anonymous">
-  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.1/bootstrap3-editable/js/bootstrap-editable.min.js" integrity="sha256-+fnaOx6GCnrPNNkJicdgSX4Vtl5jpxdMGykaxRQjDi4=" crossorigin="anonymous"></script>
-
-  {# datatableview #}
-  <script type="text/javascript" src="{% static "js/datatableview.min.js" %}"></script>
-
-  {# Initialization for x-editable tables #}
-  <script type="text/javascript">
-      $.fn.editable.defaults.mode = 'inline';
-      datatableview.auto_initialize = false;
-      $(function() {
-        var xeditable_options = {};
-        datatableview.initialize($('.datatable'), {
-          responsive: true,
-          fnRowCallback: datatableview.make_xeditable(xeditable_options),
-        });
-      });
-  </script>
-{% endblock extrahead %}
-
-
-{% block content %}
+{% block table_view_content %}
   <div class="row wrapper border-bottom white-bg page-heading">
     <div class="col-lg-10 m-t-md">
       <ol class="breadcrumb">
@@ -78,12 +40,10 @@
     <div class="inline"><a class="btn btn-primary" href="{% url 'data_sources' %}">Data Sources</a></div>
   </div>
 
-  <div class="contact-list">
-    {{ datatable }}
-  </div>
+  {{ block.super }}
 
   <script type="text/javascript">
     var contacts_list_url = '{% url 'list_contacts' %}';
   </script>
   <script src="{% static "js/contact/contact_list.js" %}"></script>
-{% endblock content %}
+{% endblock table_view_content %}
