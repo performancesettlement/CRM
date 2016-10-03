@@ -1,11 +1,17 @@
 from ckeditor.fields import RichTextField
 from datatableview import Datatable
-from datatableview.columns import DisplayColumn
+from datatableview.columns import CompoundColumn, DisplayColumn, TextColumn
 from datatableview.helpers import make_processor, through_filter
 from datatableview.views import XEditableDatatableView
 from django.contrib.auth.decorators import login_required
-from django.db.models import CharField, DateTimeField, Model
-from django.forms.models import modelform_factory
+from django.contrib.auth.models import User
+from django.db.models import (
+    DateTimeField,
+    ForeignKey,
+    Model,
+    SET_NULL,
+)
+from django.forms.models import ModelForm
 from django.forms.widgets import SelectMultiple
 from django.template.defaultfilters import date
 from django.template.loader import render_to_string
@@ -15,6 +21,7 @@ from multiselectfield import MultiSelectField
 from settings import SHORT_DATETIME_FORMAT
 from sundog.models import NONE_CHOICE_LABEL
 from sundog.routing import decorate_view, route
+from sundog.utils import LongCharField
 
 
 class Document(Model):
@@ -136,40 +143,43 @@ class Document(Model):
     )
     STATE_CHOICES_DICT = dict(STATE_CHOICES)
 
-    title = CharField(max_length=500)
+    title = LongCharField()
     created_at = DateTimeField(auto_now_add=True)
-    type = CharField(max_length=50, choices=TYPE_CHOICES)
+    created_by = ForeignKey(User, on_delete=SET_NULL, blank=True, null=True)
+    type = LongCharField(choices=TYPE_CHOICES)
     state = MultiSelectField(choices=STATE_CHOICES)
     template_body = RichTextField()
 
     def get_absolute_url(self):
-        return reverse('document.edit', args=[str(self.id)])
+        return reverse('document.edit', args=[self.id])
 
 
 class DocumentCRUDViewMixin:
     model = Document
 
-    form_class = modelform_factory(
-        model,
-        fields=[
-            'title',
-            'type',
-            'state',
-            'template_body',
-        ],
-        widgets={
-            "state": SelectMultiple(
-                attrs={
-                    'class': 'ui fluid dropdown'
-                },
-            ),
-        },
-    )
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['menu_page'] = 'documents'
         return context
+
+    class form_class(ModelForm):
+        class Meta:
+            model = Document
+
+            fields = [
+                'title',
+                'type',
+                'state',
+                'template_body',
+            ]
+
+            widgets = {
+                'state': SelectMultiple(
+                    attrs={
+                        'class': 'ui fluid dropdown'
+                    },
+                ),
+            }
 
     class Meta:
         abstract = True
@@ -194,12 +204,38 @@ class DocumentList(DocumentCRUDViewMixin, XEditableDatatableView):
             ),
         )
 
+        created_by_full_name = CompoundColumn(
+            'Created by',
+            sources=[
+                TextColumn(source='created_by__first_name'),
+                TextColumn(source='created_by__last_name'),
+            ],
+            processor=(
+                lambda *args, **kwargs: (
+                    [
+                        '{first_name} {last_name}'
+                        .format(**locals())
+                        for names in [
+                            dict(
+                                enumerate(
+                                    kwargs.get('default_value', [])
+                                )
+                            )
+                        ]
+                        for first_name in [names.get(0, '')]
+                        for last_name in [names.get(1, '')]
+                    ] or ['']
+                )[0]
+            ),
+        )
+
         class Meta:
             structure_template = 'datatableview/bootstrap_structure.html'
 
             columns = [
                 'id',
                 'created_at',
+                'created_by_full_name',
                 'title',
                 'type',
                 'actions',
@@ -223,7 +259,10 @@ class DocumentList(DocumentCRUDViewMixin, XEditableDatatableView):
 @route(r'^documents/add/?$', name='document.add')
 @decorate_view(login_required)
 class DocumentCreate(DocumentCRUDViewMixin, CreateView):
-    pass
+
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        return super().form_valid(form)
 
 
 @route(r'^documents/(?P<pk>\d+)/?$', name='document.edit')
