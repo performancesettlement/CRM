@@ -1,5 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
+from django.db.models import CharField
+from django.http import Http404
 from django.utils.html import strip_tags
 from django_auth_app.services import get_user_timezone
 
@@ -107,3 +109,27 @@ def get_data(prefix, post_data):
 
 def const(x, *_, **__):
     return lambda *_, **__: x
+
+
+# From https://djangosnippets.org/snippets/2328/
+class LongCharField(CharField):
+    "A basically unlimited-length CharField."
+    description = "Unlimited-length string"
+
+    def __init__(self, *args, **kwargs):
+        kwargs['max_length'] = int(1e9)  # Satisfy management validation.
+        # Don't add max-length validator like CharField does.
+        super().__init__(*args, **kwargs)
+
+    def get_internal_type(self):
+        # This has no function, since this value is used as a lookup in
+        # db_type().  Put something that isn't known by Django so it
+        # raises an error if it's ever used.
+        return 'LongCharField'
+
+    def db_type(self, connection):
+        return 'text'
+
+    def formfield(self, **kwargs):
+        # Don't pass max_length to form field like CharField does.
+        return super().formfield(**kwargs)
