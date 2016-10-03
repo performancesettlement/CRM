@@ -52,18 +52,6 @@ INSTALLED_APPS = (
     'rest_framework',
     'compressor',
     'taggit',
-    'wagtail.wagtailcore',
-    'wagtail.wagtailadmin',
-    'wagtail.wagtaildocs',
-    'wagtail.wagtailsnippets',
-    'wagtail.wagtailusers',
-    'wagtail.wagtailimages',
-    'wagtail.wagtailembeds',
-    'wagtail.wagtailsearch',
-    'wagtail.wagtailredirects',
-    'wagtail.wagtailforms',
-    'wagtail.wagtailsites',
-    'wagtail.contrib.wagtailapi',
     'avatar',
     'colorful',
     'multi_email_field',
@@ -91,8 +79,6 @@ MIDDLEWARE_CLASSES = (
 
     'whitenoise.middleware.WhiteNoiseMiddleware',
 
-    'wagtail.wagtailcore.middleware.SiteMiddleware',
-    'wagtail.wagtailredirects.middleware.RedirectMiddleware',
     'sundog.middleware.ImpersonationMiddleware',
     'sundog.middleware.TimezoneMiddleware',
 

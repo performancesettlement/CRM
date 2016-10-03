@@ -5,9 +5,6 @@ from decimal import Decimal
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from wagtail.wagtailcore.models import Page
-from wagtail.wagtailcore.fields import RichTextField
-from wagtail.wagtailadmin.edit_handlers import FieldPanel
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 from sundog.utils import format_price, get_now
@@ -1443,17 +1440,6 @@ class FileStatusStat(models.Model):
 
     class Meta:
         unique_together = ('date_stat', 'file_status',)
-
-
-# CMS PAGES #
-class Terms(Page):
-    subtitle = RichTextField(null=True)
-    body = RichTextField()
-
-    content_panels = Page.content_panels + [
-        FieldPanel('subtitle', classname="full"),
-        FieldPanel('body', classname="full"),
-    ]
 
 
 for model in package_models(sundog.view):

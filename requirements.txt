@@ -48,7 +48,6 @@ rjsmin==1.0.12
 six==1.10.0
 Unidecode==0.4.19
 urllib3==1.17
-wagtail==1.6.2
 whitenoise==3.2.1
 Willow==0.3.1
 xlrd==1.0.0

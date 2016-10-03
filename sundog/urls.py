@@ -21,9 +21,6 @@ from django.contrib import admin
 from sundog.views import FileSearchView
 from sundog import ajax
 from sundog.routing import module_urls, package_urls
-from wagtail.wagtailadmin import urls as wagtailadmin_urls
-from wagtail.wagtaildocs import urls as wagtaildocs_urls
-from wagtail.wagtailcore import urls as wagtail_urls
 
 import sundog.view
 
@@ -35,9 +32,6 @@ urlpatterns = module_urls(views) + package_urls(sundog.view) + [
     url(r'^accounts/', include('allauth.urls')),
 
     url(r'^account/', include('django_auth_app.urls', namespace='django_auth_app')),
-
-    url(r'^cms-admin/', include(wagtailadmin_urls)),
-    url(r'^cms-documents/', include(wagtaildocs_urls)),
 
     url(r'^avatar/', include('avatar.urls')),
 
@@ -113,9 +107,6 @@ urlpatterns = module_urls(views) + package_urls(sundog.view) + [
     url(r'^profile/stop_impersonate_user/$', views.stop_impersonate_user, name='stop_impersonate_user'),
     url(r'^admin/update_preferences_for_section_collapsed_state/$', ajax.update_preferences_for_section_collapsed_state, name='update_section_collapsed_state'),
     url(r'^admin/get_preferences_for_sections_collapsed_state/$', ajax.get_preferences_for_sections_collapsed_state, name='get_sections_collapsed_state'),
-    # For anything not caught by a more specific rule above, hand over to
-    # Wagtail's serving mechanism
-    url(r'', include(wagtail_urls)),
 ]
 
 handler404 = 'sundog.views.render404'
