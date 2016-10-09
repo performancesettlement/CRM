@@ -13,14 +13,12 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt /usr/src/app/
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . /usr/src/app
-COPY local_config_docker.py local_config.py
-RUN mkdir -p log && touch log/django.log log/sundog.log
-
-COPY docker-entrypoint.sh .
-
 ENTRYPOINT ["./docker-entrypoint.sh"]
 
 EXPOSE 80
 
 CMD ["development"]
+
+COPY local_config_docker.py local_config.py
+
+COPY . /usr/src/app

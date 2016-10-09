@@ -153,7 +153,8 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+            'format':
+                "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
             'datefmt': "%d/%b/%Y %H:%M:%S"
         },
         'simple': {
@@ -166,14 +167,6 @@ LOGGING = {
         }
     },
     'handlers': {
-        'info_file': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.path.join(PROJECT_ROOT, 'log', 'sundog.log'),
-            'maxBytes': 1024 * 1024 * 5,  # 5 mb
-            'backupCount': 10,
-            'formatter': 'verbose'
-        },
         'mail': {
             'level': 'ERROR',
             'filters': ['require_debug_false'],
@@ -185,14 +178,6 @@ LOGGING = {
             'class': 'logging.handlers.SysLogHandler',
             'facility': 'local5',
             'formatter': 'simple'
-        },
-        'django': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.path.join(PROJECT_ROOT, 'log', 'django.log'),
-            'maxBytes': 1024 * 1024 * 5,  # 5 mb
-            'backupCount': 10,
-            'formatter': 'verbose',
         },
         'console': {
             'level': 'DEBUG',
@@ -207,7 +192,7 @@ LOGGING = {
         },
     },
     'root': {
-        'handlers': ['info_file', 'mail', 'syslog', 'console', 'logstash'],
+        'handlers': ['mail', 'syslog', 'console', 'logstash'],
         'level': 'DEBUG',
     },
     'loggers': {
@@ -216,35 +201,35 @@ LOGGING = {
             'level': 'DEBUG',
         },
         'sundog': {
-            'handlers': ['info_file', 'mail', 'syslog', 'console', 'logstash'],
+            'handlers': ['mail', 'syslog', 'console', 'logstash'],
             'level': 'DEBUG',
         },
         'django_auth_app': {
-            'handlers': ['info_file', 'mail', 'syslog', 'console', 'logstash'],
+            'handlers': ['mail', 'syslog', 'console', 'logstash'],
             'level': 'DEBUG',
         },
         'django': {
-            'handlers': ['syslog', 'django', 'console', 'logstash'],
+            'handlers': ['syslog', 'console', 'logstash'],
             'level': 'DEBUG',
         },
         'django.db.backends': {
-            'handlers': ['syslog', 'django', 'console', 'logstash'],
+            'handlers': ['syslog', 'console', 'logstash'],
             'level': 'DEBUG',
         },
         'django.request': {
-            'handlers': ['syslog', 'mail', 'django', 'console', 'logstash'],
+            'handlers': ['syslog', 'mail', 'console', 'logstash'],
             'level': 'DEBUG',
         },
         'django.server': {
-            'handlers': ['syslog', 'mail', 'django', 'console', 'logstash'],
+            'handlers': ['syslog', 'mail', 'console', 'logstash'],
             'level': 'DEBUG',
         },
         'gunicorn.access': {
-            'handlers': ['syslog', 'mail', 'django', 'console', 'logstash'],
+            'handlers': ['syslog', 'mail', 'console', 'logstash'],
             'level': 'DEBUG',
         },
         'gunicorn.error': {
-            'handlers': ['syslog', 'mail', 'django', 'console', 'logstash'],
+            'handlers': ['syslog', 'mail', 'console', 'logstash'],
             'level': 'DEBUG',
         },
     }
