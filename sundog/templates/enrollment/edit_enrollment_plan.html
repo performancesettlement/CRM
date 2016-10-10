@@ -174,7 +174,7 @@
                     <a id="cancel-second-fee" class="pull-right btn btn-primary" style="display: none;">Remove Second Fee</a>
                 </div>
                 <div class="col-xs-12 no-padding-sides border m-t-xs">
-                    <input type="hidden" id="id_1-fee_id" name="1-fee_id" value="{{ form_fee_1.instance.fee_id }}">
+                    <input type="hidden" id="id_1-fee_plan_id" name="1-fee_plan_id" value="{{ form_fee_1.instance.fee_plan_id }}">
                     <div class="col-xs-1 m-t-xs m-b-xs no-padding-right">
                         <label class="col-xs-12 no-padding-sides">Active</label>
                         <div class="col-xs-12 no-padding-sides">
@@ -242,8 +242,8 @@
                         </div>
                     </div>
                     <div id="fee-2-data" class="col-xs-12 no-padding-sides border-top m-t-xs" style="display: none;">
-                        {% if form_fee_2.instance.fee_id %}
-                        <input type="hidden" id="id_2-fee_id" name="2-fee_id" value="{{ form_fee_2.instance.fee_id }}">
+                        {% if form_fee_2.instance.fee_plan_id %}
+                        <input type="hidden" id="id_2-fee_plan_id" name="2-fee_plan_id" value="{{ form_fee_2.instance.fee_plan_id }}">
                         {% endif %}
                         <div class="col-xs-1 m-t-xs m-b-xs no-padding-right">
                             <label class="col-xs-12 no-padding-sides">Active</label>

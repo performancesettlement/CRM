@@ -1,3 +1,4 @@
+import calendar
 from datetime import datetime
 import os
 from decimal import Decimal
@@ -95,3 +96,26 @@ def get_data(prefix, post_data):
     if not data:
         data = None
     return data
+
+
+def to_int(string, default=-1):
+    try:
+        result = int(string)
+    except:
+        result = default
+    return result
+
+
+def add_months(date, months):
+    month = date.month - 1 + months
+    year = int(date.year + month / 12)
+    month = month % 12 + 1
+    day = min(date.day, calendar.monthrange(year, month)[1])
+    return datetime(year, month, day)
+
+
+def get_debts_ids(data):
+    debt_ids = data.get('debt_ids')
+    if debt_ids:
+        debt_ids = [int(debt_id) for debt_id in debt_ids.split(',')]
+    return debt_ids

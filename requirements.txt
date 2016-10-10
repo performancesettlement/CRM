@@ -15,6 +15,7 @@ xlrd==0.9.4
 django-timezone-utils
 django-crontab
 mock==2.0.0
+numpy==1.11.2
 django-allauth
 django-colorfield==0.1.10
 django-multi-email-field==0.4

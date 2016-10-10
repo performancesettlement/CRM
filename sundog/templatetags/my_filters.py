@@ -18,6 +18,7 @@ def times(number):
 
 @register.filter(name='currency') 
 def currency(dollars):
+    dollars = Decimal(dollars).quantize(Decimal('.01'))
     if dollars is None:
         return "N/A"
     else:
@@ -115,7 +116,7 @@ def times(media_type):
 
 @register.filter(name='multiply')
 def multiply(value, arg):
-    return value * arg
+    return Decimal(value) * Decimal(arg)
     
 
 @register.filter(name='minus')

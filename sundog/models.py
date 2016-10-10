@@ -5,6 +5,7 @@ from decimal import Decimal
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from numpy import arange
 from wagtail.wagtailcore.models import Page
 from wagtail.wagtailcore.fields import RichTextField
 from wagtail.wagtailadmin.edit_handlers import FieldPanel
@@ -400,6 +401,27 @@ class Contact(models.Model):
     def __str__(self):
         return '%s' % self.first_name
 
+    def available_monthly(self):
+        incomes = list(self.incomes.all())
+        if incomes:
+            incomes = incomes[0].total()
+        else:
+            incomes = Decimal('0.00')
+        expenses = list(self.expenses.all())
+        if expenses:
+            expenses = expenses[0].total()
+        else:
+            expenses = Decimal('0.00')
+        return incomes - expenses
+
+    def est_sett(self, ids=None):
+        est_sett = Decimal('0.00')
+        debts = list(self.contact_debts.all())
+        for debt in debts:
+            if (not ids and debt.enrolled) or (ids and debt.debt_id in ids):
+                est_sett += debt.get_est_sett()
+        return est_sett
+
     def debts_count(self):
         return len(self.contact_debts.all())
 
@@ -410,10 +432,10 @@ class Contact(models.Model):
                 total += debt.original_debt_amount
         return total
 
-    def total_enrolled_current_debts(self):
+    def total_enrolled_current_debts(self, ids=None):
         total = Decimal('0.00')
         for debt in list(self.contact_debts.all()):
-            if debt.enrolled and debt.current_debt_amount:
+            if (not ids and debt.enrolled and debt.current_debt_amount) or (ids and debt.debt_id in ids):
                 total += debt.current_debt_amount
         return total
 
@@ -513,7 +535,7 @@ class FeeProfileRule(models.Model):
     inc	= models.PositiveSmallIntegerField()
     sett_fee_low = models.DecimalField(max_digits=14, decimal_places=2)
     sett_fee_high = models.DecimalField(max_digits=14, decimal_places=2)
-    sett_inc = models.DecimalField(max_digits=14, decimal_places=2)
+    sett_fee_inc = models.DecimalField(max_digits=14, decimal_places=2)
 
     class Meta:
         ordering = ['fee_profile_rule_id']
@@ -521,9 +543,12 @@ class FeeProfileRule(models.Model):
 
 MONTH_CHOICES = [(str(x), str(x) + ' Month') for x in range(1, 301)]
 
-AMOUNT_CHOICES = [(0, '0.0%')] + [(str(x/2), str(x/2) + '%') for x in range(1, 102)]
 
-WITH_AFTER_FEE_CHOICES = copy.copy(MONTH_CHOICES) + [('after_1', 'After Fee 1'), ('after_2', 'After Fee 2')]
+AMOUNT_CHOICES = [(str(x), '{}%'.format(x)) for x in arange(0, 51, 0.5)]
+
+AFTER_FEE_CHOICES = [('after_1', 'After Fee 1'), ('after_2', 'After Fee 2')]
+
+WITH_AFTER_FEE_CHOICES = copy.copy(MONTH_CHOICES) + AFTER_FEE_CHOICES
 
 
 class EnrollmentPlan(models.Model):
@@ -561,6 +586,9 @@ class EnrollmentPlan(models.Model):
     savings_adjustment = models.NullBooleanField()
     show_savings_accumulation = models.NullBooleanField()
 
+    def __str__(self):
+        return self.name
+
 
 YES_NO_CHOICES = (
     ('yes', 'Yes'),
@@ -579,27 +607,36 @@ FEE_TYPE_CHOICES = (
 WITH_HALF_FULL_CHOICES = [('half', 'Half'), ('full', 'Full')] + copy.copy(MONTH_CHOICES)
 
 
-class Fee(models.Model):
-    fee_id = models.AutoField(primary_key=True)
-    enrollment_plan = models.ForeignKey(EnrollmentPlan, related_name='fees')
+class FeePlan(models.Model):
+    fee_plan_id = models.AutoField(primary_key=True)
+    enrollment_plan = models.ForeignKey(EnrollmentPlan, related_name='fee_plans')
     active = models.BooleanField(default=False)
     name = models.CharField(max_length=100)
     type = models.CharField(max_length=128, choices=FEE_TYPE_CHOICES)
-    amount = models.CharField(max_length=4, choices=AMOUNT_CHOICES, default='0')
+    amount = models.CharField(max_length=4, choices=AMOUNT_CHOICES)
     defer = models.CharField(max_length=3, choices=YES_NO_CHOICES, default='no')
     discount = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
     starts = models.CharField(max_length=10, choices=WITH_AFTER_FEE_CHOICES)
     ends = models.CharField(max_length=10, choices=WITH_HALF_FULL_CHOICES)
     weighted_fee_perc = models.PositiveSmallIntegerField(null=True, blank=True)
-    weighted_fee_in_first = models.CharField(max_length=3, choices=WITH_AFTER_FEE_CHOICES)
+    weighted_fee_in_first = models.CharField(max_length=3, choices=WITH_AFTER_FEE_CHOICES, null=True, blank=True)
     paid_by_check = models.CharField(max_length=3, choices=YES_NO_CHOICES, default='no')
     hide = models.CharField(max_length=3, choices=YES_NO_CHOICES, default='no')
+
+
+CUSTODIAL_ACCOUNT_CHOICES = [('epps', 'EPPS'), ('dpg', 'DPG Custodial')]
 
 
 class Enrollment(models.Model):
     enrollment_id = models.AutoField(primary_key=True)
     enrollment_plan = models.ForeignKey(EnrollmentPlan, related_name='enrollments_linked', blank=True, null=True)
     contact = models.ForeignKey(Contact, related_name='enrollments', blank=True, null=True)
+    custodial_account = models.CharField(max_length=4, choices=CUSTODIAL_ACCOUNT_CHOICES, default='epps')
+    comp_template_chooser = models.CharField(max_length=20, blank=True, null=True)
+    program_length = models.CharField(max_length=4)
+    start_date = models.DateTimeField()
+    first_date = models.DateTimeField()
+    second_date = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 
@@ -615,6 +652,14 @@ class Enrollment(models.Model):
         # TODO: implement logic.
         return 0
 
+
+class Fee(models.Model):
+    fee_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=100)
+    amount = models.CharField(max_length=20)
+    fee_plan = models.ForeignKey(FeePlan, related_name='fees_related', blank=True, null=True)
+    enrollment = models.ForeignKey(Enrollment, related_name='fees', blank=True, null=True)
+
 ACCOUNT_TYPE_CHOICES = (
     (None, NONE_CHOICE_LABEL),
     ('checking', 'Checking'),
@@ -626,9 +671,7 @@ class BankAccount(models.Model):
     bank_account_id = models.AutoField(primary_key=True)
     contact = models.ForeignKey(Contact, related_name='bank_account', blank=True, null=True)
     routing_number = models.CharField(max_length=20)
-    account_number = models.CharField(max_length=128)
-    account_number_salt = models.CharField(max_length=32)
-    account_number_last_4_digits = models.CharField(max_length=4)
+    account_number = models.CharField(max_length=30)
     account_type = models.CharField(max_length=10, choices=ACCOUNT_TYPE_CHOICES)
     name_on_account = models.CharField(max_length=20)
     bank_name = models.CharField(max_length=100)
@@ -639,6 +682,17 @@ class BankAccount(models.Model):
     phone = models.CharField(max_length=10, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+
+    def info_complete(self):
+        return self.bank_name and self.name_on_account and self.account_number and self.account_type and self.routing_number
+
+
+class Payment(models.Model):
+    payment_id = models.AutoField(primary_key=True)
+    number = models.PositiveSmallIntegerField(null=True, blank=True)
+    date = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    amount = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    paid = models.BooleanField(default=False)
 
 
 ACTIVITY_TYPE_CHOICES = (
@@ -1090,7 +1144,6 @@ class Creditor(models.Model):
         all_owed_money = Decimal('0.00')
         all_settled_money = Decimal('0.00')
         all_debts = list(self.creditor_debts.all()) + list(self.bought_debts.all())
-        # TODO: check rule for settled amount!
         for debt in all_debts:
             if not debt.debt_buyer or (debt.debt_buyer and debt.debt_buyer.creditor_id == self.creditor_id):
                 if debt.original_debt_amount:
@@ -1108,7 +1161,14 @@ DEBT_ACCOUNT_TYPE_CHOICES = (
     ('standard', 'Standard'),
 )
 
+DEBT_ACCOUNT_EST_SETT = {
+    'difficult_creditor': Decimal('60'),
+    'payday_loan': Decimal('40'),
+    'standard': Decimal('40'),
+}
+
 WHOSE_DEBT_CHOICES = (
+    ('applicant', 'Applicant'),
     ('applicant', 'Applicant'),
     ('co_applicant', 'Co-Applicant'),
     ('joint', 'Joint'),
@@ -1168,6 +1228,9 @@ class Debt(models.Model):
                     break
         else:
             self.has_summons_label = self.has_summons
+
+    def get_est_sett(self):
+        return self.current_debt_amount * (DEBT_ACCOUNT_EST_SETT.get(self.account_type, Decimal('40')) / 100)
 
     def notes_count(self):
         return len(self.notes.all())

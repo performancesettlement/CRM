@@ -3,8 +3,8 @@ from django.contrib.auth.models import User
 from django.core.validators import validate_email
 from django_auth_app import enums
 from sundog.models import MyFile, FileStatus, Contact, Tag, Stage, Status, Campaign, Source, BankAccount, Note, Call,\
-    Email, DEBT_SETTLEMENT, Uploaded, Incomes, Expenses, Creditor, Debt, DebtNote, EnrollmentPlan, Fee, FeeProfile,\
-    FeeProfileRule, WorkflowSettings
+    Email, DEBT_SETTLEMENT, Uploaded, Incomes, Expenses, Creditor, Debt, DebtNote, EnrollmentPlan, FeePlan, FeeProfile,\
+    FeeProfileRule, WorkflowSettings, Enrollment, Fee
 from sundog import services
 from haystack.forms import SearchForm
 from sundog.constants import RADIO_FILTER_CHOICES, SHORT_DATE_FORMAT
@@ -298,20 +298,16 @@ class BankAccountForm(forms.ModelForm):
         self.previous_account_number = kwargs.get('instance').account_number if kwargs.get('instance') else None
         if kwargs and 'instance' in kwargs and not args:
             bank_account = kwargs['instance']
-            if bank_account and bank_account.account_number_last_4_digits:
-                self.initial['account_number'] = '******' + bank_account.account_number_last_4_digits
+            if bank_account and bank_account.account_number:
+                self.initial['account_number'] = '******' + bank_account.account_number[-4:]
 
     def save(self, commit=True):
-        account_number_changed = True
         if self.instance:
             if self.cleaned_data and 'account_number' in self.cleaned_data:
                 account_number = self.cleaned_data['account_number']
-                if account_number == '******' + self.instance.account_number_last_4_digits:
-                    account_number_changed = False
+                if account_number == '******' + self.instance.account_number[-4:]:
                     self.cleaned_data['account_number'] = self.previous_account_number
                     self.instance.account_number = self.previous_account_number
-        if account_number_changed:
-            hash_password(self.instance)
         return super(BankAccountForm, self).save(commit=commit)
 
 
@@ -527,20 +523,47 @@ class EnrollmentPlanForm(forms.ModelForm):
         fields = '__all__'
 
     def __init__(self, *args, **kwargs):
-        if kwargs and 'instance' in kwargs and  kwargs['instance'].states:
+        if kwargs and 'instance' in kwargs and kwargs['instance'].states:
             kwargs['instance'].states = kwargs['instance'].states.replace('\'', '').replace('[', '').replace(']', '').split(', ')
         super(EnrollmentPlanForm, self).__init__(*args, **kwargs)
 
 
-class FeeForm(forms.ModelForm):
+class EnrollmentForm(forms.ModelForm):
+    class Meta:
+        model = Enrollment
+        widgets = {
+            'enrollment_plan': forms.Select(attrs={'class': 'col-xs-12 no-padding-sides'}),
+            'comp_template_chooser': forms.Select(choices=[('', 'EPPS Compensation Template')], attrs={'class': 'col-xs-12 no-padding-sides'}),
+            'start_date': forms.DateInput(format=SHORT_DATE_FORMAT, attrs={'placeholder': 'mm/dd/yyyy', 'data-provide': 'datepicker'}),
+            'first_date': forms.DateInput(format=SHORT_DATE_FORMAT, attrs={'placeholder': 'mm/dd/yyyy', 'data-provide': 'datepicker'}),
+            'second_date': forms.DateInput(format=SHORT_DATE_FORMAT, attrs={'placeholder': 'mm/dd/yyyy', 'data-provide': 'datepicker'}),
+        }
+        exclude = ['created_at', 'updated_at']
+
+    def __init__(self, contact, *args, **kwargs):
+        super(EnrollmentForm, self).__init__(*args, **kwargs)
+        self.fields['contact'].initial = contact
+        self.fields['comp_template_chooser'].empty_label = None
+
+
+class FeePlanForm(forms.ModelForm):
     enrollment_plan = forms.ModelChoiceField(required=False, queryset=EnrollmentPlan.objects.all(),
                                              widget=forms.HiddenInput())
 
     class Meta:
+        model = FeePlan
+        widgets = {
+            'fee_plan_id': forms.HiddenInput(),
+            'name': forms.TextInput(attrs={'style': 'max-width: 140px;'})
+        }
+        fields = '__all__'
+
+
+class FeeForm(forms.ModelForm):
+    class Meta:
         model = Fee
         widgets = {
             'fee_id': forms.HiddenInput(),
-            'name': forms.TextInput(attrs={'style': 'max-width: 140px;'})
         }
         fields = '__all__'
 
