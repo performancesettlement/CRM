@@ -65,7 +65,7 @@
                     <div class="col-xs-2 m-t-xs m-b-xs">
                         <label class="col-xs-12 no-padding-sides">Select First Payment Date</label>
                         <div class="col-xs-12 no-padding-sides">
-                            {{ form.select_first_payment_date }}
+                            {{ form.select_first_payment }}
                         </div>
                     </div>
                 </div>
@@ -99,65 +99,13 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xs-12 no-padding-sides m-b-md">
-                <h3>Settlement Savings</h3>
-                <div class="col-xs-12 border no-padding-sides">
-                    <div class="col-xs-2 m-t-xs m-b-xs">
-                        <label class="col-xs-12 no-padding-sides">Est. Settlement %</label>
-                        <div class="col-xs-12 no-padding-sides">
-                            {{ form.est_settlement_perc }}
-                        </div>
-                    </div>
-                    <div class="col-xs-1 m-t-xs m-b-xs">
-                        <label class="col-xs-12 no-padding-sides">Minimum</label>
-                        <div class="col-xs-12 no-padding-sides">
-                            {{ form.est_settlement_perc_minimum }}
-                        </div>
-                    </div>
-                    <div class="col-xs-1 m-t-xs m-b-xs">
-                        <label class="col-xs-12 no-padding-sides">Maximum</label>
-                        <div class="col-xs-12 no-padding-sides">
-                            {{ form.est_settlement_perc_maximum }}
-                        </div>
-                    </div>
-                    <div class="col-xs-1 m-t-xs">
-                        <label class="col-xs-12 no-padding-sides">Increment</label>
-                        <div class="col-xs-12 no-padding-sides">
-                            {{ form.est_settlement_perc_increment }}
-                        </div>
-                    </div>
-                    <div class="col-xs-12 m-t-md">
-                        <div>{{ form.performance_plan }}</div>
-                        <div class="checkbox-label-after inline">This Is A Performance Plan</div>
-                    </div>
-                    <div class="col-xs-12">
-                        <div>{{ form.draft_fee_separate }}</div>
-                        <div class="checkbox-label-after inline">Draft Fee's Separate</div>
-                    </div>
-                    <div class="col-xs-12 m-b-xs">
-                        <div>{{ form.includes_veritas_legal }}</div>
-                        <div class="checkbox-label-after inline">Includes Veritas Legal</div>
-                    </div>
-                </div>
-            </div>
+
             <div class="col-xs-12 no-padding-sides m-b-md">
                 <h3>Qualifiers</h3>
                 <div class="col-xs-12 border no-padding-sides">
                     <div class="col-xs-12 m-b-xs">
-                        <div>{{ form.legal_plan_flag }}</div>
-                        <div class="checkbox-label-after inline">Legal Plan</div>
-                    </div>
-                    <div class="col-xs-12 m-b-xs">
                         <div class="col-xs-2 no-padding-sides">{{ form.debt_amount_flag }}<div class="checkbox-label-after-small inline">Debt Amount</div></div>
                         <div class="col-xs-10 no-padding-sides">{{ form.debt_amount_from }} To {{ form.debt_amount_to }}</div>
-                    </div>
-                    <div class="col-xs-12 m-b-xs">
-                        <div class="col-xs-2 no-padding-sides">{{ form.debt_to_income_flag }}<div class="checkbox-label-after-small inline">Debt to Income ratio</div></div>
-                        <div class="col-xs-10 no-padding-sides">{{ form.debt_to_income_ratio_from }} To {{ form.debt_to_income_ratio_to }}</div>
-                    </div>
-                    <div class="col-xs-12 m-b-xs">
-                        <div class="col-xs-2 no-padding-sides">{{ form.states_flag }}<div class="checkbox-label-after-small inline">States</div></div>
-                        <div class="col-xs-10 no-padding-sides">{{ form.states }}</div>
                     </div>
                     <div class="col-xs-12 m-b-xs">
                         <div class="col-xs-2 no-padding-sides"><a href="{% url "add_fee_profile" %}">Fee Profile</a></div>
@@ -172,137 +120,79 @@
                     <a id="cancel-second-fee" class="pull-right btn btn-primary" {% if not has_second_fee %}style="display: none;"{% endif %}>Remove Second Fee</a>
                 </div>
                 <div class="col-xs-12 no-padding-sides border m-t-xs">
-                    <div class="col-xs-1 m-t-xs m-b-xs no-padding-right">
+                    <div class="col-xs-2 m-t-xs m-b-xs no-padding-right">
                         <label class="col-xs-12 no-padding-sides">Active</label>
                         <div class="col-xs-12 no-padding-sides">
                             {{ form_fee_1.active }}
                         </div>
                     </div>
-                    <div class="col-xs-1 m-t-xs m-b-xs no-padding-sides">
+                    <div class="col-xs-2 m-t-xs m-b-xs no-padding-sides">
                         <label class="col-xs-12 no-padding-sides">Name</label>
                         <div class="col-xs-12 no-padding-sides">
                             {{ form_fee_1.name }}
                         </div>
                     </div>
-                    <div class="col-xs-1 m-t-xs m-b-xs no-padding-sides">
+                    <div class="col-xs-2 m-t-xs m-b-xs no-padding-sides">
                         <label class="col-xs-12 no-padding-sides">Fee Type</label>
                         <div class="col-xs-12 no-padding-sides">
                             {{ form_fee_1.type }}
                         </div>
                     </div>
-                    <div class="col-xs-1 m-t-xs m-b-xs no-padding-sides">
+                    <div class="col-xs-2 m-t-xs m-b-xs no-padding-sides">
                         <label class="col-xs-12 no-padding-sides">Amount</label>
                         <div class="col-xs-12 no-padding-sides">
-                            {{ form_fee_1.amount }}
+                            {{ form_fee_1.percentage_amount }}
+                            {{ form_fee_1.fixed_amount }}
                         </div>
                     </div>
-                    <div class="col-xs-1 m-t-xs m-b-xs no-padding-sides">
+                    <div class="col-xs-2 m-t-xs m-b-xs no-padding-sides">
                         <label class="col-xs-12 no-padding-sides">Defer</label>
                         <div class="col-xs-12 no-padding-sides">
                             {{ form_fee_1.defer }}
                         </div>
                     </div>
-                    <div class="col-xs-1 m-t-xs m-b-xs no-padding-sides">
+                    <div class="col-xs-2 m-t-xs m-b-xs no-padding-sides">
                         <label class="col-xs-12 no-padding-sides">Discount</label>
                         <div class="col-xs-12 no-padding-sides">
                             {{ form_fee_1.discount }}
                         </div>
                     </div>
-                    <div class="col-xs-1 m-t-xs m-b-xs no-padding-sides">
-                        <label class="col-xs-12 no-padding-sides">Starts</label>
-                        <div class="col-xs-12 no-padding-sides">
-                            {{ form_fee_1.starts }}
-                        </div>
-                    </div>
-                    <div class="col-xs-1 m-t-xs m-b-xs no-padding-sides">
-                        <label class="col-xs-12 no-padding-sides">Ends</label>
-                        <div class="col-xs-12 no-padding-sides">
-                            {{ form_fee_1.ends }}
-                        </div>
-                    </div>
-                    <div class="col-xs-2 m-t-xs m-b-xs no-padding-sides">
-                        <label class="col-xs-12 no-padding-sides">Weighted Fee</label>
-                        <div class="col-xs-12 no-padding-sides">
-                            {{ form_fee_1.weighted_fee_perc }} % in first {{ form_fee_1.weighted_fee_in_first }}
-                        </div>
-                    </div>
-                    <div class="col-xs-1 m-t-xs m-b-xs no-padding-sides">
-                        <label class="col-xs-12 no-padding-sides">Paid By Check</label>
-                        <div class="col-xs-12 no-padding-sides">
-                            {{ form_fee_1.paid_by_check }}
-                        </div>
-                    </div>
-                    <div class="col-xs-1 m-t-xs m-b-xs no-padding-sides">
-                        <label class="col-xs-12 no-padding-sides">Hide</label>
-                        <div class="col-xs-12 no-padding-sides">
-                            {{ form_fee_1.hide }}
-                        </div>
-                    </div>
                     <div id="fee-2-data" class="col-xs-12 no-padding-sides border-top m-t-xs" {% if not has_second_fee %}style="display: none;"{% endif %}>
-                        <div class="col-xs-1 m-t-xs m-b-xs no-padding-right">
+                        <div class="col-xs-2 m-t-xs m-b-xs no-padding-right">
                             <label class="col-xs-12 no-padding-sides">Active</label>
                             <div class="col-xs-12 no-padding-sides">
                                 {{ form_fee_2.active }}
                             </div>
                         </div>
-                        <div class="col-xs-1 m-t-xs m-b-xs no-padding-sides">
+                        <div class="col-xs-2 m-t-xs m-b-xs no-padding-sides">
                             <label class="col-xs-12 no-padding-sides">Name</label>
                             <div class="col-xs-12 no-padding-sides">
                                 {{ form_fee_2.name }}
                             </div>
                         </div>
-                        <div class="col-xs-1 m-t-xs m-b-xs no-padding-sides">
+                        <div class="col-xs-2 m-t-xs m-b-xs no-padding-sides">
                             <label class="col-xs-12 no-padding-sides">Fee Type</label>
                             <div class="col-xs-12 no-padding-sides">
                                 {{ form_fee_2.type }}
                             </div>
                         </div>
-                        <div class="col-xs-1 m-t-xs m-b-xs no-padding-sides">
+                        <div class="col-xs-2 m-t-xs m-b-xs no-padding-sides">
                             <label class="col-xs-12 no-padding-sides">Amount</label>
                             <div class="col-xs-12 no-padding-sides">
-                                {{ form_fee_2.amount }}
+                                {{ form_fee_2.percentage_amount }}
+                                {{ form_fee_2.fixed_amount }}
                             </div>
                         </div>
-                        <div class="col-xs-1 m-t-xs m-b-xs no-padding-sides">
+                        <div class="col-xs-2 m-t-xs m-b-xs no-padding-sides">
                             <label class="col-xs-12 no-padding-sides">Defer</label>
                             <div class="col-xs-12 no-padding-sides">
                                 {{ form_fee_2.defer }}
                             </div>
                         </div>
-                        <div class="col-xs-1 m-t-xs m-b-xs no-padding-sides">
+                        <div class="col-xs-2 m-t-xs m-b-xs no-padding-sides">
                             <label class="col-xs-12 no-padding-sides">Discount</label>
                             <div class="col-xs-12 no-padding-sides">
                                 {{ form_fee_2.discount }}
-                            </div>
-                        </div>
-                        <div class="col-xs-1 m-t-xs m-b-xs no-padding-sides">
-                            <label class="col-xs-12 no-padding-sides">Starts</label>
-                            <div class="col-xs-12 no-padding-sides">
-                                {{ form_fee_2.starts }}
-                            </div>
-                        </div>
-                        <div class="col-xs-1 m-t-xs m-b-xs no-padding-sides">
-                            <label class="col-xs-12 no-padding-sides">Ends</label>
-                            <div class="col-xs-12 no-padding-sides">
-                                {{ form_fee_2.ends }}
-                            </div>
-                        </div>
-                        <div class="col-xs-2 m-t-xs m-b-xs no-padding-sides">
-                            <label class="col-xs-12 no-padding-sides">Weighted Fee</label>
-                            <div class="col-xs-12 no-padding-sides">
-                                {{ form_fee_2.weighted_fee_perc }} % in first {{ form_fee_2.weighted_fee_in_first }}
-                            </div>
-                        </div>
-                        <div class="col-xs-1 m-t-xs m-b-xs no-padding-sides">
-                            <label class="col-xs-12 no-padding-sides">Paid By Check</label>
-                            <div class="col-xs-12 no-padding-sides">
-                                {{ form_fee_2.paid_by_check }}
-                            </div>
-                        </div>
-                        <div class="col-xs-1 m-t-xs m-b-xs no-padding-sides">
-                            <label class="col-xs-12 no-padding-sides">Hide</label>
-                            <div class="col-xs-12 no-padding-sides">
-                                {{ form_fee_2.hide }}
                             </div>
                         </div>
                     </div>
@@ -356,6 +246,7 @@
         var hasSecondFee = {% if has_second_fee %} true {% else %} false {% endif %};
         var addEnrollmentPlanUrl = "{% url "add_enrollment_plan" %}";
         var editEnrollmentPlanUrl = "{% url "edit_enrollment_plan" enrollment_plan_id=0 %}";
+        var fixedValues = {{ fixed_values|safe }};
     </script>
     <script src="{% static "js/enrollment/enrollment_plan.js" %}"></script>
 

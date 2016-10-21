@@ -1,5 +1,5 @@
 import calendar
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 from decimal import Decimal
 import uuid
@@ -8,6 +8,7 @@ import pytz
 from django_auth_app.services import get_user_timezone
 import settings
 import hashlib
+from sundog.constants import SHORT_DATE_FORMAT
 
 
 def document_directory_path(instance, filename):
@@ -119,3 +120,46 @@ def get_debts_ids(data):
     if debt_ids:
         debt_ids = [int(debt_id) for debt_id in debt_ids.split(',')]
     return debt_ids
+
+
+def get_fees_values(data):
+    fee_values = []
+    fee_index = 1
+    found = True
+    while found:
+        found = False
+        for key, value in data.items():
+            if key.startswith('id_' + str(fee_index)):
+                fee_values.append(value)
+                fee_index += 1
+                found = True
+                break
+        if not found:
+            break
+    return fee_values
+
+
+def get_payments_data(data, starting_index=3):
+    found = True
+    index = starting_index
+    payments = []
+    while found:
+        prefix = str(index)
+        found = False
+        payment_data = get_data(prefix, data)
+        if payment_data:
+            found = True
+            number = payment_data[prefix + '-number']
+            date = datetime.strptime(payment_data[prefix + '-date'], SHORT_DATE_FORMAT)
+            amount = Decimal(payment_data[prefix + '-amount'])
+            payment = {'number': number, 'date': date, 'amount': amount}
+            payments.append(payment)
+            index += 1
+    return payments
+
+
+def get_next_work_date(date):
+    week_day = date.weekday()
+    if week_day in [5, 6]:
+        date += timedelta(days=7 - week_day)
+    return date

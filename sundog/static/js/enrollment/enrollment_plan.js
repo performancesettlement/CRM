@@ -61,6 +61,35 @@ $(document).ready(function() {
         );
     });
 
+    function enableDisableFixedAndPercentInputs(newValue, fixedInput, percentInput) {
+        if (fixedValues.indexOf(newValue) !== -1) {
+            fixedInput.prop('disabled', false);
+            fixedInput.show();
+            percentInput.prop('disabled', true);
+            percentInput.hide();
+        }
+        else {
+            percentInput.prop('disabled', false);
+            percentInput.show();
+            fixedInput.prop('disabled', true);
+            fixedInput.hide();
+        }
+    }
+
+    $('#id_1-type').change(function() {
+        var newValue = $(this).val();
+        var fixedInput = $('input[name="1-amount"]');
+        var percentInput = $('select[name="1-amount"]');
+        enableDisableFixedAndPercentInputs(newValue, fixedInput, percentInput);
+    });
+
+    $('#id_2-type').change(function() {
+        var newValue = $(this).val();
+        var fixedInput = $('input[name="2-amount"]');
+        var percentInput = $('select[name="2-amount"]');
+        enableDisableFixedAndPercentInputs(newValue, fixedInput, percentInput);
+    });
+
     $('#edit-enrollment-plan-form').submit(function(event) {
         event.preventDefault();
         var form = $(this);

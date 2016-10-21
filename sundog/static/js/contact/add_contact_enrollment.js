@@ -25,28 +25,45 @@ $(document).ready(function() {
 
     function createSelector(fee, i) {
         var options = getOptions(fee);
-        var feeHtml = '<div>' +
-            '<div>' +
-                '<label>' + fee.name + ':</label>' +
-                '<select id="id_' + i + '-amount" >' +
-                    options +
-                '</select>' +
-            '</div>' +
+        var feeHtml = '<div class="m-b-xs">' +
+            '<label>' + fee.name + ':</label>' +
+            '<input type="hidden" name="' + i + '-fee_plan" value="' + fee.fee_plan_id + '">' +
+            '<select id="id_' + i + '-amount" name="' + i + '-amount" class="fee-select">' +
+                options +
+            '</select>' +
         '</div>';
         return feeHtml;
     }
 
     function addTableHeaderBefore(elem, fee) {
-        elem.before('<th class="dymamic-added">' + fee.name + '</th>');
+        elem.before('<th class="dynamic-added">' + fee.name + '</th>');
     }
 
-    function generateSelectorsAndAddTableHeaders(fees, table) {
-        var last = table.find('thead tr th.savings');
+    function addTableFooterBefore(elem, fee) {
+        var footer = $('#' + fee.name + '-footer');
+        if (footer.length > 0) {
+            footer.html(fee.amount);
+        }
+        else {
+            elem.before('<td id="' + fee.name + '-footer" class="dynamic-added">' + fee.amount + '</td>');
+        }
+    }
+
+    function generateSelectorsAndAddTableHeader(fees, table) {
+        var lastHeader = table.find('thead tr th.savings');
         for (var i = 0; i < fees.length; i++) {
             var fee = fees[i];
-            var feeHtml = createSelector(fee);
-            addTableHeaderBefore(last, fee);
+            var feeHtml = createSelector(fee, i + 1);
+            addTableHeaderBefore(lastHeader, fee);
             $('#fees').append(feeHtml);
+        }
+    }
+
+    function refreshFooterTotals(fees, table) {
+        var lastFooter = table.find('tfoot tr td.footer-total-savings');
+        for (var i = 0; i < fees.length; i++) {
+            var fee = fees[i];
+            addTableFooterBefore(lastFooter, fee)
         }
     }
 
@@ -60,20 +77,24 @@ $(document).ready(function() {
                 var fee = fees[j];
                 feeRows += '<td>' + payment[fee.name] + '</td>';
             }
-            var row = '<tr>';
-            row += '<td>' + payment.order + '</td>';
-            row += '<td>' + payment.date + '</td>';
+            var row = '<tr class="payment">';
+            row += '<td class="number">' + payment.order + '</td>';
+            row += '<td class="date">' + payment.date + '</td>';
             row += feeRows;
             row += '<td>' + payment.savings + '</td>';
-            row += '<td>' + payment.payment + '</td>';
+            row += '<td class="amount">' + payment.payment + '</td>';
             row += '<td>' + payment.acct_balance + '</td>';
             row += '</tr>';
             body.append(row);
         }
     }
 
-    function clearTableHeaders(table) {
-        table.find('thead tr th.dymamic-added').remove();
+    function clearTableHeader(table) {
+        table.find('thead tr th.dynamic-added').remove();
+    }
+
+    function clearTableFooter(table) {
+        table.find('tfoot tr td.dynamic-added').remove();
     }
 
     function clearTableBody(table) {
@@ -91,10 +112,10 @@ $(document).ready(function() {
 
     function refreshTotals(data) {
         $('#est-client-savings').html(data.total_savings);
+        $('#est-client-savings-with-no-fees').html(data.total_savings);
         $('#total-fees').html(data.total_fees);
         $('#est-sett-dollars').html(data.total_sett);
         $('#total-debt').html(data.total_debt);
-        $('#est-client-savings-with-no-fees').html(data.total_savings);
     }
 
     function selectProgramLength(length) {
@@ -112,16 +133,33 @@ $(document).ready(function() {
 
     function setDates(data) {
         $('#id_start_date').val(data.start_date);
-        $('#first-payment-date').show();
-        $('#id_first_date').val(data.first_date);
-        if (data.second_date) {
-            $('#second-payment-date').show();
-            $('#id_second_date').val(data.second_date);
+        var firstDateInput = $('#id_first_date');
+        var firstDateContainer = $('#first-payment-date');
+        if (data.select_first_date) {
+            firstDateContainer.show();
+            firstDateInput.prop('disabled', false);
+            firstDateInput.val(data.first_date);
         }
         else {
-            $('#second-payment-date').hide();
-            $('#id_second_date').val('');
+            firstDateContainer.hide();
+            firstDateInput.prop('disabled', true);
         }
+        var secondDateInput = $('#id_second_date');
+        var secondDateContainer = $('#second-payment-date');
+        if (data.second_date) {
+            secondDateContainer.show();
+            secondDateInput.val(data.second_date);
+        }
+        else {
+            secondDateContainer.hide();
+            secondDateInput.val('');
+        }
+    }
+
+    function setFooterTotals(data, table) {
+        $('.footer-total-savings').html(data.total_savings);
+        $('.footer-total-payment').html(data.total_payment);
+        refreshFooterTotals(data.fees, table);
     }
 
     function refreshEnrollmentScreen(data, programLengthContainer, table, refreshAll) {
@@ -129,8 +167,9 @@ $(document).ready(function() {
         setDates(data);
         refreshTotals(data);
         generatePayments(data.payments, fees, table);
+        setFooterTotals(data, table);
         if (refreshAll) {
-            generateSelectorsAndAddTableHeaders(fees, table);
+            generateSelectorsAndAddTableHeader(fees, table);
             setProgramLengthOptions(data.program_lengths);
             selectProgramLength(data.length_selected);
         }
@@ -141,22 +180,34 @@ $(document).ready(function() {
         var planId = $('#id_enrollment_plan').val();
         var table = $('#payments-table');
         var programLengthContainer = $('#edit-program-length-container');
-        if (refreshAll) {
-            clearTableHeaders(table);
-            clearTableBody(table);
-            clearFeesDropdowns();
-        }
         if (planId !== '') {
             var url = getEnrollmentPlanInfoUrl.replace('0', planId);
             var debtsIds = getDebtIds();
             var recurringDate = $('#id_start_date').val();
             url += '?start_date=' + recurringDate + '&debt_ids=' + debtsIds;
             if (sendExtraFields) {
-                var firstDate = $('#id_first_date').val();
+                var firstDate = '';
+                var firstDateInput = $('#id_first_date');
+                if (firstDateInput.val()) {
+                    firstDate = firstDateInput.val();
+                }
                 var secondDate = $('#id_second_date').val();
                 var monthsSelector = $('#id_program_length');
                 var months = monthsSelector.val() != null ? monthsSelector.val() : '';
-                url += '&first_date=' + firstDate + '&second_date=' + secondDate + '&months=' + months
+                url += '&first_date=' + firstDate + '&second_date=' + secondDate + '&months=' + months;
+                var fees = $('.fee-select');
+                if (fees.length > 0) {
+                    for (var i = 0; i < fees.length; i++) {
+                        var fee = $(fees[i]);
+                        url += '&' + fee.attr('id') + '=' + fee.val();
+                    }
+                }
+            }
+            if (refreshAll) {
+                clearTableHeader(table);
+                clearTableFooter(table);
+                clearTableBody(table);
+                clearFeesDropdowns();
             }
             $.get(url, function(response) {
                 if (response.data) {
@@ -174,6 +225,13 @@ $(document).ready(function() {
         var url = getDebtsInfoUrl;
         var debtsIds = getDebtIds();
         url += '?debt_ids=' + debtsIds;
+        var table = $('#payments-table');
+        clearTableHeader(table);
+        clearTableFooter(table);
+        clearTableBody(table);
+        clearFeesDropdowns();
+        var programLengthContainer = $('#edit-program-length-container');
+        programLengthContainer.hide();
         $.get(url, function(response) {
             if (response.data) {
                 refreshTotals(response.data);
@@ -204,10 +262,40 @@ $(document).ready(function() {
         }
     });
 
-    $('#id_second_date').change(function(e) {
+    $('#fees').on('change', '.fee-select', function(e) {
         if (e.originalEvent) {
             requestEnrollmentPlanInfo(true, false);
         }
+    });
+
+    $('#enrollment-form-submit').click(function() {
+        var form = $('#enrollment-form');
+        var formData = form.serializeArray();
+        var body = $('#payments-table').find('tbody tr.payment');
+        var prefix = 3;
+        body.each(function() {
+            var number = parseInt($(this).find('td.number').html());
+            var date = $(this).find('td.date').html();
+            var amount = $(this).find('td.amount').html().replace('$', '').replace(',', '');
+            formData.push({name: prefix + '-number', value: number});
+            formData.push({name: prefix + '-date', value: date});
+            formData.push({name: prefix + '-amount', value: amount});
+            prefix++;
+        });
+
+        $.ajax({
+            url: form.attr('action'),
+            data: formData,
+            type: 'POST',
+            success: function(response){
+                if (response.errors) {
+                    showErrorPopup(response.errors);
+                }
+                if (response.result) {
+                    redirect(enrollmentsUrl);
+                }
+            }
+        });
     });
 
     $('input.debt').change(function() {
@@ -228,7 +316,15 @@ $(document).ready(function() {
         }
     });
 
+
+
     $('#id_enrollment_plan').change(function() {
-        requestEnrollmentPlanInfo(false, true);
+        var planId = $('#id_enrollment_plan').val();
+        if (planId !== '') {
+            requestEnrollmentPlanInfo(false, true);
+        }
+        else {
+            requestDebtsInfo();
+        }
     });
 });

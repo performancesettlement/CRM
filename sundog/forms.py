@@ -1,14 +1,14 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.core.validators import validate_email
+from django.db.models import Q
 from django_auth_app import enums
 from sundog.models import MyFile, FileStatus, Contact, Tag, Stage, Status, Campaign, Source, BankAccount, Note, Call,\
     Email, DEBT_SETTLEMENT, Uploaded, Incomes, Expenses, Creditor, Debt, DebtNote, EnrollmentPlan, FeePlan, FeeProfile,\
-    FeeProfileRule, WorkflowSettings, Enrollment, Fee
+    FeeProfileRule, WorkflowSettings, Enrollment, Fee, AMOUNT_CHOICES
 from sundog import services
 from haystack.forms import SearchForm
-from sundog.constants import RADIO_FILTER_CHOICES, SHORT_DATE_FORMAT
-from sundog.utils import hash_password
+from sundog.constants import RADIO_FILTER_CHOICES, SHORT_DATE_FORMAT, FIXED_VALUES
 
 
 class FileSearchForm(SearchForm):
@@ -506,14 +506,8 @@ class EnrollmentPlanForm(forms.ModelForm):
             'enrollment_plan_id': forms.HiddenInput(),
             'active': forms.CheckboxInput(),
             'two_monthly_drafts': forms.CheckboxInput(),
-            'select_first_payment_date': forms.CheckboxInput(),
-            'performance_plan': forms.CheckboxInput(),
-            'draft_fee_separate': forms.CheckboxInput(),
-            'includes_veritas_legal': forms.CheckboxInput(),
-            'legal_plan_flag': forms.CheckboxInput(),
+            'select_first_payment': forms.CheckboxInput(),
             'debt_amount_flag': forms.CheckboxInput(),
-            'debt_to_income_flag': forms.CheckboxInput(),
-            'states_flag': forms.CheckboxInput(),
             'show_fee_subtotal_column': forms.CheckboxInput(),
             'savings_adjustment': forms.CheckboxInput(),
             'show_savings_accumulation': forms.CheckboxInput(),
@@ -521,11 +515,6 @@ class EnrollmentPlanForm(forms.ModelForm):
             'fee_profile': forms.Select(choices=FeeProfile.objects.all(), attrs={'class': 'col-xs-2 no-padding-sides'})
         }
         fields = '__all__'
-
-    def __init__(self, *args, **kwargs):
-        if kwargs and 'instance' in kwargs and kwargs['instance'].states:
-            kwargs['instance'].states = kwargs['instance'].states.replace('\'', '').replace('[', '').replace(']', '').split(', ')
-        super(EnrollmentPlanForm, self).__init__(*args, **kwargs)
 
 
 class EnrollmentForm(forms.ModelForm):
@@ -537,26 +526,57 @@ class EnrollmentForm(forms.ModelForm):
             'start_date': forms.DateInput(format=SHORT_DATE_FORMAT, attrs={'placeholder': 'mm/dd/yyyy', 'data-provide': 'datepicker'}),
             'first_date': forms.DateInput(format=SHORT_DATE_FORMAT, attrs={'placeholder': 'mm/dd/yyyy', 'data-provide': 'datepicker'}),
             'second_date': forms.DateInput(format=SHORT_DATE_FORMAT, attrs={'placeholder': 'mm/dd/yyyy', 'data-provide': 'datepicker'}),
+            'contact': forms.HiddenInput(),
         }
         exclude = ['created_at', 'updated_at']
 
     def __init__(self, contact, *args, **kwargs):
+        debt_ids = None
+        if 'debt_ids' in kwargs:
+            debt_ids = kwargs['debt_ids']
         super(EnrollmentForm, self).__init__(*args, **kwargs)
         self.fields['contact'].initial = contact
         self.fields['comp_template_chooser'].empty_label = None
+        queryset = EnrollmentPlan.objects.all()
+        debt_amount = contact.total_enrolled_current_debts(ids=debt_ids)
+        queryset.filter(Q(debt_amount_flag=False) | Q(debt_amount_flag=True, debt_amount_from__gte=debt_amount,
+                                                      debt_amount_to__lte=debt_amount))
+        self.fields['enrollment_plan'].queryset = queryset
+
+
+FIELD_NAME_MAPPING = {
+    'fixed_amount': 'amount',
+    'percentage_amount': 'amount',
+}
 
 
 class FeePlanForm(forms.ModelForm):
     enrollment_plan = forms.ModelChoiceField(required=False, queryset=EnrollmentPlan.objects.all(),
                                              widget=forms.HiddenInput())
+    fixed_amount = forms.DecimalField(required=False, widget=forms.TextInput(attrs={'style': 'max-width: 140px;'}))
+    percentage_amount = forms.DecimalField(required=False, widget=forms.Select(choices=AMOUNT_CHOICES))
 
     class Meta:
         model = FeePlan
         widgets = {
             'fee_plan_id': forms.HiddenInput(),
-            'name': forms.TextInput(attrs={'style': 'max-width: 140px;'})
+            'name': forms.TextInput(attrs={'style': 'max-width: 140px;'}),
         }
         fields = '__all__'
+
+    def add_prefix(self, field_name):
+        field_name = FIELD_NAME_MAPPING.get(field_name, field_name)
+        return super(FeePlanForm, self).add_prefix(field_name)
+
+    def __init__(self, *args, **kwargs):
+        super(FeePlanForm, self).__init__(*args, **kwargs)
+        if self.instance:
+            if self.instance.type in FIXED_VALUES:
+                self.initial['fixed_amount'] = self.instance.amount
+                self.fields['percentage_amount'].widget.attrs.update({'disabled': 'disabled', 'style': 'display:none;'})
+            else:
+                self.initial['percentage_amount'] = self.instance.amount
+                self.fields['fixed_amount'].widget.attrs.update({'disabled': 'disabled', 'style': 'max-width: 140px; display: none;'})
 
 
 class FeeForm(forms.ModelForm):
