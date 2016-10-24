@@ -1,4 +1,3 @@
-from ckeditor.fields import RichTextField
 from datatableview import Datatable
 from datatableview.columns import CompoundColumn, DisplayColumn, TextColumn
 from datatableview.helpers import make_processor, through_filter
@@ -12,16 +11,18 @@ from django.db.models import (
     SET_NULL,
 )
 from django.forms.models import ModelForm
-from django.forms.widgets import SelectMultiple
+from django.forms.widgets import Select, SelectMultiple
 from django.template.defaultfilters import date
 from django.template.loader import render_to_string
 from django.urls import reverse
-from django.views.generic.edit import CreateView, UpdateView
+from django.views.generic.edit import UpdateView
+from fm.views import AjaxCreateView, AjaxDeleteView, AjaxUpdateView
 from multiselectfield import MultiSelectField
 from settings import SHORT_DATETIME_FORMAT
 from sundog.models import NONE_CHOICE_LABEL
 from sundog.routing import decorate_view, route
 from sundog.utils import LongCharField
+from tinymce.models import HTMLField
 
 
 class Document(Model):
@@ -62,99 +63,125 @@ class Document(Model):
     TYPE_CHOICES_DICT = dict(TYPE_CHOICES)
 
     STATE_CHOICES = (
-        ('AA', 'AA-Armed Forces Americas'),
-        ('AE', 'AE-Armed Forces Other'),
-        ('AL', 'Alabama'),
-        ('AK', 'Alaska'),
-        ('AS', 'American Samoa'),
-        ('AP', 'AP-Armed Forces Pacific'),
-        ('AZ', 'Arizona'),
-        ('AR', 'Arkansas'),
-        ('NSW', 'AU-New South Wales'),
-        ('ANT', 'AU-Northern Territory'),
-        ('QLD', 'AU-Queensland'),
-        ('SA', 'AU-South Australia'),
-        ('TAS', 'AU-Tasmania'),
-        ('VIC', 'AU-Victoria'),
-        ('WAU', 'AU-Western Australia'),
-        ('CA', 'California'),
-        ('AB', 'Canada-Alberta'),
-        ('BC', 'Canada-British Columbia'),
-        ('MB', 'Canada-Manitoba'),
-        ('NB', 'Canada-New Brunswick'),
-        ('NL', 'Canada-Newfoundland'),
-        ('NT', 'Canada-Northwest Territories'),
-        ('NS', 'Canada-Nova Scotia'),
-        ('NU', 'Canada-Nunavet'),
-        ('ON', 'Canada-Ontario'),
-        ('PE', 'Canada-Prince Edward Island'),
-        ('QC', 'Canada-Quebec'),
-        ('SK', 'Canada-Saskatchewan'),
-        ('YT', 'Canada-Yukon'),
-        ('CO', 'Colorado'),
-        ('CT', 'Connecticut'),
-        ('DE', 'Delaware'),
-        ('DC', 'District of Columbia'),
-        ('FL', 'Florida'),
-        ('GA', 'Georgia'),
-        ('GU', 'Guam'),
-        ('HI', 'Hawaii'),
-        ('ID', 'Idaho'),
-        ('IL', 'Illinois'),
-        ('IN', 'Indiana'),
-        ('IA', 'Iowa'),
-        ('KS', 'Kansas'),
-        ('KY', 'Kentucky'),
-        ('LA', 'Louisiana'),
-        ('ME', 'Maine'),
-        ('MD', 'Maryland'),
-        ('MA', 'Massachusetts'),
-        ('MI', 'Michigan'),
-        ('MN', 'Minnesota'),
-        ('MS', 'Mississippi'),
-        ('MO', 'Missouri'),
-        ('MT', 'Montana'),
-        ('NE', 'Nebraska'),
-        ('NV', 'Nevada'),
-        ('NH', 'New Hampshire'),
-        ('NJ', 'New Jersey'),
-        ('NM', 'New Mexico'),
-        ('NY', 'New York'),
-        ('NC', 'North Carolina'),
-        ('ND', 'North Dakota'),
-        ('OH', 'Ohio'),
-        ('OK', 'Oklahoma'),
-        ('OR', 'Oregon'),
-        ('PA', 'Pennsylvania'),
-        ('PR', 'Puerto Rico'),
-        ('RI', 'Rhode Island'),
-        ('SC', 'South Carolina'),
-        ('SD', 'South Dakota'),
-        ('TN', 'Tennessee'),
-        ('TX', 'Texas'),
-        ('VI', 'U.S. Virgin Islands'),
-        ('UT', 'Utah'),
-        ('VT', 'Vermont'),
-        ('VA', 'Virginia'),
-        ('WA', 'Washington'),
-        ('WV', 'West Virginia'),
-        ('WI', 'Wisconsin'),
-        ('WY', 'Wyoming'),
+        ('Armed Forces', (
+            ('AA', 'Americas'),
+            ('AP', 'Pacific'),
+            ('AE', 'Other'),
+        )),
+        ('Australia', (
+            ('NSW', 'New South Wales'),
+            ('ANT', 'Northern Territory'),
+            ('QLD', 'Queensland'),
+            ('SA', 'South Australia'),
+            ('TAS', 'Tasmania'),
+            ('VIC', 'Victoria'),
+            ('WAU', 'Western Australia'),
+        )),
+        ('Canada', (
+            ('AB', 'Alberta'),
+            ('BC', 'British Columbia'),
+            ('MB', 'Manitoba'),
+            ('NB', 'New Brunswick'),
+            ('NL', 'Newfoundland'),
+            ('NT', 'Northwest Territories'),
+            ('NS', 'Nova Scotia'),
+            ('NU', 'Nunavet'),
+            ('ON', 'Ontario'),
+            ('PE', 'Prince Edward Island'),
+            ('QC', 'Quebec'),
+            ('SK', 'Saskatchewan'),
+            ('YT', 'Yukon'),
+        )),
+        ('U.S. States', (
+            ('AL', 'Alabama'),
+            ('AK', 'Alaska'),
+            ('AZ', 'Arizona'),
+            ('AR', 'Arkansas'),
+            ('CA', 'California'),
+            ('CO', 'Colorado'),
+            ('CT', 'Connecticut'),
+            ('DE', 'Delaware'),
+            ('FL', 'Florida'),
+            ('GA', 'Georgia'),
+            ('HI', 'Hawaii'),
+            ('ID', 'Idaho'),
+            ('IL', 'Illinois'),
+            ('IN', 'Indiana'),
+            ('IA', 'Iowa'),
+            ('KS', 'Kansas'),
+            ('KY', 'Kentucky'),
+            ('LA', 'Louisiana'),
+            ('ME', 'Maine'),
+            ('MD', 'Maryland'),
+            ('MA', 'Massachusetts'),
+            ('MI', 'Michigan'),
+            ('MN', 'Minnesota'),
+            ('MS', 'Mississippi'),
+            ('MO', 'Missouri'),
+            ('MT', 'Montana'),
+            ('NE', 'Nebraska'),
+            ('NV', 'Nevada'),
+            ('NH', 'New Hampshire'),
+            ('NJ', 'New Jersey'),
+            ('NM', 'New Mexico'),
+            ('NY', 'New York'),
+            ('NC', 'North Carolina'),
+            ('ND', 'North Dakota'),
+            ('OH', 'Ohio'),
+            ('OK', 'Oklahoma'),
+            ('OR', 'Oregon'),
+            ('PA', 'Pennsylvania'),
+            ('RI', 'Rhode Island'),
+            ('SC', 'South Carolina'),
+            ('SD', 'South Dakota'),
+            ('TN', 'Tennessee'),
+            ('TX', 'Texas'),
+            ('UT', 'Utah'),
+            ('VT', 'Vermont'),
+            ('VA', 'Virginia'),
+            ('WA', 'Washington'),
+            ('WV', 'West Virginia'),
+            ('WI', 'Wisconsin'),
+            ('WY', 'Wyoming'),
+        )),
+        ('U.S. Others', (
+            ('AS', 'American Samoa'),
+            ('DC', 'District of Columbia'),
+            ('GU', 'Guam'),
+            ('PR', 'Puerto Rico'),
+            ('VI', 'U.S. Virgin Islands'),
+        )),
     )
-    STATE_CHOICES_DICT = dict(STATE_CHOICES)
+    STATE_CHOICES_DICT = {
+        key: value
+        for group, choices in STATE_CHOICES
+        for key, value in choices
+    }
 
     title = LongCharField()
     created_at = DateTimeField(auto_now_add=True)
     created_by = ForeignKey(User, on_delete=SET_NULL, blank=True, null=True)
     type = LongCharField(choices=TYPE_CHOICES)
-    state = MultiSelectField(choices=STATE_CHOICES)
-    template_body = RichTextField()
+
+    # FIXME: Work around stupid arbitrary length limits with a very large stupid
+    # arbitrary length limit.  A proper fix would require a modified form of the
+    # MultiSelectField class based on LongCharField, which could be accomplished
+    # easily by forking the django-multiselectfield project and having it depend
+    # on a new small package holding the LongCharField definition.
+    state = MultiSelectField(choices=STATE_CHOICES, max_length=2**20)
+
+    template_body = HTMLField()
 
     def get_absolute_url(self):
-        return reverse('document.edit', args=[self.id])
+        return reverse(
+            'documents.edit',
+            args=[
+                self.id,
+            ]
+        )
 
 
-class DocumentCRUDViewMixin:
+class DocumentsCRUDViewMixin:
     model = Document
 
     def get_context_data(self, **kwargs):
@@ -176,7 +203,15 @@ class DocumentCRUDViewMixin:
             widgets = {
                 'state': SelectMultiple(
                     attrs={
-                        'class': 'ui fluid dropdown'
+                        'class': 'selectpicker',
+                        'data-actions-box': 'true',
+                        'data-live-search': 'true',
+                    },
+                ),
+                'type': Select(
+                    attrs={
+                        'class': 'selectpicker',
+                        'data-live-search': 'true',
                     },
                 ),
             }
@@ -185,9 +220,16 @@ class DocumentCRUDViewMixin:
         abstract = True
 
 
-@route(r'^documents/$', name='document.list')
+@route(
+    r'^documents/$',
+    name=[
+        'documents',
+        'documents.list',
+    ]
+)
 @decorate_view(login_required)
-class DocumentList(DocumentCRUDViewMixin, XEditableDatatableView):
+class DocumentsList(DocumentsCRUDViewMixin, XEditableDatatableView):
+    template_name = 'sundog/documents/list.html'
 
     class datatable_class(Datatable):
 
@@ -196,9 +238,10 @@ class DocumentList(DocumentCRUDViewMixin, XEditableDatatableView):
             processor=(
                 lambda instance, *_, **__:
                     render_to_string(
-                        template_name='sundog/document_list/actions.html',
+                        template_name='sundog/documents/list/actions.html',
                         context={
                             'document_id': instance.id,
+                            'document_title': instance.title,
                         },
                     )
             ),
@@ -256,19 +299,31 @@ class DocumentList(DocumentCRUDViewMixin, XEditableDatatableView):
             }
 
 
-@route(r'^documents/add/?$', name='document.add')
-@decorate_view(login_required)
-class DocumentCreate(DocumentCRUDViewMixin, CreateView):
+class DocumentsAJAXFormMixin(DocumentsCRUDViewMixin):
+    template_name = 'sundog/base/fm_form.html'
+
+
+@route(r'^documents/add/ajax/?$', name='documents.add.ajax')
+class DocumentsAddAJAX(DocumentsAJAXFormMixin, AjaxCreateView):
 
     def form_valid(self, form):
         form.instance.created_by = self.request.user
         return super().form_valid(form)
 
 
-@route(r'^documents/(?P<pk>\d+)/?$', name='document.edit')
+@route(r'^documents/(?P<pk>\d+)(?:/edit)?/?$', name='documents.edit')
 @decorate_view(login_required)
-class DocumentUpdate(DocumentCRUDViewMixin, UpdateView):
+class DocumentsEdit(DocumentsCRUDViewMixin, UpdateView):
+    template_name = 'sundog/documents/edit.html'
+
+
+@route(r'^documents/(?P<pk>\d+)(?:/edit)/ajax/?$', name='documents.edit.ajax')
+@decorate_view(login_required)
+class DocumentsEditAJAX(DocumentsAJAXFormMixin, AjaxUpdateView):
     pass
 
 
-# TODO: document.delete
+@route(r'^documents/(?P<pk>\d+)/delete/ajax/$', name='documents.delete.ajax')
+@decorate_view(login_required)
+class DocumentsDeleteAJAX(DocumentsAJAXFormMixin, AjaxDeleteView):
+    pass

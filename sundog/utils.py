@@ -1,6 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 from django.db.models import CharField
+from django.db.models.fields import BLANK_CHOICE_DASH
 from django.http import Http404
 from django.utils.html import strip_tags
 from django_auth_app.services import get_user_timezone
@@ -27,7 +28,13 @@ def get_or_404(classmodel, **kwargs):
 def import_file_path(f_name, date_time, user_id):
     file_name, file_extension = os.path.splitext(f_name)
     file_name += date_time.strftime("_%Y-%m-%d_%H-%M-%S")
-    return os.path.join(settings.PROJECT_ROOT, 'import', 'history', str(user_id), file_name+file_extension)
+    return os.path.join(
+        settings.PROJECT_ROOT,
+        'import',
+        'history',
+        str(user_id),
+        file_name + file_extension
+    )
 
 
 def format_date(date):
@@ -37,7 +44,7 @@ def format_date(date):
 def utc_to_local(utc_dt, timezone):
     local_tz = pytz.timezone(timezone)
     local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone(local_tz)
-    return local_tz.normalize(local_dt) # .normalize might be unnecessary
+    return local_tz.normalize(local_dt)  # .normalize might be unnecessary
 
 
 def set_date_to_user_timezone(date, user_id):
@@ -80,7 +87,9 @@ def get_now(timezone=pytz.utc):
 def hash_password(bank_account):
     salt = uuid.uuid4().hex
     password = bank_account.account_number
-    bank_account.account_number = hashlib.sha512((password + salt).encode('utf-8')).hexdigest()
+    bank_account.account_number = hashlib.sha512(
+        (password + salt).encode('utf-8')
+    ).hexdigest()
     bank_account.account_number_salt = salt
     bank_account.account_number_last_4_digits = password[-4:]
 
@@ -90,8 +99,7 @@ def get_form_errors(form):
     for field in form:
         if field.errors:
             for field_error in field.errors:
-                error = strip_tags(field.html_name.replace("_", " ").title()) + ": " + field_error
-                form_errors.append(error)
+                form_errors.append(format_field_error(field, field_error))
     for non_field_error in form.non_field_errors():
         form_errors.append(non_field_error)
     return form_errors
@@ -133,3 +141,37 @@ class LongCharField(CharField):
     def formfield(self, **kwargs):
         # Don't pass max_length to form field like CharField does.
         return super().formfield(**kwargs)
+
+    # Restore method removed in https://github.com/django/django/pull/5093/commits/770449e24b3b0fa60d870bc3404961ddca754c3b  # noqa
+    def get_flatchoices(
+        self,
+        include_blank=True,
+        blank_choice=BLANK_CHOICE_DASH,
+    ):
+        """
+        Returns flattened choices with a default blank choice included.
+        """
+        first_choice = blank_choice if include_blank else []
+        return first_choice + list(self.flatchoices)
+
+
+def get_form_errors(form):
+    return [
+        "{title}: {field_error}".format(
+            title=strip_tags(
+                field
+                .html_name
+                .replace("_", " ")
+                .title()
+            ),
+            field_error=field_error,
+        )
+        for field in form
+        if field.errors
+        for field_error in field.errors
+    ] + [
+        non_field_error
+        for non_field_errors in [form.non_field_errors()]
+        if non_field_errors
+        for non_field_error in non_field_errors
+    ]

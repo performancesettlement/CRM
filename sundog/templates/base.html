@@ -54,5 +54,13 @@
     {% block base_content %}{% endblock base_content %}
     {% block content %}{% endblock content %}
     {% block base_post_content %}{% endblock base_post_content %}
+
+    {% include "fm/modal.html" %}
+
+    <script type="text/javascript">
+      $(function() {
+        $.fm();
+      });
+    </script>
   </body>
 </html>

@@ -21,7 +21,7 @@ def route(regex, name=None):
     Decorator to add route configuration to views.
 
     Omitting the name will derive the view name from the view object
-    ``__name__``.
+    ``__name__``.  The name may be a string or an iterable yielding strings.
 
     Sample usage:
 
@@ -64,7 +64,14 @@ def route(regex, name=None):
                     view,
                     [],
                     lambda view_routes:
-                        view_routes + [Route(regex, name)]
+                        view_routes + [
+                            Route(regex, name_)
+                            for name_ in (
+                                [name]
+                                if isinstance(name, str)
+                                else name
+                            )
+                        ]
                 )
         )
         return view
@@ -81,41 +88,45 @@ decorate_view = (
 )
 
 
-filter_package_modules = lambda package, filter: [
-    x
-    for loader, name, is_pkg in walk_packages(package.__path__)
-    for module in [import_module(package.__package__ + '.' + name)]
-    for x in filter(module)
-]
-
-
-module_urls = lambda module: [
-    url(
-        regex=route.regex,
-        name=(
-            route.name
-            if route.name
-            else view.__module__ + '.' + view.__name__
-        ),
-        view=(
-            view.as_view()
-            if isinstance(view, type) and issubclass(view, View)
-            else view
-        ),
-    )
-    for view, routes in module.__dict__.get(Route, {}).items()
-    for route in routes
-]
-
-
-package_urls = lambda package: filter_package_modules(package, module_urls)
-
-
-package_models = lambda package: filter_package_modules(
-    package,
-    lambda module: [
-        value
-        for name, value in module.__dict__.items()
-        if isinstance(value, type) and issubclass(value, Model)
+def filter_package_modules(package, filter):
+    return [
+        x
+        for loader, name, is_pkg in walk_packages(package.__path__)
+        for module in [import_module(package.__package__ + '.' + name)]
+        for x in filter(module)
     ]
-)
+
+
+def module_urls(module):
+    return [
+        url(
+            regex=route.regex,
+            name=(
+                route.name
+                if route.name
+                else view.__module__ + '.' + view.__name__
+            ),
+            view=(
+                view.as_view()
+                if isinstance(view, type) and issubclass(view, View)
+                else view
+            ),
+        )
+        for view, routes in module.__dict__.get(Route, {}).items()
+        for route in routes
+    ]
+
+
+def package_urls(package):
+    return filter_package_modules(package, module_urls)
+
+
+def package_models(package):
+    return filter_package_modules(
+        package,
+        lambda module: [
+            value
+            for name, value in module.__dict__.items()
+            if isinstance(value, type) and issubclass(value, Model)
+        ]
+    )

@@ -26,6 +26,7 @@ from sundog.utils import const
 @route(r'^dataSources/$', name='data_sources')  # FIXME: Create proper view
 @decorate_view(login_required)
 class ContactList(XEditableDatatableView):
+    template_name = 'sundog/contact/list.html'
 
     model = Contact
 
@@ -142,7 +143,7 @@ class ContactList(XEditableDatatableView):
             processor=(
                 lambda instance, *_, **__:
                     render_to_string(
-                        template_name='sundog/contact_list/actions.html',
+                        template_name='sundog/contact/list/actions.html',
                         context={
                             'contact_id': instance.contact_id,
                         },

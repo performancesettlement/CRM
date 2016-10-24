@@ -1,12 +1,9 @@
-{% extends "app-view.html" %}
+{% extends "sundog/base/app.html" %}
 
 {% load staticfiles %}
 
 
 {% block app_view_head %}
-  {# datatables.responsive #}
-  <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.1.0/css/responsive.dataTables.min.css" crossorigin="anonymous">
-  <script type="text/javascript" src="https://cdn.datatables.net/responsive/2.1.0/js/dataTables.responsive.min.js" crossorigin="anonymous"></script>
 
   {# bootstrap-datepicker #}
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.6.4/css/bootstrap-datepicker3.min.css" integrity="sha256-nFp4rgCvFsMQweFQwabbKfjrBwlaebbLkE29VFR0K40=" crossorigin="anonymous">
@@ -26,7 +23,6 @@
       $(function() {
         var xeditable_options = {};
         datatableview.initialize($('.datatable'), {
-          responsive: true,
           fnRowCallback: datatableview.make_xeditable(xeditable_options),
         });
       });
@@ -34,25 +30,34 @@
 
   {% block table_view_head %}
   {% endblock table_view_head %}
+
 {% endblock app_view_head %}
 
 
 {% block app_view_pre_content %}
+
   {% block table_view_pre_content %}
   {% endblock table_view_pre_content %}
+
 {% endblock app_view_pre_content %}
 
 
 {% block app_view_content %}
+
   {% block table_view_content %}
+
     <div class="data-table">
       {{ datatable }}
     </div>
+
   {% endblock table_view_content %}
+
 {% endblock app_view_content %}
 
 
 {% block app_view_post_content %}
+
   {% block table_view_post_content %}
   {% endblock table_view_post_content %}
+
 {% endblock app_view_post_content %}

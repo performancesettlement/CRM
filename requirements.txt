@@ -10,12 +10,10 @@ django-allauth==0.27.0
 django-appconf==1.0.2
 django-avatar==3.1.0
 django-bootstrap-breadcrumbs==0.8
-django-ckeditor==5.1.1
 django-colorfield==0.1.10
 django-colorful==1.2
 django-compressor==2.1
-django-crontab==0.7.1
-django-haystack==2.5.0
+django-crispy-forms==1.6.0
 django-htmlmin==0.9.1
 django-localflavor==1.3
 django-modelcluster==2.0
@@ -26,7 +24,6 @@ django-taggit==0.21.2
 django-timezone-utils==0.10
 django-treebeard==4.0.1
 djangorestframework==3.4.6
-elasticsearch==1.9.0
 furl==0.5.3
 gunicorn==19.6.0
 html5lib==0.999999
@@ -51,4 +48,6 @@ urllib3==1.17
 whitenoise==3.2.1
 Willow==0.3.1
 xlrd==1.0.0
-git+https://github.com/jangeador/django-datatable-view@87565dc4ac8252d685339c55206a663b887110c8#egg=django-datatable-view
+git+https://github.com/mgomezch/django-datatable-view@87565dc4ac8252d685339c55206a663b887110c8#egg=django-datatable-view
+git+https://github.com/mgomezch/django-fm@3eff0d69df0d166a279a0e489b3fc45cbf766eaf#egg=django-fm
+git+https://github.com/mgomezch/django-tinymce@b7c492a25e84ae7bb6580d452f570c49cf15bb1d#egg=django-tinymce

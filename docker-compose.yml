@@ -24,7 +24,7 @@ services:
     restart: "always"
     links:
       - "elasticsearch"
-    command: "logstash -f /etc/logstash/conf.d/"
+    command: "logstash -f /etc/logstash/conf.d/ --allow-env"
     volumes:
       - "./conf/logstash:/etc/logstash/conf.d"
 
