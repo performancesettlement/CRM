@@ -12,7 +12,7 @@ services:
   logstash:
     environment:
       # Make this project's Logstash write to the local_services Elasticsearch
-      ELASTICSEARCH_HOST: "logstash-local-5000.service.consul.test"
+      ELASTICSEARCH_HOST: "elasticsearch-local-9200.service.consul.test"
     logging:
       driver: "gelf"
       options:
@@ -38,3 +38,8 @@ services:
       options:
         gelf-address: "udp://logstash-local-12201.service.consul.test:12201"
     restart: "no"
+
+networks:
+  default:
+    external:
+      name: "localservices_default"
