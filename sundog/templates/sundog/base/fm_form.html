@@ -1,62 +1,6 @@
+{% load staticfiles %}
+
 {% include 'fm/form.html' %}
 
-{# Fix bootstrap-select instances inside the modal form #}
-<script>
-  function tinymce_setup(editor) {
-    editor.on(
-      'change',
-      function () {
-        editor.save();
-      }
-    );
-  }
-
-  function initialize_modal_contents() {
-    $('.selectpicker').selectpicker('render');
-
-    tinyMCE.remove('.tinymce');
-    $('.tinymce').each(
-      function() {
-        initTinyMCE($(this));
-      }
-    );
-    return false;
-  }
-
-  $(
-    function() {
-      $('#fm-modal').on(
-        'fm.ready',
-        initialize_modal_contents
-      );
-    }
-  );
-
-  {% comment %}
-  The selectpicker controls need to be initialized every time the FM modal
-  dialog loads.  This can be mostly solved with a handler for the `fm.ready`
-  event, but the first time the FM modal dialog loads, this script has not yet
-  registered the event handler.  Therefore, the initialization function needs
-  to be executed manually for the first initialization.
-  {% endcomment %}
-  initialize_modal_contents();
-</script>
-
-<style>
-  {# Fix dropdowns disappearing on click between options #}
-  .dropdown-menu > li > a {
-    margin: 0;
-  }
-
-  .btn-default:hover,
-  .btn-default:focus,
-  .btn-default:active,
-  .btn-default.active,
-  .open .dropdown-toggle.btn-default,
-  .btn-default:active:focus,
-  .btn-default:active:hover,
-  .btn-default.active:hover,
-  .btn-default.active:focus {
-    color: #222;
-  }
-</style>
+<script src="{% static "js/sundog/fm_form.js" %}"></script>
+<link rel="stylesheet" href="{% static "css/sundog/fm_form.css" %}">
