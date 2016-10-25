@@ -1,0 +1,95 @@
+{% extends "app-base.html" %}
+{% load staticfiles my_filters %}
+{% block content %}
+    <script src="{% static "js/plugins/ckeditor/ckeditor.js" %}"></script>
+    <div class="row wrapper border-bottom white-bg page-heading">
+        <div class="col-xs-12 m-t-md">
+            <ol class="breadcrumb">
+                <li>
+                    <a id="list-contacts-link" href="{% url 'list_contacts' %}">Contacts</a>
+                </li>
+                <li>
+                    <a id="list-contact-dashboard-link" href="{% url 'contact_dashboard' contact_id=contact.contact_id %}">{{ contact.full_name_straight }}</a>
+                </li>
+                <li class="active">
+                    <strong>Enrollment Details</strong>
+                </li>
+            </ol>
+        </div>
+    </div>
+    <div id="totals" class="col-xs-12 border p-xs">
+        <div class="inline m-r-md">
+            <div class="m-b-xs font-bold">Gateway</div>
+            <div id="total-debt" class="blue font-medium font-bold">{{ enrollment.custodial_account_label }}</div>
+        </div>
+        <div class="inline m-r-md">
+            <div class="m-b-xs font-bold">Payments</div>
+            <div id="est-sett-dollars" class="blue font-medium font-bold">{{ enrollment.payments_made }}/{{ payments|length }}</div>
+        </div>
+        <div class="inline m-r-md">
+            <div class="m-b-xs font-bold">Client Balance</div>
+            <div id="total-fees" class="blue font-medium font-bold">$0.00</div>
+        </div>
+        <div class="inline m-r-md">
+            <div class="m-b-xs font-bold">Pending Balance</div>
+            <div id="total-fees" class="blue font-medium font-bold">$0.00</div>
+        </div>
+        <div class="inline m-r-md">
+            <div class="m-b-xs font-bold">Deferred Fees</div>
+            <div id="total-fees" class="blue font-medium font-bold">$0.00</div>
+        </div>
+        <div class="inline m-r-md">
+            <div class="m-b-xs font-bold">Sett Commit</div>
+            <div id="total-fees" class="blue font-medium font-bold">{{ enrollment.total_payment }}</div>
+        </div>
+        <div class="inline m-r-md">
+            <div class="m-b-xs font-bold">Total Fee's Paid</div>
+            <div id="total-fees" class="blue font-medium font-bold">$0.00</div>
+        </div>
+        <div class="inline m-r-md">
+            <div class="m-b-xs font-bold">Fees Taken</div>
+            <div id="total-fees" class="blue font-medium font-bold">0/0</div>
+        </div>
+        <div class="inline m-r-md">
+            <div class="m-b-xs font-bold">Returns</div>
+            <div id="total-fees" class="blue font-medium font-bold">0</div>
+        </div>
+    </div>
+    <div class="col-xs-12">
+        <table id="debts-table" class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Active</th>
+                    <th>Processed</th>
+                    <th>Process Date</th>
+                    <th>Cleared Date</th>
+                    <th>Amount</th>
+                    <th>Type</th>
+                    <th>Trans ID</th>
+                    <th>Memo</th>
+                    <th>Payee</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for payment in payments %}
+                <tr id="{{ payment.payment_id }}">
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script src="{% static "js/contact/enrollment_details.js" %}"></script>
+
+{% endblock %}

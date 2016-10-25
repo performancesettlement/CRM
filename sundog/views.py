@@ -1,23 +1,21 @@
-import copy
+from _decimal import ROUND_UP
+from datetime import datetime, timedelta
+from decimal import Decimal
+from django.contrib.auth.decorators import login_required, permission_required
 from django.core import mail
 from django.core.paginator import Paginator
-import sys
-from django_auth_app.utils import serialize_user
-from django.shortcuts import render, render_to_response, redirect
-from django.contrib.auth.decorators import login_required, permission_required
+from django.db import transaction
 from django.http import Http404
 from django.http.response import (
-    HttpResponse,
     HttpResponseRedirect,
     JsonResponse,
 )
-from django.core.files import File
-import settings
-import os
-import logging
+from django.shortcuts import render, render_to_response, redirect
+from django_auth_app.utils import serialize_user
+from numpy import arange
 from sundog import services
-from sundog import utils
 from sundog.cache.user.info import get_cache_user
+from sundog.constants import SHORT_DATE_FORMAT, FIXED_VALUES
 from sundog.decorators import bypass_impersonation_login_required
 from sundog.forms import (
     BankAccountForm,
@@ -29,9 +27,11 @@ from sundog.forms import (
     DebtForm,
     DebtNoteForm,
     EmailForm,
+    EnrollmentForm,
     EnrollmentPlanForm,
     ExpensesForm,
     FeeForm,
+    FeePlanForm,
     FeeProfileForm,
     FeeProfileRuleForm,
     ImpersonateUserForm,
@@ -57,6 +57,7 @@ from sundog.models import (
     FeeProfile,
     FeeProfileRule,
     Incomes,
+    Payment,
     Stage,
     STAGE_TYPE_CHOICES,
     Status,
@@ -64,7 +65,25 @@ from sundog.models import (
     WorkflowSettings,
 )
 from sundog.services import reorder_stages, reorder_status
-from sundog.utils import get_data, get_form_errors, get_or_404
+from sundog.templatetags.my_filters import currency, percent
+from sundog.utils import (
+    add_months,
+    get_data,
+    get_debts_ids,
+    get_fees_values,
+    get_form_errors,
+    get_next_work_date,
+    get_now,
+    get_or_404,
+    get_payments_data,
+    to_int,
+)
+
+import copy
+import logging
+import settings
+import sys
+
 
 logger = logging.getLogger(__name__)
 
@@ -266,8 +285,7 @@ def upload_file(request, contact_id):
         form = UploadedForm(contact, request.user, request.POST, request.FILES)
         if form.is_valid():
             form.save()
-            response_data = 'Ok'
-            response = {'result': response_data}
+            response = {'result': 'Ok'}
         else:
             response = {'errors': get_form_errors(form)}
         return JsonResponse(response)
@@ -829,25 +847,14 @@ def debt_add_note(request):
 def add_enrollment_plan(request):
     form_errors = None
     form_fee_1 = FeeForm(prefix='1')
-    form_fee_2 = FeeForm(prefix='2')
     form = EnrollmentPlanForm(request.POST)
     enrollment_plans = EnrollmentPlan.objects.all()
     if request.method == 'POST' and request.POST:
-        form_fee_1 = FeeForm(get_data('1', request.POST), prefix='1')
+        form_fee_1 = FeePlanForm(get_data('1', request.POST), prefix='1')
         fee_data_2 = get_data('2', request.POST)
         if fee_data_2:
-            form_fee_2 = FeeForm(request.POST, prefix='2')
-        if (
-            form.is_valid() and
-            form_fee_1.is_valid() and
-            (
-                not fee_data_2 or
-                (
-                    fee_data_2 and
-                    form_fee_2.is_valid()
-                )
-            )
-        ):
+            form_fee_2 = FeePlanForm(request.POST, prefix='2')
+        if form.is_valid() and form_fee_1.is_valid() and (not fee_data_2 or (fee_data_2 and form_fee_2.is_valid())):
             enrollment_plan = form.save()
             fee_1 = form_fee_1.save(commit=False)
             fee_1.enrollment_plan = enrollment_plan
@@ -856,16 +863,11 @@ def add_enrollment_plan(request):
                 fee_2 = form_fee_2.save(commit=False)
                 fee_2.enrollment_plan = enrollment_plan
                 fee_2.save()
-            return redirect(
-                'edit_enrollment_plan',
-                enrollment_plan_id=enrollment_plan.enrollment_plan_id,
-            )
+            return redirect('edit_enrollment_plan', enrollment_plan_id=enrollment_plan.enrollment_plan_id)
         else:
             form_errors = get_form_errors(form) + get_form_errors(form_fee_1)
             if fee_data_2:
                 form_errors += get_form_errors(form_fee_2)
-    plans = [('', '--New Plan--')] + [(plan.enrollment_plan_id, plan.name) for plan in enrollment_plans]
-    has_second_fee = form_errors and next((x for x in form_errors if '2-' in x), False)
     context_info = {
         'request': request,
         'user': request.user,
@@ -873,36 +875,53 @@ def add_enrollment_plan(request):
         'form_fee_1': form_fee_1,
         'form_fee_2': form_fee_2,
         'form_errors': form_errors,
-        'has_second_fee': has_second_fee,
-        'plans': plans,
+        'has_second_fee': (
+            form_errors and
+            next(
+                (x for x in form_errors if '2-' in x),
+                False,
+            )
+        ),
+        'plans': [('', '--New Plan--')] + [
+            (plan.enrollment_plan_id, plan.name) for plan in enrollment_plans
+        ],
+        'fixed_values': FIXED_VALUES,
         'menu_page': 'enrollments',
     }
     template_path = 'enrollment/add_enrollment_plan.html'
     return _render_response(request, context_info, template_path)
 
 
-@login_required
 def edit_enrollment_plan(request, enrollment_plan_id):
     form_errors = None
-    instance = EnrollmentPlan.objects.get(enrollment_plan_id=int(enrollment_plan_id))
+    instance = (
+        EnrollmentPlan
+        .objects
+        .get(
+            enrollment_plan_id=int(enrollment_plan_id),
+        )
+    )
     form = EnrollmentPlanForm(request.POST or None, instance=instance)
-    fees = list(instance.fees.all())
+    fees = list(instance.fee_plans.all())
     fee_count = len(fees)
-    form_fee_1 = FeeForm(prefix='1', instance=fees[0])
+    fee_instance = fees[0] if fees else None
+    form_fee_1 = FeePlanForm(prefix='1', instance=fee_instance)
     enrollment_plans = EnrollmentPlan.objects.all()
     if request.method == 'POST' and request.POST:
-        form_fee_1 = FeeForm(get_data('1', request.POST), prefix='1', instance=fees[0])
+        form_fee_1 = FeePlanForm(
+            get_data('1', request.POST),
+            prefix='1',
+            instance=fee_instance
+        )
         fee_data_2 = get_data('2', request.POST)
-        if fee_data_2 and fee_count == 1:
-            form_fee_2 = FeeForm(request.POST, prefix='2')
-        elif fee_count > 1 and fee_data_2:
-            form_fee_2 = FeeForm(request.POST, instance=fees[1], prefix='2')
+        if fee_count > 1 and fee_data_2:
+            form_fee_2 = FeePlanForm(request.POST, instance=fees[1], prefix='2')
+        else:
+            form_fee_2 = FeePlanForm(request.POST, prefix='2')
         if (
             form.is_valid() and
-            form_fee_1.is_valid() and
-            (
-                not fee_data_2 or
-                (
+            form_fee_1.is_valid() and (
+                not fee_data_2 or (
                     fee_data_2 and
                     form_fee_2.is_valid()
                 )
@@ -926,21 +945,20 @@ def edit_enrollment_plan(request, enrollment_plan_id):
                 form_errors += get_form_errors(form_fee_2)
             response = {'errors': form_errors}
         return JsonResponse(response)
-    plans = (
-        [('', '--New Plan--')] +
-        [
-            (plan.enrollment_plan_id, plan.name)
-            for plan in enrollment_plans
-        ]
-    )
-    form_fee_2 = FeeForm(prefix='2')
+    plans = [
+        ('', '--New Plan--'),
+    ] + [
+        (plan.enrollment_plan_id, plan.name)
+        for plan in enrollment_plans
+    ]
+    form_fee_2 = FeePlanForm(prefix='2')
     if len(fees) > 1:
-        form_fee_2 = FeeForm(prefix='2', instance=fees[1])
+        form_fee_2 = FeePlanForm(prefix='2', instance=fees[1])
     has_second_fee = (
         form_errors and
         next(
             (x for x in form_errors if '2-' in x),
-            False
+            False,
         )
     ) or (len(fees) > 1)
     context_info = {
@@ -953,6 +971,7 @@ def edit_enrollment_plan(request, enrollment_plan_id):
         'form_errors': form_errors,
         'has_second_fee': has_second_fee,
         'plans': plans,
+        'fixed_values': FIXED_VALUES,
         'menu_page': 'enrollments',
     }
     template_path = 'enrollment/edit_enrollment_plan.html'
@@ -963,9 +982,12 @@ def edit_enrollment_plan(request, enrollment_plan_id):
 def delete_enrollment_plan(request, enrollment_plan_id):
     if request.method == 'DELETE':
         try:
-            EnrollmentPlan.objects.get(
-                enrollment_plan_id=enrollment_plan_id,
-            ).delete()
+            (
+                EnrollmentPlan
+                .objects
+                .get(enrollment_plan_id=enrollment_plan_id)
+                .delete()
+            )
         except EnrollmentPlan.DoesNotExist:
             pass
         except Exception:
@@ -1196,16 +1218,23 @@ def enrollments_list(request):
             else 'sorting_asc'
         ),
     }
-    query = Enrollment.objects.prefetch_related('contact')
+
+    query = (
+        Enrollment
+        .objects
+        .prefetch_related('contact')
+        .prefetch_related('payments')
+    )
+
     if order_by.replace('-', '') == 'created_at':
         order_by = [order_by]
         enrollments = list(query.order_by(*order_by))
     else:
         enrollments = list(query)
         if order_by == 'full_name':
-            enrollments.sort(key=lambda d: d.contact.full_name_straight())
+            enrollments.sort(key=lambda d: d.contact.full_name_straight)
         elif order_by == '-full_name':
-            enrollments.sort(key=lambda d: -d.contact.full_name_straight())
+            enrollments.sort(key=lambda d: -d.contact.full_name_straight)
         elif order_by == 'next_payment':
             enrollments.sort(
                 key=lambda d: (
@@ -1282,6 +1311,262 @@ def workflow_settings_save(request):
         else:
             response = {'errors': get_form_errors(form)}
         return JsonResponse(response)
+
+
+@login_required
+def add_contact_enrollment(request, contact_id):
+    contact = Contact.objects.prefetch_related('contact_debts').prefetch_related('incomes').prefetch_related('expenses').get(contact_id=contact_id)
+    try:
+        enrollment = Enrollment.objects.get(contact=contact)
+    except Enrollment.DoesNotExist:
+        enrollment = None
+    if enrollment:
+        return redirect('enrollments_list')
+    form_errors = []
+    if request.method == 'POST' and request.POST:
+        post_data = request.POST.copy()
+        if 'first_date' not in post_data:
+            post_data['first_date'] = (get_now() + timedelta(days=1)).strftime(SHORT_DATE_FORMAT)
+        form = EnrollmentForm(contact, post_data)
+        form_fee_1 = FeeForm(get_data('1', post_data), prefix='1')
+        form_fee_2 = None
+        form_2_data = get_data('2', post_data)
+        if form_2_data:
+            form_fee_2 = FeeForm(form_2_data, prefix='2')
+        if form.is_valid() and form_fee_1.is_valid() and (not form_fee_2 or (form_fee_2 and form_fee_2.is_valid())):
+            enrollment = form.save()
+            with transaction.atomic():
+                fee_1 = form_fee_1.save(commit=False)
+                fee_1.enrollment = enrollment
+                fee_1.save()
+                if form_fee_2:
+                    fee_2 = form_fee_2.save(commit=False)
+                    fee_2.enrollment = enrollment
+                    fee_2.save()
+                payments_data = get_payments_data(post_data)
+                payments = [Payment(number=payment['number'], date=payment['date'], amount=payment['amount']) for payment in payments_data]
+                for payment in payments:
+                    payment.enrollment = enrollment
+                    payment.status = 'open'
+                    payment.save()
+            response_data = 'Ok'
+            response = {'result': response_data}
+        else:
+            form_errors = get_form_errors(form) + get_form_errors(form_fee_1)
+            if form_fee_2:
+                form_errors += get_form_errors(form_fee_2)
+            response = {'errors': form_errors}
+        return JsonResponse(response)
+    debts = list(contact.contact_debts.all())
+    form = EnrollmentForm(contact)
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'contact': contact,
+        'debts': debts,
+        'form': form,
+        'fixed_values': FIXED_VALUES,
+        'form_errors': form_errors,
+        'menu_page': 'contacts',
+    }
+    template_path = 'contact/add_contact_enrollment.html'
+    return _render_response(request, context_info, template_path)
+
+
+@login_required
+def contact_enrollment_details(request, contact_id):
+    contact = Contact.objects.prefetch_related('contact_debts').prefetch_related('incomes').prefetch_related('expenses').get(contact_id=contact_id)
+    try:
+        enrollment = Enrollment.objects.prefetch_related('payments').get(contact=contact)
+    except Enrollment.DoesNotExist:
+        enrollment = None
+    if enrollment:
+        return redirect('add_contact_enrollment')
+    payments = list(enrollment.payments.all())
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'contact': contact,
+        'enrollment': enrollment,
+        'payments': payments,
+        'menu_page': 'contacts',
+    }
+    template_path = 'contact/add_contact_enrollment.html'
+    return _render_response(request, context_info, template_path)
+
+
+@login_required
+def get_enrollment_plan_info(request, contact_id, enrollment_plan_id):
+    if not request.is_ajax():
+        return redirect('home')
+    response = {'result': None}
+    if request.method == 'GET' and request.GET:
+        contact = Contact.objects.prefetch_related('contact_debts').get(contact_id=contact_id)
+        now = get_now()
+        first_date_str = request.GET.get('first_date')
+        first_date = datetime.strptime((first_date_str if first_date_str else (now + timedelta(days=1)).strftime(SHORT_DATE_FORMAT)), SHORT_DATE_FORMAT)
+        start_date_str = request.GET.get('start_date')
+        start_date = datetime.strptime((start_date_str if start_date_str else (first_date + timedelta(days=32)).strftime(SHORT_DATE_FORMAT)), SHORT_DATE_FORMAT)
+        second_date_str = request.GET.get('second_date')
+        second_date = datetime.strptime(second_date_str, SHORT_DATE_FORMAT) if second_date_str else None
+        debt_ids = get_debts_ids(request.GET)
+        fee_values = get_fees_values(request.GET)
+        total_debt = contact.total_enrolled_current_debts(ids=debt_ids)
+        payments = []
+        plan = EnrollmentPlan.objects.prefetch_related('fee_profile').prefetch_related('fee_profile__rules').get(enrollment_plan_id=enrollment_plan_id)
+        default_months = None
+        if to_int(plan.program_length_default) != -1:
+            default_months = int(plan.program_length_default)
+        months = to_int(request.GET.get('months'), default=default_months)
+        if plan.two_monthly_drafts and not second_date:
+            second_date = start_date + timedelta(days=15)
+        elif not plan.two_monthly_drafts:
+            second_date = None
+        difference_between_dates = None
+        if second_date:
+            difference_between_dates = second_date - start_date
+        fee_profile = plan.fee_profile if plan.fee_profile else None
+        rules = list(fee_profile.rules.all()) if fee_profile else []
+        rule_for_fee = None
+        for rule in rules:
+            if rule.debt_high >= total_debt >= rule.debt_low:
+                rule_for_fee = rule
+                break
+        number_of_payments = months if not second_date else months * 2
+        monthly_debt = total_debt / number_of_payments
+        est_settlement = contact.est_sett(ids=debt_ids)
+        fees = {}
+        min_length = to_int(plan.program_length_minimum)
+        max_length = to_int(plan.program_length_maximum)
+        program_lengths = [(str(x), ('{} Months' if x > 1 else '{} Month').format(x)) for x in range(min_length, max_length + 1, plan.program_length_increment)]
+        fees_amounts = Decimal('0.00')
+        total_fees_amounts = Decimal('0.00')
+        fee_plans = plan.fee_plans.all()
+        fee_index = 0
+        for fee_plan in fee_plans:
+            if fee_plan.type in FIXED_VALUES:
+                amount = Decimal(fee_plan.amount) * number_of_payments
+                options = [(str(amount), currency(amount / number_of_payments))]
+            else:
+                if fee_values and len(fee_values) > fee_index:
+                    base_amount = fee_values[fee_index]
+                    fee_index += 1
+                else:
+                    base_amount = fee_plan.amount
+                perc = Decimal(base_amount)
+                amount = total_debt * (perc / 100)
+                if rule_for_fee:
+                    options = [(str(op), percent(op)) for op in arange(rule_for_fee.sett_fee_low, rule_for_fee.sett_fee_high + 1, rule_for_fee.sett_fee_inc)]
+                else:
+                    if perc:
+                        options = [(str(perc), percent(perc))]
+                    else:
+                        options = [(str(amount / number_of_payments), currency(amount / number_of_payments))]
+            total_fees_amounts += amount
+            if fee_plan.defer == 'yes':
+                fees_amounts += amount
+            fees[fee_plan.name] = {
+                'name': fee_plan.name,
+                'amount': amount,
+                'fee_plan_id': fee_plan.fee_plan_id,
+                'type': fee_plan.type,
+                'defer': fee_plan.defer,
+                'options': options,
+                'monthly_payment': amount / number_of_payments
+            }
+        total_payment = est_settlement + total_fees_amounts
+        monthly_amount_paid = (total_payment / number_of_payments).quantize(Decimal('.01'), rounding=ROUND_UP)
+
+        monthly_amount_acct_balance = (est_settlement + fees_amounts) / number_of_payments
+        savings = total_debt - total_payment
+        date = get_next_work_date(first_date)
+        std_timedelta = add_months(start_date, 1) - start_date
+        monthly_savings = monthly_debt - monthly_amount_paid
+        accumulated_paid_amount = Decimal('0.00')
+        payment_monthly_savings_total = Decimal('0.00')
+        payment_monthly_amount_paid_total = Decimal('0.00')
+        payment_fees_total = {fee['name']: Decimal('0.00') for fee in fees.values()}
+        for payment_index in range(0, number_of_payments):
+            accumulated_paid_amount += monthly_amount_acct_balance
+            payment_monthly_savings_total += monthly_savings
+            payment_monthly_amount_paid_total += monthly_amount_paid
+            if payment_index == number_of_payments - 1:
+                monthly_savings += savings - payment_monthly_savings_total
+                monthly_amount_paid += total_payment - payment_monthly_amount_paid_total
+            payment = {
+                'order': payment_index + 1,
+                'date': get_next_work_date(date).strftime(SHORT_DATE_FORMAT),
+                'savings': currency(monthly_savings),
+                'payment': currency(monthly_amount_paid),
+                'acct_balance': currency(accumulated_paid_amount),
+            }
+            for fee_plan in fee_plans:
+                payment[fee_plan.name] = fees[fee_plan.name]['monthly_payment']
+                payment_fees_total[fee_plan.name] += fees[fee_plan.name]['monthly_payment']
+                if payment_index == number_of_payments - 1:
+                    payment[fee_plan.name] += fees[fee_plan.name]['amount'] - payment_fees_total[fee_plan.name]
+                payment[fee_plan.name] = currency(payment[fee_plan.name])
+            payments.append(payment)
+            if date != first_date:
+                if difference_between_dates:
+                    if payment_index % 2 == 1:
+                        delta = difference_between_dates
+                    else:
+                        delta = std_timedelta - difference_between_dates
+                        std_timedelta = add_months(date, 1) - date
+                else:
+                    std_timedelta = add_months(date, 1) - date
+                    delta = std_timedelta
+                date += delta
+            else:
+                date = start_date
+        for _, fee_data in fees.items():
+            fee_data['amount'] = currency(fee_data['amount'])
+            fee_data['monthly_payment'] = currency(fee_data['monthly_payment'])
+        data = {
+            'total_savings': currency(savings),
+            'total_fees': currency(total_fees_amounts),
+            'total_sett': currency(est_settlement),
+            'total_debt': currency(total_debt),
+            'total_payment': currency(total_payment),
+            'program_lengths': program_lengths,
+            'length_selected': months,
+            'select_first_date': plan.select_first_payment,
+            'first_date': first_date.strftime(SHORT_DATE_FORMAT),
+            'start_date': start_date.strftime(SHORT_DATE_FORMAT),
+            'fees': list(fees.values()),
+            'payments': payments,
+        }
+        if second_date:
+            data['second_date'] = second_date.strftime(SHORT_DATE_FORMAT)
+        response['result'] = 'Ok'
+        response['data'] = data
+
+    return JsonResponse(response)
+
+
+@login_required
+def get_debts_info(request, contact_id):
+    if not request.is_ajax():
+        return redirect('home')
+    response = {'result': None}
+    if request.method == 'GET' and request.GET:
+        contact = Contact.objects.prefetch_related('contact_debts').get(contact_id=contact_id)
+        debt_ids = get_debts_ids(request.GET)
+        total_debt = contact.total_enrolled_current_debts(ids=debt_ids)
+        est_settlement = contact.est_sett(ids=debt_ids)
+        total_payment = est_settlement
+        savings = total_debt - total_payment
+
+        data = {
+            'total_savings': currency(savings),
+            'total_sett': currency(est_settlement),
+            'total_debt': currency(total_debt),
+        }
+        response['result'] = 'Ok'
+        response['data'] = data
+
+    return JsonResponse(response)
 
 #######################################################################
 

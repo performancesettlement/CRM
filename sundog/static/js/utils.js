@@ -101,3 +101,4 @@ function redirect(location) {
 function refreshScreen() {
     redirect(window.location);
 }
+

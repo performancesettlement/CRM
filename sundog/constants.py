@@ -74,3 +74,8 @@ CONTACTS_STATIC_LIST = [
     MY_CONTACTS,
     ALL_CONTACTS
 ]
+
+FIXED_VALUES = [
+    'fixed',
+    'fixedamort'
+]

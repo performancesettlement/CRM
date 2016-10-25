@@ -29,6 +29,7 @@ gunicorn==19.6.0
 html5lib==0.999999
 json-logging-py==0.2
 mock==2.0.0
+numpy==1.11.2
 oauthlib==2.0.0
 pbr==1.10.0
 Pillow==3.3.1

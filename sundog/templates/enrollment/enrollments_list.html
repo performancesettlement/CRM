@@ -45,12 +45,12 @@
                 <tr>
                     <td>{% if result.contact %}{{ result.contact.full_name_straight }}{% endif %}</td>
                     <td>{% if result.contact and result.contact.state %}{{ result.contact.state }}{% endif %}</td>
-                    <td>{% if result.next_payment %}{{ result.next_payment }}{% endif %}</td>
-                    <td>{% if result.payments_made %}{{ result.payments_made }}{% endif %}</td>
-                    <td>{% if result.balance %}{{ result.balance }}{% endif %}</td>
+                    <td>{% if result.next_payment %}{{ result.next_payment|date:'SHORT_DATE_FORMAT' }}{% endif %}</td>
+                    <td>{{ result.payments_made }}</td>
+                    <td>{{ result.balance|currency }}</td>
                     <td>{% if result.created_at|date:'SHORT_DATETIME_FORMAT' %}{{ result.created_at }}{% endif %}</td>
                     <td class="contact-actions">
-                        <a id="{{ result.contact_id }}-view" href=""><span title="View" class="glyphicon glyphicon-arrow-right"></span></a>
+                        <a id="{{ result.contact_id }}-view" href="{% url "contact_dashboard" contact_id=result.contact.contact_id %}"><span title="View" class="glyphicon glyphicon-arrow-right"></span></a>
                     </td>
                 </tr>
                 {% endfor %}

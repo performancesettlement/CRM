@@ -1,8 +1,10 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.core.validators import validate_email
+from django.db.models import Q
 from django_auth_app import enums
 from sundog.models import (
+    AMOUNT_CHOICES,
     BankAccount,
     Call,
     Campaign,
@@ -12,9 +14,11 @@ from sundog.models import (
     DebtNote,
     DEBT_SETTLEMENT,
     Email,
+    Enrollment,
     EnrollmentPlan,
     Expenses,
     Fee,
+    FeePlan,
     FeeProfile,
     FeeProfileRule,
     Incomes,
@@ -26,8 +30,10 @@ from sundog.models import (
     WorkflowSettings,
 )
 from sundog import services
-from sundog.constants import SHORT_DATE_FORMAT
-from sundog.utils import hash_password
+from sundog.constants import (
+    SHORT_DATE_FORMAT,
+    FIXED_VALUES,
+)
 
 
 class ImpersonateUserForm(forms.ModelForm):
@@ -212,20 +218,16 @@ class BankAccountForm(forms.ModelForm):
         self.previous_account_number = kwargs.get('instance').account_number if kwargs.get('instance') else None
         if kwargs and 'instance' in kwargs and not args:
             bank_account = kwargs['instance']
-            if bank_account and bank_account.account_number_last_4_digits:
-                self.initial['account_number'] = '******' + bank_account.account_number_last_4_digits
+            if bank_account and bank_account.account_number:
+                self.initial['account_number'] = '******' + bank_account.account_number[-4:]
 
     def save(self, commit=True):
-        account_number_changed = True
         if self.instance:
             if self.cleaned_data and 'account_number' in self.cleaned_data:
                 account_number = self.cleaned_data['account_number']
-                if account_number == '******' + self.instance.account_number_last_4_digits:
-                    account_number_changed = False
+                if account_number == '******' + self.instance.account_number[-4:]:
                     self.cleaned_data['account_number'] = self.previous_account_number
                     self.instance.account_number = self.previous_account_number
-        if account_number_changed:
-            hash_password(self.instance)
         return super(BankAccountForm, self).save(commit=commit)
 
 
@@ -424,14 +426,8 @@ class EnrollmentPlanForm(forms.ModelForm):
             'enrollment_plan_id': forms.HiddenInput(),
             'active': forms.CheckboxInput(),
             'two_monthly_drafts': forms.CheckboxInput(),
-            'select_first_payment_date': forms.CheckboxInput(),
-            'performance_plan': forms.CheckboxInput(),
-            'draft_fee_separate': forms.CheckboxInput(),
-            'includes_veritas_legal': forms.CheckboxInput(),
-            'legal_plan_flag': forms.CheckboxInput(),
+            'select_first_payment': forms.CheckboxInput(),
             'debt_amount_flag': forms.CheckboxInput(),
-            'debt_to_income_flag': forms.CheckboxInput(),
-            'states_flag': forms.CheckboxInput(),
             'show_fee_subtotal_column': forms.CheckboxInput(),
             'savings_adjustment': forms.CheckboxInput(),
             'show_savings_accumulation': forms.CheckboxInput(),
@@ -440,24 +436,74 @@ class EnrollmentPlanForm(forms.ModelForm):
         }
         fields = '__all__'
 
+
+class EnrollmentForm(forms.ModelForm):
+    class Meta:
+        model = Enrollment
+        widgets = {
+            'enrollment_plan': forms.Select(attrs={'class': 'col-xs-12 no-padding-sides'}),
+            'comp_template_chooser': forms.Select(choices=[('', 'EPPS Compensation Template')], attrs={'class': 'col-xs-12 no-padding-sides'}),
+            'start_date': forms.DateInput(format=SHORT_DATE_FORMAT, attrs={'placeholder': 'mm/dd/yyyy', 'data-provide': 'datepicker'}),
+            'first_date': forms.DateInput(format=SHORT_DATE_FORMAT, attrs={'placeholder': 'mm/dd/yyyy', 'data-provide': 'datepicker'}),
+            'second_date': forms.DateInput(format=SHORT_DATE_FORMAT, attrs={'placeholder': 'mm/dd/yyyy', 'data-provide': 'datepicker'}),
+            'contact': forms.HiddenInput(),
+        }
+        exclude = ['created_at', 'updated_at']
+
+    def __init__(self, contact, *args, **kwargs):
+        debt_ids = None
+        if 'debt_ids' in kwargs:
+            debt_ids = kwargs['debt_ids']
+        super(EnrollmentForm, self).__init__(*args, **kwargs)
+        self.fields['contact'].initial = contact
+        self.fields['comp_template_chooser'].empty_label = None
+        queryset = EnrollmentPlan.objects.all()
+        debt_amount = contact.total_enrolled_current_debts(ids=debt_ids)
+        queryset.filter(Q(debt_amount_flag=False) | Q(debt_amount_flag=True, debt_amount_from__gte=debt_amount,
+                                                      debt_amount_to__lte=debt_amount))
+        self.fields['enrollment_plan'].queryset = queryset
+
+
+FIELD_NAME_MAPPING = {
+    'fixed_amount': 'amount',
+    'percentage_amount': 'amount',
+}
+
+
+class FeePlanForm(forms.ModelForm):
+    enrollment_plan = forms.ModelChoiceField(required=False, queryset=EnrollmentPlan.objects.all(),
+                                             widget=forms.HiddenInput())
+    fixed_amount = forms.DecimalField(required=False, widget=forms.TextInput(attrs={'style': 'max-width: 140px;'}))
+    percentage_amount = forms.DecimalField(required=False, widget=forms.Select(choices=AMOUNT_CHOICES))
+
+    class Meta:
+        model = FeePlan
+        widgets = {
+            'fee_plan_id': forms.HiddenInput(),
+            'name': forms.TextInput(attrs={'style': 'max-width: 140px;'}),
+        }
+        fields = '__all__'
+
+    def add_prefix(self, field_name):
+        field_name = FIELD_NAME_MAPPING.get(field_name, field_name)
+        return super(FeePlanForm, self).add_prefix(field_name)
+
     def __init__(self, *args, **kwargs):
-        if kwargs and 'instance' in kwargs and  kwargs['instance'].states:
-            kwargs['instance'].states = kwargs['instance'].states.replace('\'', '').replace('[', '').replace(']', '').split(', ')
-        super(EnrollmentPlanForm, self).__init__(*args, **kwargs)
+        super(FeePlanForm, self).__init__(*args, **kwargs)
+        if self.instance:
+            if self.instance.type in FIXED_VALUES:
+                self.initial['fixed_amount'] = self.instance.amount
+                self.fields['percentage_amount'].widget.attrs.update({'disabled': 'disabled', 'style': 'display:none;'})
+            else:
+                self.initial['percentage_amount'] = self.instance.amount
+                self.fields['fixed_amount'].widget.attrs.update({'disabled': 'disabled', 'style': 'max-width: 140px; display: none;'})
 
 
 class FeeForm(forms.ModelForm):
-    enrollment_plan = forms.ModelChoiceField(
-        required=False,
-        queryset=EnrollmentPlan.objects.all(),
-        widget=forms.HiddenInput(),
-    )
-
     class Meta:
         model = Fee
         widgets = {
             'fee_id': forms.HiddenInput(),
-            'name': forms.TextInput(attrs={'style': 'max-width: 140px;'})
         }
         fields = '__all__'
 

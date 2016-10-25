@@ -3820,6 +3820,9 @@ table.table-mail tr td {
   background-color: #ed5565;
   color: #ffffff;
 }
+.red {
+    color: #ed5565;
+}
 .black-bg {
   background-color: #262626;
 }
@@ -8266,4 +8269,16 @@ input {
 .fee-profile-rule label {
   width: 114px !important;
   min-width: 114px !important;
+}
+
+.underlined {
+    text-decoration: underline;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.dynamic-added {
+    text-transform: capitalize;
 }
