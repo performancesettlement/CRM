@@ -56,6 +56,11 @@ ul.dropdown-menu li a{
    color: #676a6c !important;
 }
 
+/* Fix bootstrap-select dropdowns disappearing on click between options */
+.dropdown-menu > li > a {
+  margin: 0;
+}
+
 /* Admin custom style */
 .action-checkbox, .action-checkbox-column{
     padding: 5px;

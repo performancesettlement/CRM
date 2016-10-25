@@ -102,3 +102,11 @@ function refreshScreen() {
     redirect(window.location);
 }
 
+function tinymce_setup(editor) {
+  editor.on(
+    'change',
+    function() {
+      editor.save();
+    }
+  );
+}

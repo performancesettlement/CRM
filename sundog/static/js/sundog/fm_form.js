@@ -1,13 +1,3 @@
-/* Fix bootstrap-select and TinyMCE instances inside the modal form */
-function tinymce_setup(editor) {
-  editor.on(
-    'change',
-    function () {
-      editor.save();
-    }
-  );
-}
-
 function initialize_modal_contents() {
   $('.selectpicker').selectpicker('render');
 
