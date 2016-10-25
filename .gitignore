@@ -27,7 +27,7 @@ import/history/*
 *.sw?
 
 # Docker service persistent data:
-/data/
+/data
 
 # Local environment variables:
 .env
