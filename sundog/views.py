@@ -846,7 +846,8 @@ def debt_add_note(request):
 @login_required
 def add_enrollment_plan(request):
     form_errors = None
-    form_fee_1 = FeeForm(prefix='1')
+    form_fee_1 = FeePlanForm(prefix='1')
+    form_fee_2 = FeePlanForm(prefix='2')
     form = EnrollmentPlanForm(request.POST)
     enrollment_plans = EnrollmentPlan.objects.all()
     if request.method == 'POST' and request.POST:
@@ -854,7 +855,15 @@ def add_enrollment_plan(request):
         fee_data_2 = get_data('2', request.POST)
         if fee_data_2:
             form_fee_2 = FeePlanForm(request.POST, prefix='2')
-        if form.is_valid() and form_fee_1.is_valid() and (not fee_data_2 or (fee_data_2 and form_fee_2.is_valid())):
+        if (
+            form.is_valid() and
+            form_fee_1.is_valid() and (
+                not fee_data_2 or (
+                    fee_data_2 and
+                    form_fee_2.is_valid()
+                )
+            )
+        ):
             enrollment_plan = form.save()
             fee_1 = form_fee_1.save(commit=False)
             fee_1.enrollment_plan = enrollment_plan
@@ -863,11 +872,24 @@ def add_enrollment_plan(request):
                 fee_2 = form_fee_2.save(commit=False)
                 fee_2.enrollment_plan = enrollment_plan
                 fee_2.save()
-            return redirect('edit_enrollment_plan', enrollment_plan_id=enrollment_plan.enrollment_plan_id)
+            return redirect(
+                'edit_enrollment_plan',
+                enrollment_plan_id=enrollment_plan.enrollment_plan_id,
+            )
         else:
             form_errors = get_form_errors(form) + get_form_errors(form_fee_1)
             if fee_data_2:
                 form_errors += get_form_errors(form_fee_2)
+    plans = [('', '--New Plan--')] + [
+        (plan.enrollment_plan_id, plan.name) for plan in enrollment_plans
+    ]
+    has_second_fee = (
+        form_errors and
+        next(
+            (x for x in form_errors if '2-' in x),
+            False,
+        )
+    )
     context_info = {
         'request': request,
         'user': request.user,
@@ -875,16 +897,8 @@ def add_enrollment_plan(request):
         'form_fee_1': form_fee_1,
         'form_fee_2': form_fee_2,
         'form_errors': form_errors,
-        'has_second_fee': (
-            form_errors and
-            next(
-                (x for x in form_errors if '2-' in x),
-                False,
-            )
-        ),
-        'plans': [('', '--New Plan--')] + [
-            (plan.enrollment_plan_id, plan.name) for plan in enrollment_plans
-        ],
+        'has_second_fee': has_second_fee,
+        'plans': plans,
         'fixed_values': FIXED_VALUES,
         'menu_page': 'enrollments',
     }
@@ -892,6 +906,7 @@ def add_enrollment_plan(request):
     return _render_response(request, context_info, template_path)
 
 
+@login_required
 def edit_enrollment_plan(request, enrollment_plan_id):
     form_errors = None
     instance = (
