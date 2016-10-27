@@ -1,3 +1,4 @@
+.git
 .project
 .pydevproject
 __pycache__
@@ -19,6 +20,12 @@ django_app_nginx.conf
 django_auth_app/migrations/0*
 sundog/migrations/0*
 import/history/*
+docker-compose.yml
+
+# Editor temporary files
+.ropeproject
+**/*~
+**/*.sw?
 
 # Docker service data
 data/

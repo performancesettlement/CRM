@@ -1,0 +1,23 @@
+<a
+  id="{{ contact_id }}-edit-contact-status"
+  href="{% url 'edit_contact_status' contact_id=contact_id %}"
+  class="edit-contact-status"
+>
+  <span title="Edit Status" class="glyphicon glyphicon-th"></span>
+</a>
+
+<a
+  id="{{ contact_id }}-edit-contact-info"
+  href="{% url 'edit_contact' contact_id=contact_id %}"
+  class="edit-contact-info"
+>
+  <span title="Edit Info" class="glyphicon glyphicon-edit"></span>
+</a>
+
+<a
+  id="{{ contact_id }}-contact-dashboard"
+  href="{% url 'contact_dashboard' contact_id=contact_id %}"
+  class="contact-dashboard"
+>
+  <span title="Dashboard" class="glyphicon glyphicon-arrow-right"></span>
+</a>

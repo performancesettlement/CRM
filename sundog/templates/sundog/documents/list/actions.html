@@ -1,0 +1,19 @@
+<a
+  class="fm-delete documents-delete"
+  data-fm-callback="reload"
+  data-fm-head="Delete this document?  {{ document_title }}"
+  href="{% url 'documents.delete.ajax' pk=document_id %}"
+  id="{{ document_id }}-delete-document"
+>
+  <span title="Delete document" class="glyphicon glyphicon-remove"></span>
+</a>
+
+<a
+  class="fm-update documents-edit"
+  data-fm-callback="reload"
+  data-fm-head="Editing document: {{ document_title }}"
+  href="{% url 'documents.edit.ajax' pk=document_id %}"
+  id="{{ document_id }}-edit-document"
+>
+  <span title="Edit document" class="glyphicon glyphicon-arrow-right"></span>
+</a>

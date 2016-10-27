@@ -3,24 +3,40 @@ version: "2"
 services:
 
   web:
-    build: .
-    expose:
-      - "80"
+    build:
+      context: .
+    restart: "always"
+    env_file: ".env"
     links:
-      - sundog_db
-      - elasticsearch
-    environment:
-      DEBUG: 'true'
-    restart: always
+      - "postgres"
+      - "elasticsearch"
+      - "logstash"
 
   elasticsearch:
-    image: elasticsearch
+    build: "services/elasticsearch"
+    restart: "always"
     volumes:
       - "./data/elasticsearch/data:/usr/share/elasticsearch/data"
       - "./data/elasticsearch/log:/usr/share/elasticsearch/log"
 
-  sundog_db:
-    image: postgres
+  logstash:
+    image: "logstash"
+    restart: "always"
+    links:
+      - "elasticsearch"
+    command: "logstash -f /etc/logstash/conf.d/ --allow-env"
+    volumes:
+      - "./conf/logstash:/etc/logstash/conf.d"
+
+  kibana:
+    image: "kibana"
+    restart: "always"
+    links:
+      - "elasticsearch"
+
+  postgres:
+    image: "postgres"
+    restart: "always"
     environment:
       POSTGRES_DB: "sundog_db"
       POSTGRES_USER: "sundog_db"

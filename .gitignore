@@ -21,5 +21,16 @@ sundog/migrations/0*
 local_config.py
 import/history/*
 
+# Editor temporary files
+.ropeproject
+*~
+*.sw?
+
 # Docker service persistent data:
-/data/
+/data
+
+# Local environment variables:
+.env
+
+# Docker Compose overrides, mostly symlinked for production:
+docker-compose.override.yml

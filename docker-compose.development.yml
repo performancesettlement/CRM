@@ -1,0 +1,45 @@
+version: "2"
+
+# Forward all Docker logging to the local_services Logstash
+services:
+
+  web:
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://logstash-local-12201.service.consul.test:12201"
+
+  logstash:
+    environment:
+      # Make this project's Logstash write to the local_services Elasticsearch
+      ELASTICSEARCH_HOST: "elasticsearch-local-9200.service.consul.test"
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://logstash-local-12201.service.consul.test:12201"
+
+  postgres:
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://logstash-local-12201.service.consul.test:12201"
+
+  elasticsearch:
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://logstash-local-12201.service.consul.test:12201"
+
+  # Disable this project's Kibana in favor of the one from local_services
+  kibana:
+    entrypoint: "true"
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://logstash-local-12201.service.consul.test:12201"
+    restart: "no"
+
+networks:
+  default:
+    external:
+      name: "localservices_default"
