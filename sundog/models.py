@@ -13,7 +13,7 @@ from sundog.utils import format_price, get_now
 
 import copy
 import logging
-import sundog.view
+import sundog.components
 import sys
 
 
@@ -1273,5 +1273,5 @@ class Campaign(models.Model):
         return '%s' % self.title
 
 
-for model in package_models(sundog.view):
+for model in package_models(sundog.components):
     setattr(sys.modules[__name__], model.__name__, model)

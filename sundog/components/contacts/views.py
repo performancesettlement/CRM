@@ -20,13 +20,13 @@ from sundog.routing import decorate_view, route
 from sundog.utils import const
 
 
-@route(r'^contacts/?$', name='contact.list')
+@route(r'^contacts/?$', name='contacts.list')
 @route(r'^contacts/?$', name='list_contacts')  # FIXME: Replace view name usages
 @route(r'^contacts/lists/$', name='new_list')  # FIXME: Create proper view
 @route(r'^dataSources/$', name='data_sources')  # FIXME: Create proper view
 @decorate_view(login_required)
-class ContactList(XEditableDatatableView):
-    template_name = 'sundog/contact/list.html'
+class ContactsList(XEditableDatatableView):
+    template_name = 'sundog/contacts/list.html'
 
     model = Contact
 
@@ -143,7 +143,7 @@ class ContactList(XEditableDatatableView):
             processor=(
                 lambda instance, *_, **__:
                     render_to_string(
-                        template_name='sundog/contact/list/actions.html',
+                        template_name='sundog/contacts/list/actions.html',
                         context={
                             'contact_id': instance.contact_id,
                         },
