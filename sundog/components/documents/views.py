@@ -160,3 +160,19 @@ class DocumentsEditAJAX(DocumentsAJAXFormMixin, AjaxUpdateView):
 @decorate_view(login_required)
 class DocumentsDeleteAJAX(DocumentsAJAXFormMixin, AjaxDeleteView):
     pass
+
+
+@route(r'^documents/(?P<pk>\d+)/preview/pdf/?$', name='documents.preview.pdf')
+@decorate_view(login_required)
+class DocumentsPreviewPDF(DocumentsCRUDViewMixin, View):
+    def get(self, request, *args, **kwargs):
+        return HttpResponse(
+            content=(
+                Document
+                .objects
+                .get(pk=kwargs['pk'])
+                .render()
+                .write_pdf()
+            ),
+            content_type='application/pdf',
+        )

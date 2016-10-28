@@ -1,3 +1,4 @@
+from datetime import date, timedelta
 from django.contrib.auth.models import User
 from django.db.models import (
     DateTimeField,
@@ -7,9 +8,11 @@ from django.db.models import (
 )
 from django.urls import reverse
 from multiselectfield import MultiSelectField
-from sundog.models import NONE_CHOICE_LABEL
+from pystache import render
+from sundog.models import Contact, NONE_CHOICE_LABEL
 from sundog.utils import LongCharField
 from tinymce.models import HTMLField
+from weasyprint import HTML
 
 
 class Document(Model):
@@ -166,3 +169,130 @@ class Document(Model):
                 self.id,
             ]
         )
+
+    @staticmethod
+    def default_contact():
+        return Contact(
+            contact_id=-1,
+            first_name='Test',
+            middle_name='Ing',
+            last_name='User',
+            previous_name='',
+            phone_number='8885551234',
+            mobile_number='8887771234',
+            email='test.user@example.com',
+            birth_date=date(1983, 10, 4),
+            # identification='',
+            marital_status='married',
+            co_applicant_first_name='CoTest',
+            co_applicant_middle_name='CoIng',
+            co_applicant_last_name='CoUser',
+            co_applicant_previous_name='Co Previous Name',
+            co_applicant_phone_number='8882221234',
+            co_applicant_mobile_number='8884441234',
+            co_applicant_email='co.test.user@example.com',
+            co_applicant_birth_date=date(1984, 11, 5),
+            # co_applicant_identification='',
+            co_applicant_marital_status='divorced',
+            dependants='4',
+            address_1='123 Fake St.',
+            address_2='APT 1',
+            city='Chicago',
+            state='IL',
+            zip_code='60101',
+            residential_status='home_owner',
+            co_applicant_address='321 Fake St.',
+            co_applicant_city='APT 2',
+            co_applicant_state='CA',
+            co_applicant_zip_code='60103',
+            employer='Performance Settlement LLC',
+            employment_status='unemployed',
+            position='Senior Manager',
+            length_of_employment='10 years',
+            work_phone='8886661234',
+            co_applicant_employer='Performance Settlement LLC',
+            co_applicant_employment_status='employed',
+            co_applicant_position='Supervisor',
+            co_applicant_length_of_employment='5 years',
+            co_applicant_work_phone='8883331234',
+            hardships='loss_of_employment',
+            hardship_description=(
+                'I was involved in a major car accident and had to take 3 '
+                'months off of work'
+            ),
+            special_note_1='Test note 1',
+            special_note_2='Test note 2',
+            special_note_3='Test note 3',
+            special_note_4='Test note 4',
+            ssn1='',  # TODO
+            ssn2='',  # TODO
+            third_party_speaker_full_name='Test Third Party Speaker',
+            third_party_speaker_last_4_of_ssn='1234',
+            authorization_form_on_file='yes',
+            active=True,
+            # assigned_to=ForeignKey(User, null=True, blank=True),  # TODO
+            # call_center_representative=ForeignKey(User),  # TODO
+            # lead_source=ForeignKey(LeadSource),  # TODO
+            # company=ForeignKey(Company, null=True, blank=True),  # TODO
+            # stage=ForeignKey(Stage, blank=True, null=True),  # TODO
+            # status=ForeignKey(Status, blank=True, null=True),  # TODO
+            last_status_change=date.today(),
+            created_at=date.today() - timedelta(days=2),
+            updated_at=date.today() - timedelta(days=1),
+        )
+
+    @staticmethod
+    def contact_context(contact=default_contact()):
+        return {
+            'ID': contact.id,
+            'FIRSTNAME': contact.first_name,
+            'LASTNAME': contact.last_name,
+            'MIDDLENAME': contact.middle_name,
+            'FULLNAME': "{first_name} {last_name}".format(
+                first_name=contact.first_name,
+                last_name=contact.last_name,
+            ),
+            'PHONE': contact.phone_number,
+            # {HOMEPHONE_AREA}  Home Phone Area Code  # TODO
+            # {HOMEPHONE_PRE}   Home Phone Prefix  # TODO
+            # {HOMEPHONE_SUFF}  Home Phone Suffix  # TODO
+            'PHONE2': contact.work_phone,
+            # {WORKPHONE_AREA}  Work Phone Area Code
+            # {WORKPHONE_PRE}   Work Phone Prefix
+            # {WORKPHONE_SUFF}  Work Phone Suffix
+            'PHONE3': contact.mobile_number,
+            # {CELLPHONE_AREA}  Cell Phone Area Code
+            # {CELLPHONE_PRE}   Cell Phone Prefix
+            # {CELLPHONE_SUFF}  Cell Phone Suffix
+            'EMAIL': contact.email,
+            # {FAX}         Fax  # TODO
+            'ADDRESS': contact.address_1,
+            'ADDRESS2': contact.address_2,
+            'CITY': contact.city,
+            'STATE': contact.state,
+            # {STATEFULL}   Populates the State fully spelled out  # TODO
+            'ZIP': contact.zip_code,
+            # {FULLADDRESS} Populates the Entire Address  # TODO
+            # {SSN}         Contact's Social Security Number  # TODO
+            # {ENCSSN}      Contact's Encrypted Social Security Number  # TODO
+            # {SSN1}        Digit from the contact's SSN  # TODO
+            # {SSN2}        Digit from the contact's SSN  # TODO
+            # {SSN3}        Digit from the contact's SSN  # TODO
+            # {SSN4}        Digit from the contact's SSN  # TODO
+            # {SSN5}        Digit from the contact's SSN  # TODO
+            # {SSN6}        Digit from the contact's SSN  # TODO
+            # {SSN7}        Digit from the contact's SSN  # TODO
+            # {SSN8}        Digit from the contact's SSN  # TODO
+            # {SSN9}        Digit from the contact's SSN  # TODO
+            'DOB': contact.birth_date,  # TODO: format
+        }
+
+    def render(self, contact=default_contact()):
+        return HTML(
+            string=render(
+                template=self.template_body,
+                context={
+                    **self.contact_context(contact),
+                },
+            ),
+        ),
