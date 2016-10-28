@@ -305,7 +305,6 @@ TINYMCE_PLUGINS = {
     'autolink',
     'autoresize',
     'autosave',
-    'bbcode',
     'charmap',
     'code',
     'codesample',
