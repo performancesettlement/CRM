@@ -46,9 +46,11 @@ rjsmin==1.0.12
 six==1.10.0
 Unidecode==0.4.19
 urllib3==1.17
+weasyprint==0.31
 whitenoise==3.2.1
 Willow==0.3.1
 xlrd==1.0.0
+
 git+https://github.com/mgomezch/django-datatable-view@87565dc4ac8252d685339c55206a663b887110c8#egg=django-datatable-view
 git+https://github.com/mgomezch/django-fm@3eff0d69df0d166a279a0e489b3fc45cbf766eaf#egg=django-fm
 git+https://github.com/mgomezch/django-tinymce@b7c492a25e84ae7bb6580d452f570c49cf15bb1d#egg=django-tinymce
