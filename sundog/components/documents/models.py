@@ -7,6 +7,7 @@ from django.db.models import (
     SET_NULL,
 )
 from django.urls import reverse
+from django_auth_app.enums import US_STATES
 from multiselectfield import MultiSelectField
 from pystache import render
 from sundog.models import Contact, NONE_CHOICE_LABEL
@@ -182,7 +183,7 @@ class Document(Model):
             mobile_number='8887771234',
             email='test.user@example.com',
             birth_date=date(1983, 10, 4),
-            # identification='',
+            identification='000-123-4567',
             marital_status='married',
             co_applicant_first_name='CoTest',
             co_applicant_middle_name='CoIng',
@@ -192,7 +193,7 @@ class Document(Model):
             co_applicant_mobile_number='8884441234',
             co_applicant_email='co.test.user@example.com',
             co_applicant_birth_date=date(1984, 11, 5),
-            # co_applicant_identification='',
+            co_applicant_identification='000-765-4321',
             co_applicant_marital_status='divorced',
             dependants='4',
             address_1='123 Fake St.',
@@ -224,18 +225,18 @@ class Document(Model):
             special_note_2='Test note 2',
             special_note_3='Test note 3',
             special_note_4='Test note 4',
-            ssn1='',  # TODO
-            ssn2='',  # TODO
+            ssn1='000-987-6543',
+            ssn2='000-345-6789',
             third_party_speaker_full_name='Test Third Party Speaker',
             third_party_speaker_last_4_of_ssn='1234',
             authorization_form_on_file='yes',
             active=True,
-            # assigned_to=ForeignKey(User, null=True, blank=True),  # TODO
-            # call_center_representative=ForeignKey(User),  # TODO
-            # lead_source=ForeignKey(LeadSource),  # TODO
-            # company=ForeignKey(Company, null=True, blank=True),  # TODO
-            # stage=ForeignKey(Stage, blank=True, null=True),  # TODO
-            # status=ForeignKey(Status, blank=True, null=True),  # TODO
+            # assigned_to=ForeignKey(User, null=True, blank=True),      # TODO
+            # call_center_representative=ForeignKey(User),              # TODO
+            # lead_source=ForeignKey(LeadSource),                       # TODO
+            # company=ForeignKey(Company, null=True, blank=True),       # TODO
+            # stage=ForeignKey(Stage, blank=True, null=True),           # TODO
+            # status=ForeignKey(Status, blank=True, null=True),         # TODO
             last_status_change=date.today(),
             created_at=date.today() - timedelta(days=2),
             updated_at=date.today() - timedelta(days=1),
@@ -253,46 +254,65 @@ class Document(Model):
                 last_name=contact.last_name,
             ),
             'PHONE': contact.phone_number,
-            # {HOMEPHONE_AREA}  Home Phone Area Code  # TODO
-            # {HOMEPHONE_PRE}   Home Phone Prefix  # TODO
-            # {HOMEPHONE_SUFF}  Home Phone Suffix  # TODO
+            'HOMEPHONE_AREA': contact.phone_number[0:2],
+            'HOMEPHONE_PRE': contact.phone_number[3:5],
+            'HOMEPHONE_SUFF': contact.phone_number[6:],
             'PHONE2': contact.work_phone,
-            # {WORKPHONE_AREA}  Work Phone Area Code
-            # {WORKPHONE_PRE}   Work Phone Prefix
-            # {WORKPHONE_SUFF}  Work Phone Suffix
+            'WORKPHONE_AREA': contact.work_phone[0:2],
+            'WORKPHONE_PRE': contact.work_phone[3:5],
+            'WORKPHONE_SUFF': contact.work_phone[6:],
             'PHONE3': contact.mobile_number,
-            # {CELLPHONE_AREA}  Cell Phone Area Code
-            # {CELLPHONE_PRE}   Cell Phone Prefix
-            # {CELLPHONE_SUFF}  Cell Phone Suffix
+            'CELLPHONE_AREA': contact.mobile_number[0:2],
+            'CELLPHONE_PRE': contact.mobile_number[3:5],
+            'CELLPHONE_SUFF': contact.mobile_number[6:],
             'EMAIL': contact.email,
-            # {FAX}         Fax  # TODO
+            # 'FAX': ,  # TODO: Fax
             'ADDRESS': contact.address_1,
             'ADDRESS2': contact.address_2,
             'CITY': contact.city,
             'STATE': contact.state,
-            # {STATEFULL}   Populates the State fully spelled out  # TODO
+            'STATEFULL': str(
+                next(
+                    name
+                    for code, name in US_STATES
+                    if code == contact.state
+                ),
+            ),
             'ZIP': contact.zip_code,
-            # {FULLADDRESS} Populates the Entire Address  # TODO
-            # {SSN}         Contact's Social Security Number  # TODO
-            # {ENCSSN}      Contact's Encrypted Social Security Number  # TODO
-            # {SSN1}        Digit from the contact's SSN  # TODO
-            # {SSN2}        Digit from the contact's SSN  # TODO
-            # {SSN3}        Digit from the contact's SSN  # TODO
-            # {SSN4}        Digit from the contact's SSN  # TODO
-            # {SSN5}        Digit from the contact's SSN  # TODO
-            # {SSN6}        Digit from the contact's SSN  # TODO
-            # {SSN7}        Digit from the contact's SSN  # TODO
-            # {SSN8}        Digit from the contact's SSN  # TODO
-            # {SSN9}        Digit from the contact's SSN  # TODO
-            'DOB': contact.birth_date,  # TODO: format
+            'FULLADDRESS': (
+                "{address_1}, {address_2}, {city} {state} {zip}".format(
+                    address_1=contact.address_1,
+                    address_2=contact.address_2,
+                    city=contact.city,
+                    state=contact.state,
+                    zip=contact.zip,
+                )
+            ),
+            'SSN': contact.identification,
+            # 'ENCSSN': ,  # TODO: Contact's Encrypted Social Security Number
+            'SSN1': contact.identification[0],
+            'SSN2': contact.identification[1],
+            'SSN3': contact.identification[2],
+            'SSN4': contact.identification[4],
+            'SSN5': contact.identification[5],
+            'SSN6': contact.identification[6],
+            'SSN7': contact.identification[8],
+            'SSN8': contact.identification[9],
+            'SSN9': contact.identification[10],
+            'DOB': str(contact.birth_date),
         }
 
-    def render(self, contact=default_contact()):
+    def render(
+        self,
+        extra_context={},
+        contact=default_contact(),
+    ):
         return HTML(
             string=render(
                 template=self.template_body,
                 context={
                     **self.contact_context(contact),
+                    **extra_context,
                 },
             ),
         ),
