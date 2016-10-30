@@ -1,3 +1,3 @@
-FROM elasticsearch:2.4.0
+FROM elasticsearch:5
 
-RUN plugin install royrusso/elasticsearch-HQ
+RUN elasticsearch-plugin install x-pack --batch

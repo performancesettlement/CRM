@@ -4,7 +4,7 @@ services:
 
   web:
     build:
-      context: .
+      context: "."
     restart: "always"
     env_file: ".env"
     links:
@@ -13,23 +13,24 @@ services:
       - "logstash"
 
   elasticsearch:
-    build: "services/elasticsearch"
+    build:
+      context: "services/elasticsearch"
     restart: "always"
     volumes:
       - "./data/elasticsearch/data:/usr/share/elasticsearch/data"
       - "./data/elasticsearch/log:/usr/share/elasticsearch/log"
 
   logstash:
-    image: "logstash"
+    build:
+      context: "services/logstash"
     restart: "always"
     links:
       - "elasticsearch"
-    command: "logstash -f /etc/logstash/conf.d/ --allow-env"
-    volumes:
-      - "./conf/logstash:/etc/logstash/conf.d"
+    command: "logstash -f /etc/logstash/conf.d/"
 
   kibana:
-    image: "kibana"
+    build:
+      context: "services/elasticsearch"
     restart: "always"
     links:
       - "elasticsearch"
