@@ -13,7 +13,6 @@ from django.utils.timezone import now
 
 from django_auth_app.utils import serialize_user
 from numpy import arange
-from sundog import services
 from sundog.cache.user.info import get_cache_user
 from sundog.constants import SHORT_DATE_FORMAT, FIXED_VALUES
 from sundog.decorators import bypass_impersonation_login_required
@@ -1742,19 +1741,6 @@ def edit_compensation_template(request, company_id, compensation_template_id):
 
 
 #######################################################################
-
-
-@bypass_impersonation_login_required
-def files_recent(request):
-    recent_files_list = services.get_access_file_history(request.user)
-    context_info = {'request': request, 'user': request.user, 'recent_files_list': recent_files_list}
-    return _render_response(request, context_info, 'file/recent_files.html')
-
-
-@bypass_impersonation_login_required
-def help(request):
-    context_info = {'request': request, 'user': request.user}
-    return _render_response(request, context_info, 'file/recent_files.html')
 
 
 def terms(request):
