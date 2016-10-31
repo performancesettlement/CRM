@@ -18,7 +18,7 @@ DATABASE_HOST = local_config.DATABASE_HOST
 DATABASE_PORT = local_config.DATABASE_PORT
 DATABASE_PASSWORD = local_config.DATABASE_PASSWORD
 
-INDEX_PAGE = '/account/login/'
+INDEX_PAGE = '/contacts'
 LOGIN_URL = '/account/login/'
 ADMIN_MEDIA_PREFIX = '/static/admin/'
 
