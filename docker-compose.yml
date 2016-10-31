@@ -26,7 +26,6 @@ services:
     restart: "always"
     links:
       - "elasticsearch"
-    command: "logstash -f /etc/logstash/conf.d/"
 
   kibana:
     build:
