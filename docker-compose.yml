@@ -30,7 +30,7 @@ services:
 
   kibana:
     build:
-      context: "services/elasticsearch"
+      context: "services/kibana"
     restart: "always"
     links:
       - "elasticsearch"
