@@ -75,7 +75,7 @@ $(document).ready(function() {
             var feeRows = '';
             for (var j = 0; j < fees.length; j++) {
                 var fee = fees[j];
-                feeRows += '<td>' + payment[fee.name] + '</td>';
+                feeRows += '<td class="fee" name="' + fee.name + '">' + payment[fee.name] + '</td>';
             }
             var row = '<tr class="payment">';
             row += '<td class="number">' + payment.order + '</td>';
@@ -277,9 +277,15 @@ $(document).ready(function() {
             var number = parseInt($(this).find('td.number').html());
             var date = $(this).find('td.date').html();
             var amount = $(this).find('td.amount').html().replace('$', '').replace(',', '');
-            formData.push({name: prefix + '-number', value: number});
-            formData.push({name: prefix + '-date', value: date});
-            formData.push({name: prefix + '-amount', value: amount});
+            var fees = $(this).find('td.fee');
+            var prefixStr = prefix + '-';
+            fees.each(function(){
+                var name = prefixStr + $(this).attr('name');
+                var value = $(this).html().replace('$', '').replace(',', '');
+                formData.push({'name': name, 'value': value});
+            });
+            formData.push({name: prefixStr + 'date', value: date});
+            formData.push({name: prefixStr + 'amount', value: amount});
             prefix++;
         });
 
@@ -291,8 +297,8 @@ $(document).ready(function() {
                 if (response.errors) {
                     showErrorPopup(response.errors);
                 }
-                if (response.result) {
-                    redirect(enrollmentsUrl);
+                if (response.result === 'Ok' && response.redirect_url) {
+                    redirect(response.redirect_url);
                 }
             }
         });

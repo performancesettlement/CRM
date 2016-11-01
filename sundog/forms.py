@@ -3,32 +3,10 @@ from django.contrib.auth.models import User
 from django.core.validators import validate_email
 from django.db.models import Q
 from django_auth_app import enums
-from sundog.models import (
-    AMOUNT_CHOICES,
-    BankAccount,
-    Call,
-    Campaign,
-    Contact,
-    Creditor,
-    Debt,
-    DebtNote,
-    DEBT_SETTLEMENT,
-    Email,
-    Enrollment,
-    EnrollmentPlan,
-    Expenses,
-    Fee,
-    FeePlan,
-    FeeProfile,
-    FeeProfileRule,
-    Incomes,
-    Note,
-    Source,
-    Stage,
-    Status,
-    Uploaded,
-    WorkflowSettings,
-)
+from sundog.models import Contact, Stage, Status, Campaign, Source, BankAccount, Note, Call,\
+    Email, DEBT_SETTLEMENT, Uploaded, Incomes, Expenses, Creditor, Debt, DebtNote, EnrollmentPlan, FeePlan, FeeProfile,\
+    FeeProfileRule, WorkflowSettings, Enrollment, Fee, AMOUNT_CHOICES, Payment, PAYMENT_TYPE_CHOICES
+
 from sundog import services
 from sundog.constants import (
     SHORT_DATE_FORMAT,
@@ -520,3 +498,24 @@ class FeeProfileRuleForm(forms.ModelForm):
         model = FeeProfileRule
         widgets = {}
         fields = '__all__'
+
+
+class PaymentForm(forms.ModelForm):
+    date = forms.DateField(required=True,
+                           widget=forms.DateInput(format=SHORT_DATE_FORMAT,
+                                                  attrs={'placeholder': 'mm/dd/yyyy',
+                                                         'data-provide': 'datepicker',
+                                                         'class': 'col-xs-8 no-padding-sides'}))
+
+    class Meta:
+        model = Payment
+        widgets = {
+            'active': forms.CheckboxInput(attrs={'style': 'height: 18px !important;'}),
+            'type': forms.Select(choices=PAYMENT_TYPE_CHOICES, attrs={'class': 'col-xs-8 no-padding-sides'}),
+            'sub_type': forms.Select(attrs={'class': 'col-xs-8 no-padding-sides'}),
+            'amount': forms.NumberInput(attrs={'class': 'col-xs-8 no-padding-sides'}),
+            'memo': forms.Select(attrs={'class': 'col-xs-8 no-padding-sides'}),
+            'action': forms.Select(attrs={'class': 'col-xs-8 no-padding-sides'}),
+        }
+        exclude = ['created_at']
+

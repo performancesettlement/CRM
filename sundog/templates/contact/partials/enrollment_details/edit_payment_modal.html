@@ -1,0 +1,48 @@
+<div class="modal fade" id="edit-payment" tabindex="-1" role="dialog" aria-labelledby="edit-payment-label">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="edit-payment-label">Edit Payment</h4>
+            </div>
+            <div class="row modal-body">
+                <form id="edit-payment-form" class="form" action="{% url 'edit_payment' contact_id=contact.contact_id %}" method="post">
+                    {% csrf_token %}
+                    <input id="id_payment_id" name="payment_id" type="hidden">
+                    <div class="col-xs-12 form-group m-b-xs no-padding">
+                        <label class="col-xs-4 no-padding-sides"> Active </label>
+                        {{ form_edit_payment.active }}
+                    </div>
+                    <div class="col-xs-12 form-group m-b-xs no-padding">
+                        <label class="col-xs-4 no-padding-sides"> Type </label>
+                        {{ form_edit_payment.type }}
+                    </div>
+                    <div class="col-xs-12 form-group m-b-xs no-padding">
+                        <label class="col-xs-4 no-padding-sides"> Sub Type </label>
+                        {{ form_edit_payment.sub_type }}
+                    </div>
+                    <div class="col-xs-12 form-group m-b-xs no-padding">
+                        <label class="col-xs-4 no-padding-sides"> Process Date </label>
+                        {{ form_edit_payment.date }}
+                    </div>
+                    <div class="col-xs-12 form-group m-b-xs no-padding">
+                        <label class="col-xs-4 no-padding-sides"> Amount </label>
+                        {{ form_edit_payment.amount }}
+                    </div>
+                    <div class="col-xs-12 form-group m-b-xs no-padding">
+                        <label class="col-xs-4 no-padding-sides"> Memo </label>
+                        {{ form_edit_payment.memo }}
+                    </div>
+                    <div class="col-xs-12 form-group m-b-xs no-padding">
+                        <label class="col-xs-4 no-padding-sides"> Action </label>
+                        {{ form_edit_payment.action }}
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="edit-payment-submit" type="button" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+</div>

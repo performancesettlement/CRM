@@ -558,7 +558,7 @@ class Enrollment(models.Model):
 
     def __init__(self, *args, **kwargs):
         super(Enrollment, self).__init__(*args, **kwargs)
-        for custodial_choice in E_SIGNED_STATUS_CHOICES:
+        for custodial_choice in CUSTODIAL_ACCOUNT_CHOICES:
             if custodial_choice[0] == self.custodial_account:
                 self.custodial_account_label = custodial_choice[1]
                 break
@@ -575,15 +575,36 @@ class Enrollment(models.Model):
     def payments_made(self):
         payments_count = 0
         for payment in list(self.payments.all()):
-            if payment.status == 'cleared':
+            if payment.charge_type == 'payment' and payment.status == 'cleared':
                 payments_count += 1
         return payments_count
+
+    def payments_count(self):
+        count = 0
+        for payment in list(self.payments.all()):
+            if payment.charge_type == 'payment':
+                count += 1
+        return count
 
     def total_payment(self):
         total = Decimal('0.00')
         for payment in list(self.payments.all()):
-            total += payment.amount
+                total += payment.amount
         return total
+
+    def fees_made(self):
+        payments_count = 0
+        for payment in list(self.payments.all()):
+            if payment.charge_type == 'fee' and payment.status == 'cleared':
+                payments_count += 1
+        return payments_count
+
+    def fees_count(self):
+        count = 0
+        for payment in list(self.payments.all()):
+            if payment.charge_type == 'fee':
+                count += 1
+        return count
 
     def balance(self):
         # TODO: implement logic.
@@ -623,19 +644,99 @@ class BankAccount(models.Model):
         return self.bank_name and self.name_on_account and self.account_number and self.account_type and self.routing_number
 
 
+MEMO_CHOICES = (
+    (None, '--Select--'),
+    ('deferred_fees', 'Deferred Fees'),
+    ('graduation_refund', 'Graduation Refund'),
+    ('litigation_defense_fee', 'Litigation Defense Fee'),
+    ('nsf_reschedule', 'NSF Reschedule'),
+    ('recoop_transfer', 'Recoop of Transfer'),
+    ('skip_reschedule', 'Skip Reschedule'),
+    ('transfer', 'Transfer (will re-coop)'),
+    ('transfer_refund', 'Transfer - Client/Creditor Refund'),
+    ('webcorp_receivables', 'Webcorp Receivables'),
+)
+
+ACTION_CHOICES = (
+    (None, '--Select--'),
+    ('schedule_transaction', 'Schedule Transaction'),
+)
+
+PAYMENT_TYPE_CHOICES = (
+    (None, '--Select--'),
+    ('Earned Performance Fee', 'Earned Performance Fee'),
+    ('Retained Performance Fee', 'Retained Performance Fee'),
+    ('Client Refund', 'Client Refund'),
+    ('Account Transfer', 'Account Transfer'),
+    ('Check Payment', 'Check Payment'),
+    ('Balance Transfer', 'Balance Transfer'),
+)
+
+PAYMENT_SUB_TYPE_CHOICES = (
+    (None, '--Select--'),
+    ('advance_recoup', 'Advance Recoup'),
+    ('Bank_wire', 'Bank Wire'),
+    ('check', 'Check'),
+    ('check_2nd_day', 'Check 2nd Day'),
+    ('check_overnight', 'Check Overnight'),
+    ('direct_pay', 'DirectPay'),
+    ('standard_check', 'Standard Check'),
+    ('stop_payment_fee', 'Stop Payment Fee'),
+)
+
+
+PAYMENT_STATUS_CHOICES = (
+    ('open', 'Open'),
+    ('cleared', 'Cleared'),
+)
+
+PAYMENT_TRANSACTION_TYPE_CHOICES = (
+    ('debit', 'Debit'),
+    ('credit', 'Credit'),
+)
+
+PAYMENT_CHARGE_TYPE_CHOICES = (
+    ('fee', 'Fee'),
+    ('payment', 'Payment'),
+)
+
+
 class Payment(models.Model):
+    active = models.BooleanField(default=True)
     payment_id = models.AutoField(primary_key=True)
     enrollment = models.ForeignKey(Enrollment, related_name='payments', blank=True, null=True)
-    number = models.PositiveSmallIntegerField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     date = models.DateTimeField(blank=True, null=True)
     cleared_date = models.DateTimeField(blank=True, null=True)
     amount = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
     type = models.CharField(max_length=40, blank=True, null=True)
-    memo = models.CharField(max_length=200, blank=True, null=True)
+    sub_type = models.CharField(max_length=40, choices=PAYMENT_SUB_TYPE_CHOICES, blank=True, null=True)
+    memo = models.CharField(max_length=30, choices=MEMO_CHOICES, blank=True, null=True)
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES, blank=True, null=True)
     trans_id = models.CharField(max_length=20, blank=True, null=True)
     payee = models.ForeignKey(Company, related_name='payments', blank=True, null=True)
-    status = models.CharField(max_length=20, blank=True, null=True)
+    status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, blank=True, null=True)
+    transaction_type = models.CharField(max_length=10, choices=PAYMENT_TRANSACTION_TYPE_CHOICES, blank=True, null=True)
+    charge_type = models.CharField(max_length=10, choices=PAYMENT_CHARGE_TYPE_CHOICES, default='payment')
+    related_payment = models.ForeignKey('self', related_name='parent_payment', blank=True, null=True)
+
+    class Meta:
+        ordering = ['date']
+
+    def __init__(self, *args, **kwargs):
+        super(Payment, self).__init__(*args, **kwargs)
+        for type_choice in PAYMENT_TYPE_CHOICES:
+            if type_choice[0] == self.type:
+                self.type_label = type_choice[1]
+                break
+        for memo_choice in MEMO_CHOICES:
+            if memo_choice[0] == self.memo:
+                self.memo_label = memo_choice[1]
+                break
+        for status_choice in PAYMENT_STATUS_CHOICES:
+            if status_choice[0] == self.status:
+                self.status_label = status_choice[1]
+                break
 
 
 ACTIVITY_TYPE_CHOICES = (
@@ -1126,7 +1227,7 @@ DEBT_ACCOUNT_TYPE_CHOICES = (
 )
 
 DEBT_ACCOUNT_EST_SETT = {
-    'difficult_creditor': Decimal('60'),
+    'difficult_creditor': Decimal('65'),
     'payday_loan': Decimal('40'),
     'standard': Decimal('40'),
 }

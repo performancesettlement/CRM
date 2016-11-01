@@ -218,13 +218,19 @@ def get_payments_data(data, starting_index=3):
         payment_data = get_data(prefix, data)
         if payment_data:
             found = True
-            number = payment_data[prefix + '-number']
             date = datetime.strptime(
-                payment_data[prefix + '-date'],
+                payment_data.pop(prefix + '-date'),
                 SHORT_DATE_FORMAT
             )
-            amount = Decimal(payment_data[prefix + '-amount'])
-            payment = {'number': number, 'date': date, 'amount': amount}
+            amount = Decimal(payment_data.pop(prefix + '-amount'))
+            payment = {
+                'date': date,
+                'amount': amount
+            }
+            for key, value in payment_data.items():
+                fee_name = key.replace(prefix + '-', '')
+                fee_value = Decimal(value)
+                payment[fee_name] = fee_value
             payments.append(payment)
             index += 1
     return payments

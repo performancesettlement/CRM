@@ -17,14 +17,17 @@
             </ol>
         </div>
     </div>
-    <div id="totals" class="col-xs-12 border p-xs">
+    <div class="col-xs-12 m-t-md">
+        <button class="btn btn-primary" data-toggle="modal" data-target="#add-payment">Add Payment</button>
+    </div>
+    <div id="totals" class="col-xs-12 border p-xs m-t-md">
         <div class="inline m-r-md">
             <div class="m-b-xs font-bold">Gateway</div>
             <div id="total-debt" class="blue font-medium font-bold">{{ enrollment.custodial_account_label }}</div>
         </div>
         <div class="inline m-r-md">
             <div class="m-b-xs font-bold">Payments</div>
-            <div id="est-sett-dollars" class="blue font-medium font-bold">{{ enrollment.payments_made }}/{{ payments|length }}</div>
+            <div id="est-sett-dollars" class="blue font-medium font-bold">{{ enrollment.payments_made }}/{{ enrollment.payments_count }}</div>
         </div>
         <div class="inline m-r-md">
             <div class="m-b-xs font-bold">Client Balance</div>
@@ -40,7 +43,7 @@
         </div>
         <div class="inline m-r-md">
             <div class="m-b-xs font-bold">Sett Commit</div>
-            <div id="total-fees" class="blue font-medium font-bold">{{ enrollment.total_payment }}</div>
+            <div id="total-fees" class="blue font-medium font-bold">{{ enrollment.total_payment|currency }}</div>
         </div>
         <div class="inline m-r-md">
             <div class="m-b-xs font-bold">Total Fee's Paid</div>
@@ -48,14 +51,14 @@
         </div>
         <div class="inline m-r-md">
             <div class="m-b-xs font-bold">Fees Taken</div>
-            <div id="total-fees" class="blue font-medium font-bold">0/0</div>
+            <div id="total-fees" class="blue font-medium font-bold">{{ enrollment.fees_made }}/{{ enrollment.fees_count }}</div>
         </div>
         <div class="inline m-r-md">
             <div class="m-b-xs font-bold">Returns</div>
             <div id="total-fees" class="blue font-medium font-bold">0</div>
         </div>
     </div>
-    <div class="col-xs-12">
+    <div class="col-xs-12 no-padding-sides m-t-md">
         <table id="debts-table" class="table table-hover">
             <thead>
                 <tr>
@@ -69,27 +72,36 @@
                     <th>Memo</th>
                     <th>Payee</th>
                     <th>Status</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
             {% for payment in payments %}
                 <tr id="{{ payment.payment_id }}">
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
+                    <td class="active"><span class="glyphicon glyphicon-asterisk {% if payment.active %}green{% else %}red{% endif %}"></span></td>
+                    <td><span class="glyphicon glyphicon-asterisk {% if payment.cleared_date %}green{% else %}orange{% endif %}"></span></td>
+                    <td class="date">{{ payment.date|date:'SHORT_DATE_FORMAT' }}</td>
+                    <td>{% if payment.cleared_date %}{{ payment.cleared_date|date:'SHORT_DATE_FORMAT' }}{% endif %}</td>
+                    <td class="amount" val="{% if payment.amount %}{{ payment.amount }}{% endif %}">{{ payment.amount|currency }}</td>
+                    <td class="type" val="{% if payment.type %}{{ payment.type }}{% endif %}">{% if payment.type %}{{ payment.type_label }}{% endif %}</td>
+                    <td class="hidden sub_type">{% if payment.sub_type %}{{ payment.sub_type }}{% endif %}</td>
+                    <td class="hidden action">{% if payment.action %}{{ payment.action }}{% endif %}</td>
+                    <td>{% if payment.trans_id %}{{ payment.trans_id }}{% endif %}</td>
+                    <td class="memo" val="{% if payment.memo %}{{ payment.memo }}{% endif %}">{% if payment.memo %}{{ payment.memo_label }}{% endif %}</td>
+                    <td>{% if payment.payee %}{{ payment.payee }}{% endif %}</td>
+                    <td>{% if payment.status %}{{ payment.status_label }}{% endif %}</td>
+                    <td><a href="" class="edit-payment"><span class="glyphicon glyphicon-edit"></span></a></td>
                 </tr>
             {% endfor %}
             </tbody>
         </table>
     </div>
+    <div id="modals">
+        {% include "contact/partials/enrollment_details/add_payment_modal.html" %}
+        {% include "contact/partials/enrollment_details/edit_payment_modal.html" %}
+    </div>
 
+    <script src="{% static "js/plugins/datapicker/bootstrap-datepicker.js" %}"></script>
     <script src="{% static "js/contact/enrollment_details.js" %}"></script>
 
 {% endblock %}

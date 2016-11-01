@@ -3823,6 +3823,9 @@ table.table-mail tr td {
 .red {
     color: #ed5565;
 }
+.orange {
+    color: orange;
+}
 .black-bg {
   background-color: #262626;
 }

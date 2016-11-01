@@ -102,11 +102,18 @@ function refreshScreen() {
     redirect(window.location);
 }
 
+
 function tinymce_setup(editor) {
-  editor.on(
-    'change',
-    function() {
-      editor.save();
+    editor.on(
+        'change',
+        function () {
+            editor.save();
+        }
+    );
+}
+
+function handleErrors(response) {
+    if (response.errors) {
+        showErrorPopup(response.errors);
     }
-  );
 }
