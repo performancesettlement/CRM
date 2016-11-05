@@ -1,10 +1,13 @@
+from datatableview.columns import CompoundColumn, DisplayColumn, TextColumn
 from datatableview.views import XEditableDatatableView
 from datetime import datetime, timedelta
 from decimal import Decimal
 from django.db.models import CharField
 from django.db.models.fields import BLANK_CHOICE_DASH
-from django.http import Http404
+from django.http import Http404, HttpResponse
+from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+from django.views.generic.detail import BaseDetailView
 from django_auth_app.services import get_user_timezone
 from sundog.constants import SHORT_DATE_FORMAT
 
@@ -251,6 +254,71 @@ def get_next_work_date(date):
     if week_day in [5, 6]:
         date += timedelta(days=7 - week_day)
     return date
+
+
+def format_column(label, template, fields):
+    return CompoundColumn(
+        label,
+        sources=[
+            TextColumn(source=field)
+            for field in fields
+        ],
+        processor=(
+            lambda *args, **kwargs: template.format(
+                **{
+                    field: values.get(field, '')
+                    for values in [
+                        dict(
+                            zip(
+                                fields,
+                                kwargs.get('default_value', []),
+                            ),
+                        ),
+                    ]
+                    for field in fields
+                },
+            )
+        ),
+    )
+
+
+def template_column(
+    label,
+    template_name,
+    context={},
+    context_builder=const({}),
+):
+    return DisplayColumn(
+        label=label,
+        processor=(
+            lambda instance, *args, **kwargs:
+                render_to_string(
+                    template_name=template_name,
+                    context={
+                        'instance': instance,
+                        'args': args,
+                        'kwargs': kwargs,
+                        **context,
+                        **context_builder(
+                            instance=instance,
+                            context=context,
+                            label=label,
+                            template_name=template_name,
+                            *args,
+                            **kwargs,
+                        ),
+                    },
+                )
+        ),
+    )
+
+
+class PDFView(BaseDetailView):
+    def render_to_response(self, context):
+        return HttpResponse(
+            content=self.object.render(context).write_pdf(),
+            content_type='application/pdf',
+        )
 
 
 class SundogDatatableView(XEditableDatatableView):
