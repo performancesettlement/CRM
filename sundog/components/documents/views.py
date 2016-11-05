@@ -10,8 +10,9 @@ from django.template.loader import render_to_string
 from django.views.generic.edit import UpdateView
 from fm.views import AjaxCreateView, AjaxDeleteView, AjaxUpdateView
 from settings import SHORT_DATETIME_FORMAT
-from sundog.routing import decorate_view, route
 from sundog.components.documents.models import Document
+from sundog.routing import decorate_view, route
+from sundog.utils import PDFView, format_column, template_column
 
 
 class DocumentsCRUDViewMixin:
@@ -66,43 +67,18 @@ class DocumentsList(DocumentsCRUDViewMixin, XEditableDatatableView):
 
     class datatable_class(Datatable):
 
-        actions = DisplayColumn(
+        actions = template_column(
             label='Actions',
-            processor=(
-                lambda instance, *_, **__:
-                    render_to_string(
-                        template_name='sundog/documents/list/actions.html',
-                        context={
-                            'document_id': instance.id,
-                            'document_title': instance.title,
-                        },
-                    )
-            ),
+            template_name='sundog/documents/list/actions.html',
         )
 
-        created_by_full_name = CompoundColumn(
-            'Created by',
-            sources=[
-                TextColumn(source='created_by__first_name'),
-                TextColumn(source='created_by__last_name'),
+        created_by_full_name = format_column(
+            label='Created by',
+            template='{created_by__first_name} {created_by__last_name}',
+            fields=[
+                'created_by__first_name',
+                'created_by__last_name',
             ],
-            processor=(
-                lambda *args, **kwargs: (
-                    [
-                        '{first_name} {last_name}'
-                        .format(**locals())
-                        for names in [
-                            dict(
-                                enumerate(
-                                    kwargs.get('default_value', [])
-                                )
-                            )
-                        ]
-                        for first_name in [names.get(0, '')]
-                        for last_name in [names.get(1, '')]
-                    ] or ['']
-                )[0]
-            ),
         )
 
         class Meta:
@@ -137,6 +113,7 @@ class DocumentsAJAXFormMixin(DocumentsCRUDViewMixin):
 
 
 @route(r'^documents/add/ajax/?$', name='documents.add.ajax')
+@decorate_view(login_required)
 class DocumentsAddAJAX(DocumentsAJAXFormMixin, AjaxCreateView):
 
     def form_valid(self, form):
@@ -164,15 +141,5 @@ class DocumentsDeleteAJAX(DocumentsAJAXFormMixin, AjaxDeleteView):
 
 @route(r'^documents/(?P<pk>\d+)/preview/pdf/?$', name='documents.preview.pdf')
 @decorate_view(login_required)
-class DocumentsPreviewPDF(DocumentsCRUDViewMixin, View):
-    def get(self, request, *args, **kwargs):
-        return HttpResponse(
-            content=(
-                Document
-                .objects
-                .get(pk=kwargs['pk'])
-                .render()
-                .write_pdf()
-            ),
-            content_type='application/pdf',
-        )
+class DocumentsPreviewPDF(DocumentsCRUDViewMixin, PDFView):
+    pass

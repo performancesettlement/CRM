@@ -3,19 +3,28 @@
   <a
     class="documents-delete fm-delete"
     data-fm-callback="reload"
-    data-fm-head="Delete this document?  {{ document_title }}"
-    href="{% url "documents.delete.ajax" pk=document_id %}"
-    id="{{ document_id }}-delete-document"
+    data-fm-head="Delete this document?  {{ instance.title }}"
+    href="{% url "documents.delete.ajax" pk=instance.pk %}"
+    id="{{ instance.pk }}-delete-document"
   >
     <span title="Delete document" class="table-action glyphicon glyphicon-remove"></span>
   </a>
 
   <a
+    class="documents-preview"
+    href="{% url "documents.preview.pdf" pk=instance.pk %}"
+    id="{{ instance.pk }}-preview-document"
+    target="_blank"
+  >
+    <span title="Preview document" class="table-action glyphicon glyphicon-eye-open"></span>
+  </a>
+
+  <a
     class="documents-edit fm-update"
     data-fm-callback="reload"
-    data-fm-head="Editing document: {{ document_title }}"
-    href="{% url "documents.edit.ajax" pk=document_id %}"
-    id="{{ document_id }}-edit-document"
+    data-fm-head="Editing document: {{ instance.title }}"
+    href="{% url "documents.edit.ajax" pk=instance.pk %}"
+    id="{{ instance.pk }}-edit-document"
   >
     <span title="Edit document" class="table-action glyphicon glyphicon-arrow-right"></span>
   </a>

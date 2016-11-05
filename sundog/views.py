@@ -88,7 +88,7 @@ def contact_dashboard(request, contact_id):
     form_incomes = IncomesForm(contact)
     form_debt_note = DebtNoteForm()
     e_signed_docs = list(contact.e_signed_docs.all())
-    generated_docs = list(contact.generated_docs.all())
+    generated_documents = list(contact.generated_documents.all())
     uploaded_docs = list(contact.uploaded_docs.all())
     enrolled_debts = contact.contact_debts.filter(enrolled=True)
     not_enrolled_debts = contact.contact_debts.filter(enrolled=False)
@@ -107,7 +107,7 @@ def contact_dashboard(request, contact_id):
         'form_debt_note': form_debt_note,
         'activities': activities,
         'e_signed_docs': e_signed_docs,
-        'generated_docs': generated_docs,
+        'generated_documents': generated_documents,
         'uploaded_docs': uploaded_docs,
         'enrolled_debts': enrolled_debts,
         'not_enrolled_debts': not_enrolled_debts,

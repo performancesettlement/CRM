@@ -4,7 +4,7 @@
         <h3 style="margin-top: 8px;">Client Documents</h3>
     </div>
     <div class="pull-right inline">
-        <a href="" class="btn btn-primary inline m-r-xs">Generated PDF</a>
+        <a href="{% url "contacts.generated_documents" contact_id=contact.pk %}" class="btn btn-primary inline m-r-xs">Generate documents</a>
         <a href="" class="btn btn-primary inline" data-toggle="modal" data-target="#upload-file">Upload Files</a>
     </div>
 </div>
@@ -20,7 +20,7 @@
         </tr>
         </thead>
         <tbody>
-        {% for doc in generated_docs %}
+        {% for doc in generated_documents %}
             <tr>
                 <td>{{ doc.title }}</td>
                 <td>{{ doc.created_at|date:'SHORT_DATETIME_FORMAT' }}</td>
@@ -32,7 +32,7 @@
                 </td>
             </tr>
         {% endfor %}
-        <tr class="empty-table text-center" {% if generated_docs %}style="display:none;"{% endif %}>
+        <tr class="empty-table text-center" {% if generated_documents %}style="display:none;"{% endif %}>
             <td colspan="12"><strong>No generated files yet</strong></td>
         </tr>
         </tbody>

@@ -1,27 +1,27 @@
 <span class="text-nowrap">
 
   <a
-    id="{{ contact_id }}-edit-contact-status"
-    href="{% url "edit_contact_status" contact_id=contact_id %}"
+    id="{{ instance.pk }}-edit-contact-status"
+    href="{% url "edit_contact_status" contact_id=instance.pk %}"
     class="edit-contact-status"
   >
-    <span title="Edit Status" class="table-action glyphicon glyphicon-th"></span>
+    <span title="Edit Status" class="glyphicon glyphicon-th"></span>
   </a>
 
   <a
-    id="{{ contact_id }}-edit-contact-info"
-    href="{% url "edit_contact" contact_id=contact_id %}"
+    id="{{ instance.pk }}-edit-contact-info"
+    href="{% url "edit_contact" contact_id=instance.pk %}"
     class="edit-contact-info"
   >
-    <span title="Edit Info" class="table-action glyphicon glyphicon-edit"></span>
+    <span title="Edit Info" class="glyphicon glyphicon-edit"></span>
   </a>
 
   <a
-    id="{{ contact_id }}-contact-dashboard"
-    href="{% url "contact_dashboard" contact_id=contact_id %}"
+    id="{{ instance.pk }}-contact-dashboard"
+    href="{% url "contact_dashboard" contact_id=instance.pk %}"
     class="contact-dashboard"
   >
-    <span title="Dashboard" class="table-action glyphicon glyphicon-arrow-right"></span>
+    <span title="Dashboard" class="glyphicon glyphicon-arrow-right"></span>
   </a>
 
 </span>

@@ -6,6 +6,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.urls import reverse
 from django.utils.timezone import now
 from django_auth_app import enums
 from numpy import arange
@@ -345,6 +346,14 @@ class Contact(models.Model):
 
     def __str__(self):
         return '%s' % self.first_name
+
+    def get_absolute_url(self):
+        return reverse(
+            viewname='contact_dashboard',
+            kwargs={
+                'contact_id': self.pk,
+            },
+        )
 
     def available_monthly(self):
         incomes = list(self.incomes.all())
@@ -991,27 +1000,6 @@ def add_note_activity(sender, instance, **kwargs):
     activity = Activity(
         contact=instance.contact, type='note', description=instance.description, created_by=instance.created_by)
     activity.save()
-
-
-def generated_content_filename(instance, filename):
-    return '{base}generated/{identifier}/{filename}'.format(
-        base=MEDIA_PRIVATE,
-        identifier=instance.contact.contact_id,
-        filename=filename,
-    )
-
-
-class Generated(models.Model):
-    generated_id = models.AutoField(primary_key=True)
-    contact = models.ForeignKey(Contact, related_name='generated_docs', blank=True, null=True)
-    title = models.CharField(max_length=300)
-    content = S3PrivateFileField(upload_to=generated_content_filename)
-    mime_type = models.CharField(max_length=100, blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
-    created_by = models.ForeignKey(User, related_name='generated_files', blank=True, null=True)
-
-    def get_absolute_url(self):
-        return self.content.url
 
 
 E_SIGNED_STATUS_CHOICES = (
