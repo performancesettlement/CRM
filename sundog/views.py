@@ -64,10 +64,21 @@ def index(request):
 
 @login_required
 def contact_dashboard(request, contact_id):
-    contact = Contact.objects.prefetch_related('contact_debts').get(contact_id=contact_id)
-    bank_account = contact.bank_account.all() if contact else None
-    bank_account = bank_account[0] if bank_account else None
-    form_bank_account = BankAccountForm(instance=bank_account)
+    contact = (
+        Contact
+        .objects
+        .prefetch_related('contact_debts')
+        .get(
+            contact_id=contact_id,
+        )
+    )
+    form_bank_account = BankAccountForm(
+        instance=(
+            contact.bank_account
+            if hasattr(contact, 'bank_account')
+            else None
+        ),
+    )
     form_bank_account.fields['contact'].initial = contact
     form_note = NoteForm(contact, request.user)
     form_call = CallForm(contact, request.user)
@@ -566,12 +577,14 @@ def get_stage_statuses(request):
 def edit_bank_account(request, contact_id):
     if request.method == 'POST' and request.POST:
         contact = Contact.objects.get(contact_id=contact_id)
-        bank_account = contact.bank_account.all() if contact else None
-        bank_account = bank_account[0] if bank_account else None
-        if bank_account:
-            form = BankAccountForm(request.POST, instance=bank_account)
-        else:
-            form = BankAccountForm(request.POST)
+        form = BankAccountForm(
+            request.POST,
+            instance=(
+                contact.bank_account
+                if hasattr(contact, 'bank_account')
+                else None
+            ),
+        )
         if form.is_valid():
             form.save()
             response = {'result': 'Ok'}

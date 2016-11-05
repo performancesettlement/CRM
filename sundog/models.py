@@ -710,8 +710,7 @@ class SettlementOffer(models.Model):
 
 
 class BankAccount(models.Model):
-    bank_account_id = models.AutoField(primary_key=True)
-    contact = models.ForeignKey(Contact, related_name='bank_account', blank=True, null=True)
+    contact = models.OneToOneField(Contact, related_name='bank_account', primary_key=True)
     routing_number = models.CharField(max_length=20)
     account_number = models.CharField(max_length=30)
     account_type = models.CharField(max_length=10, choices=ACCOUNT_TYPE_CHOICES)
