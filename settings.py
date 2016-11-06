@@ -48,6 +48,7 @@ INSTALLED_APPS = (
     'crispy_forms',
     'datatableview',
     'django_bootstrap_breadcrumbs',
+    'django_cleanup',
     'django_s3_storage',
     'fm',
     'multiselectfield',

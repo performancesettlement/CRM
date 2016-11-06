@@ -10,6 +10,7 @@ django-allauth==0.27.0
 django-appconf==1.0.2
 django-avatar==3.1.0
 django-bootstrap-breadcrumbs==0.8
+django-cleanup==0.4.2
 django-colorfield==0.1.10
 django-colorful==1.2
 django-compressor==2.1
