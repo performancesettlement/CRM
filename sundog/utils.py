@@ -94,8 +94,23 @@ def get_data(prefix, post_data):
     return data
 
 
-def const(x, *_, **__):
-    return lambda *_, **__: x
+def const(value, *_, **__):
+    return lambda *_, **__: value
+
+
+def catching(computation, exception, catcher):
+    try:
+        return computation()
+    except exception as e:
+        return catcher(e)
+
+
+def default(computation, value):
+    return catching(
+        computation=computation,
+        exception=Exception,
+        catcher=const(value),
+    )
 
 
 # From https://djangosnippets.org/snippets/2328/

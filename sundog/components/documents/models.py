@@ -13,8 +13,8 @@ from multiselectfield import MultiSelectField
 from pystache import render
 from settings import MEDIA_PRIVATE
 from sundog.media import S3PrivateFileField
-from sundog.models import Contact, NONE_CHOICE_LABEL
-from sundog.utils import LongCharField
+from sundog.models import ACCOUNT_TYPE_CHOICES, Contact, NONE_CHOICE_LABEL
+from sundog.utils import LongCharField, default
 from tinymce.models import HTMLField
 from weasyprint import HTML
 
@@ -48,8 +48,9 @@ default_contact = Contact(
     state='IL',
     zip_code='60101',
     residential_status='home_owner',
-    co_applicant_address='321 Fake St.',
-    co_applicant_city='APT 2',
+    co_applicant_address_1='321 Fake St.',
+    co_applicant_address_2='APT 2',
+    co_applicant_city='Newport',
     co_applicant_state='CA',
     co_applicant_zip_code='60103',
     employer='Testing Employer, Inc',
@@ -64,8 +65,8 @@ default_contact = Contact(
     co_applicant_work_phone='8883331234',
     hardships='loss_of_employment',
     hardship_description=(
-        'I was involved in a major car accident and had to take 3 '
-        'months off of work'
+        'I was involved in a major car accident and had to take 3 months off of'
+        ' work'
     ),
     special_note_1='Test note 1',
     special_note_2='Test note 2',
@@ -90,27 +91,34 @@ default_contact = Contact(
 
 
 def contact_context(contact=default_contact):
+    def d(f):
+        default(f, '')
+
     return {
+        # Contact identification:
         'ID': contact.pk,
+        'CUSTOMERID': contact.pk,
+
+        # Applicant information:
         'FIRSTNAME': contact.first_name,
         'LASTNAME': contact.last_name,
         'MIDDLENAME': contact.middle_name,
         'FULLNAME': "{first_name} {last_name}".format(
-            first_name=contact.first_name,
-            last_name=contact.last_name,
+            first_name=contact.first_name or '',
+            last_name=contact.last_name or '',
         ),
         'PHONE': contact.phone_number,
-        'HOMEPHONE_AREA': contact.phone_number and contact.phone_number[0:2],
-        'HOMEPHONE_PRE': contact.phone_number and contact.phone_number[3:5],
-        'HOMEPHONE_SUFF': contact.phone_number and contact.phone_number[6:],
+        'HOMEPHONE_AREA': d(lambda: contact.phone_number[0:2]),
+        'HOMEPHONE_PRE': d(lambda: contact.phone_number[3:5]),
+        'HOMEPHONE_SUFF': d(lambda: contact.phone_number[6:]),
         'PHONE2': contact.work_phone,
-        'WORKPHONE_AREA': contact.work_phone and contact.work_phone[0:2],
-        'WORKPHONE_PRE': contact.work_phone and contact.work_phone[3:5],
-        'WORKPHONE_SUFF': contact.work_phone and contact.work_phone[6:],
+        'WORKPHONE_AREA': d(lambda: contact.work_phone[0:2]),
+        'WORKPHONE_PRE': d(lambda: contact.work_phone[3:5]),
+        'WORKPHONE_SUFF': d(lambda: contact.work_phone[6:]),
         'PHONE3': contact.mobile_number,
-        'CELLPHONE_AREA': contact.mobile_number and contact.mobile_number[0:2],
-        'CELLPHONE_PRE': contact.mobile_number and contact.mobile_number[3:5],
-        'CELLPHONE_SUFF': contact.mobile_number and contact.mobile_number[6:],
+        'CELLPHONE_AREA': d(lambda: contact.mobile_number[0:2]),
+        'CELLPHONE_PRE': d(lambda: contact.mobile_number[3:5]),
+        'CELLPHONE_SUFF': d(lambda: contact.mobile_number[6:]),
         'EMAIL': contact.email,
         # 'FAX': ,  # TODO: Fax
         'ADDRESS': contact.address_1,
@@ -130,25 +138,107 @@ def contact_context(contact=default_contact):
         'ZIP': contact.zip_code,
         'FULLADDRESS': (
             "{address_1}, {address_2}, {city} {state} {zip_code}".format(
-                address_1=contact.address_1,
-                address_2=contact.address_2,
-                city=contact.city,
-                state=contact.state,
-                zip_code=contact.zip_code,
+                address_1=contact.address_1 or '',
+                address_2=contact.address_2 or '',
+                city=contact.city or '',
+                state=contact.state or '',
+                zip_code=contact.zip_code or '',
             )
         ),
         'SSN': contact.identification,
         # 'ENCSSN': ,  # TODO: Contact's Encrypted Social Security Number
-        'SSN1': contact.identification and contact.identification[0],
-        'SSN2': contact.identification and contact.identification[1],
-        'SSN3': contact.identification and contact.identification[2],
-        'SSN4': contact.identification and contact.identification[4],
-        'SSN5': contact.identification and contact.identification[5],
-        'SSN6': contact.identification and contact.identification[6],
-        'SSN7': contact.identification and contact.identification[8],
-        'SSN8': contact.identification and contact.identification[9],
-        'SSN9': contact.identification and contact.identification[10],
+        'SSN1': d(lambda: contact.identification[0]),
+        'SSN2': d(lambda: contact.identification[1]),
+        'SSN3': d(lambda: contact.identification[2]),
+        'SSN4': d(lambda: contact.identification[4]),
+        'SSN5': d(lambda: contact.identification[5]),
+        'SSN6': d(lambda: contact.identification[6]),
+        'SSN7': d(lambda: contact.identification[8]),
+        'SSN8': d(lambda: contact.identification[9]),
+        'SSN9': d(lambda: contact.identification[10]),
         'DOB': str(contact.birth_date),
+
+        # Co-applicant information:
+        'COFIRSTNAME': contact.co_applicant_first_name,
+        'COLASTNAME': contact.co_applicant_last_name,
+        'COMIDDLENAME': contact.co_applicant_middle_name,
+        'COFULLNAME': "{first_name} {last_name}".format(
+            first_name=contact.co_applicant_first_name,
+            last_name=contact.co_applicant_last_name,
+        ),
+        'COPHONE': contact.co_applicant_phone_number,
+        'COHOMEPHONE_AREA': d(lambda: contact.co_applicant_phone_number[0:2]),
+        'COHOMEPHONE_PRE': d(lambda: contact.co_applicant_phone_number[3:5]),
+        'COHOMEPHONE_SUFF': d(lambda: contact.co_applicant_phone_number[6:]),
+        'COPHONE2': contact.co_applicant_work_phone,
+        'COWORKPHONE_AREA': d(lambda: contact.co_applicant_work_phone[0:2]),
+        'COWORKPHONE_PRE': d(lambda: contact.co_applicant_work_phone[3:5]),
+        'COWORKPHONE_SUFF': d(lambda: contact.co_applicant_work_phone[6:]),
+        'COPHONE3': contact.co_applicant_mobile_number,
+        'COCELLPHONE_AREA': d(lambda: contact.co_applicant_mobile_number[0:2]),
+        'COCELLPHONE_PRE': d(lambda: contact.co_applicant_mobile_number[3:5]),
+        'COCELLPHONE_SUFF': d(lambda: contact.co_applicant_mobile_number[6:]),
+        'COEMAIL': contact.co_applicant_email,
+        # 'COFAX': ,  # TODO: Fax
+        'COADDRESS': contact.co_applicant_address_1,
+        'COADDRESS2': contact.co_applicant_address_2,
+        'COCITY': contact.co_applicant_city,
+        'COSTATE': contact.co_applicant_state,
+        'COSTATEFULL': contact.co_applicant_state and str(
+            next(
+                (
+                    name
+                    for code, name in US_STATES
+                    if code == contact.co_applicant_state
+                ),
+                '',
+            ),
+        ),
+        'COZIP': contact.co_applicant_zip_code,
+        'COFULLADDRESS': (
+            "{address_1}, {address_2}, {city} {state} {zip_code}".format(
+                address_1=contact.co_applicant_address_1,
+                address_2=contact.co_applicant_address_2,
+                city=contact.co_applicant_city,
+                state=contact.co_applicant_state,
+                zip_code=contact.co_applicant_zip_code,
+            )
+        ),
+        'COSSN': contact.co_applicant_identification,
+        # 'COENCSSN': ,  # TODO: Contact's Encrypted Social Security Number
+        'COSSN1': d(lambda: contact.co_applicant_identification[0]),
+        'COSSN2': d(lambda: contact.co_applicant_identification[1]),
+        'COSSN3': d(lambda: contact.co_applicant_identification[2]),
+        'COSSN4': d(lambda: contact.co_applicant_identification[4]),
+        'COSSN5': d(lambda: contact.co_applicant_identification[5]),
+        'COSSN6': d(lambda: contact.co_applicant_identification[6]),
+        'COSSN7': d(lambda: contact.co_applicant_identification[8]),
+        'COSSN8': d(lambda: contact.co_applicant_identification[9]),
+        'COSSN9': d(lambda: contact.co_applicant_identification[10]),
+        'CODOB': str(contact.co_applicant_birth_date),
+
+        # Bank account information:
+        'NAMEONACCT': contact.bank_account.name_on_account,
+        'BANKNAME': contact.bank_account.bank_name,
+        'BANKADDRESS': contact.bank_account.address,
+        'BANKCITY': contact.bank_account.city,
+        'BANKSTATE': contact.bank_account.state,
+        'BANKZIP': contact.bank_account.zip_code,
+        'BANKPHONE': contact.bank_account.phone,
+        'ACCTTYPE': contact.bank_account.account_type and str(
+            next(
+                (
+                    name
+                    for code, name in ACCOUNT_TYPE_CHOICES
+                    if code == contact.bank_account.account_type
+                ),
+                '',
+            ),
+        ),
+        'ACCOUNTNUM': contact.bank_account.account_number,
+        'ROUTINGNUM': contact.bank_account.routing_number,
+        # 'ACCOUNTNUM_ENC': contact.bank_account.account_number,  # TODO: Encrypted Account Number  # noqa
+        # 'ROUTINGNUM_ENC': contact.bank_account.routing_number,  # TODO: Encrypted Routing Number  # noqa
     }
 
 
