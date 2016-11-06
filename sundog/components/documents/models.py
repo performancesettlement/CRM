@@ -299,7 +299,7 @@ class Document(Model):
 
     title = LongCharField()
     created_at = DateTimeField(auto_now_add=True)
-    created_by = ForeignKey(User, on_delete=SET_NULL, blank=True, null=True)
+    created_by = ForeignKey(to=User, on_delete=SET_NULL, blank=True, null=True)
     type = LongCharField(choices=TYPE_CHOICES)
 
     # FIXME: Work around stupid arbitrary length limits with a very large stupid
