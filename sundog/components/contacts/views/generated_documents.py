@@ -2,6 +2,7 @@ from datatableview import Datatable
 from datatableview.helpers import through_filter
 from datatableview.views import XEditableDatatableView
 from django.contrib.auth.decorators import login_required
+from django.core.files.base import ContentFile
 from django.forms.models import ModelForm
 from django.forms.widgets import Select
 from django.shortcuts import redirect
@@ -148,6 +149,20 @@ class GeneratedDocumentsAddAJAX(
     def form_valid(self, form):
         form.instance.created_by = self.request.user
         form.instance.contact = self.get_contact()
+        form.instance.content.save(
+            name='{pk}.pdf'.format(
+                pk=self.get_contact().pk,
+            ),
+            content=ContentFile(
+                content=(
+                    form.instance.template
+                    .render(
+                        contact=self.get_contact(),
+                    )
+                    .write_pdf()
+                ),
+            ),
+        )
         return super().form_valid(form)
 
 
