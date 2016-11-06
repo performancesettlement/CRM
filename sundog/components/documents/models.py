@@ -100,28 +100,31 @@ def contact_context(contact=default_contact):
             last_name=contact.last_name,
         ),
         'PHONE': contact.phone_number,
-        'HOMEPHONE_AREA': contact.phone_number[0:2],
-        'HOMEPHONE_PRE': contact.phone_number[3:5],
-        'HOMEPHONE_SUFF': contact.phone_number[6:],
+        'HOMEPHONE_AREA': contact.phone_number and contact.phone_number[0:2],
+        'HOMEPHONE_PRE': contact.phone_number and contact.phone_number[3:5],
+        'HOMEPHONE_SUFF': contact.phone_number and contact.phone_number[6:],
         'PHONE2': contact.work_phone,
-        'WORKPHONE_AREA': contact.work_phone[0:2],
-        'WORKPHONE_PRE': contact.work_phone[3:5],
-        'WORKPHONE_SUFF': contact.work_phone[6:],
+        'WORKPHONE_AREA': contact.work_phone and contact.work_phone[0:2],
+        'WORKPHONE_PRE': contact.work_phone and contact.work_phone[3:5],
+        'WORKPHONE_SUFF': contact.work_phone and contact.work_phone[6:],
         'PHONE3': contact.mobile_number,
-        'CELLPHONE_AREA': contact.mobile_number[0:2],
-        'CELLPHONE_PRE': contact.mobile_number[3:5],
-        'CELLPHONE_SUFF': contact.mobile_number[6:],
+        'CELLPHONE_AREA': contact.mobile_number and contact.mobile_number[0:2],
+        'CELLPHONE_PRE': contact.mobile_number and contact.mobile_number[3:5],
+        'CELLPHONE_SUFF': contact.mobile_number and contact.mobile_number[6:],
         'EMAIL': contact.email,
         # 'FAX': ,  # TODO: Fax
         'ADDRESS': contact.address_1,
         'ADDRESS2': contact.address_2,
         'CITY': contact.city,
         'STATE': contact.state,
-        'STATEFULL': str(
+        'STATEFULL': contact.state and str(
             next(
-                name
-                for code, name in US_STATES
-                if code == contact.state
+                (
+                    name
+                    for code, name in US_STATES
+                    if code == contact.state
+                ),
+                '',
             ),
         ),
         'ZIP': contact.zip_code,
@@ -136,15 +139,15 @@ def contact_context(contact=default_contact):
         ),
         'SSN': contact.identification,
         # 'ENCSSN': ,  # TODO: Contact's Encrypted Social Security Number
-        'SSN1': contact.identification[0],
-        'SSN2': contact.identification[1],
-        'SSN3': contact.identification[2],
-        'SSN4': contact.identification[4],
-        'SSN5': contact.identification[5],
-        'SSN6': contact.identification[6],
-        'SSN7': contact.identification[8],
-        'SSN8': contact.identification[9],
-        'SSN9': contact.identification[10],
+        'SSN1': contact.identification and contact.identification[0],
+        'SSN2': contact.identification and contact.identification[1],
+        'SSN3': contact.identification and contact.identification[2],
+        'SSN4': contact.identification and contact.identification[4],
+        'SSN5': contact.identification and contact.identification[5],
+        'SSN6': contact.identification and contact.identification[6],
+        'SSN7': contact.identification and contact.identification[8],
+        'SSN8': contact.identification and contact.identification[9],
+        'SSN9': contact.identification and contact.identification[10],
         'DOB': str(contact.birth_date),
     }
 
