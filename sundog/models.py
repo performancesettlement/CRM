@@ -1,6 +1,8 @@
 from colorful.fields import RGBColorField
 from decimal import Decimal
+from django.apps import apps
 from django.contrib.auth.models import User
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -1372,6 +1374,67 @@ class Campaign(models.Model):
 
     def __str__(self):
         return '%s' % self.title
+
+
+class Payee(models.Model):
+    payee_id = models.AutoField(primary_key=True)
+    default_for_company = models.BooleanField(default=False)
+    name = models.CharField(max_length=100)
+    bank_name = models.CharField(max_length=100)
+    routing_number = models.CharField(max_length=20)
+    account_number = models.CharField(max_length=30)
+    account_type = models.CharField(max_length=8, choices=ACCOUNT_TYPE_CHOICES)
+    name_on_account = models.CharField(max_length=100)
+    related_entity_id = models.IntegerField()
+    related_entity_name = models.CharField(max_length=20, choices=[('Company', 'Company'), ('User', 'User')])
+
+    def __init__(self, *args, **kwargs):
+        super(Payee, self).__init__(*args, **kwargs)
+        # app_label = self.__class__._meta.app_label
+        # self.related_entity = apps.get_model(app_label=app_label, model_name=self.related_entity_name)
+        self.str = str(self.payee_id) + '-' + self.name + ' ***' + self.account_number[-4:]
+
+    def __str__(self):
+        return self.str
+
+
+COMPENSATION_TEMPLATE_TYPES_CHOICES = (
+    ('flat', 'Flat Amoritization'),
+    ('variable', 'Variable Amortization'),
+    ('formula', 'Formula Based'),
+)
+
+AVAILABLE_FOR_CHOICES = (
+    ('this_company', 'This Company'),
+    ('all_companies', 'All Companies'),
+)
+
+
+class CompensationTemplate(models.Model):
+    compensation_template_id = models.AutoField(primary_key=True)
+    company = models.ForeignKey(Company)
+    name = models.CharField(max_length=100)
+    type = models.CharField(max_length=20, choices=COMPENSATION_TEMPLATE_TYPES_CHOICES)
+    available_for = models.CharField(max_length=20, choices=AVAILABLE_FOR_CHOICES)
+
+    def __str__(self):
+        return self.name
+
+
+COMPENSATION_TEMPLATE_PAYEE_TYPE_CHOICES = (
+    ('credit', 'Credit'),
+    ('transfer', 'Transfer'),
+    ('transfer_credit', 'Transfer Credit'),
+)
+
+
+class CompensationTemplatePayee(models.Model):
+    compensation_template_payee_id = models.AutoField(primary_key=True)
+    compensation_template = models.ForeignKey(CompensationTemplate, related_name='payees')
+    type = models.CharField(max_length=20, choices=COMPENSATION_TEMPLATE_PAYEE_TYPE_CHOICES)
+    fee_amount = models.DecimalField(max_digits=5, decimal_places=2, validators=[MaxValueValidator(Decimal('100.00')),
+                                                                                 MinValueValidator(Decimal('0.01'))])
+    payee = models.ForeignKey(Payee, related_name='compensation_template_payees')
 
 
 for model in package_models(sundog.view):

@@ -150,88 +150,67 @@ LOGGING = {
 
     'version': 1,
     'disable_existing_loggers': False,
-
     'formatters': {
-
         'verbose': {
             'format':
                 "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
             'datefmt': "%d/%b/%Y %H:%M:%S",
         },
-
         'simple': {
             'format': '%(levelname)s %(message)s',
         },
-
     },
-
     'filters': {
-
         'require_debug_false': {
             '()': 'django.utils.log.RequireDebugFalse',
         },
-
     },
-
     'handlers': {
-
         'mail': {
             'level': 'ERROR',
             'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler',
             'formatter': 'verbose',
         },
-
         'syslog': {
             'level': 'DEBUG',
             'class': 'logging.handlers.SysLogHandler',
             'facility': 'local5',
             'formatter': 'simple',
         },
-
         'logstash': {
             'level': 'DEBUG',
             'class': 'logstash.TCPLogstashHandler',
             'host': 'logstash',
-            'port': '5000',
             'port': 5000,
             'version': 1,
         },
-
     },
-
     'root': {
         'handlers': ['mail', 'syslog', 'logstash'],
         'level': 'DEBUG',
     },
-
     'loggers': {
-
         'root': {
             'handlers': ['logstash'],
             'level': 'DEBUG',
         },
-
         'sundog': {
             'handlers': ['mail', 'syslog', 'logstash'],
             'level': 'DEBUG',
         },
-
         'django_auth_app': {
             'handlers': ['mail', 'syslog', 'logstash'],
             'level': 'DEBUG',
         },
-
         'django': {
             'handlers': ['syslog', 'logstash'],
             'level': 'DEBUG',
         },
-
         'django.db.backends': {
             'handlers': ['syslog', 'logstash'],
             'level': 'DEBUG',
         },
-
         'django.request': {
             'handlers': ['syslog', 'mail', 'logstash'],
             'level': 'DEBUG',
@@ -241,17 +220,14 @@ LOGGING = {
             'handlers': ['syslog', 'mail', 'logstash'],
             'level': 'DEBUG',
         },
-
         'gunicorn.access': {
             'handlers': ['syslog', 'mail', 'logstash'],
             'level': 'DEBUG',
         },
-
         'gunicorn.error': {
             'handlers': ['syslog', 'mail', 'logstash'],
             'level': 'DEBUG',
         },
-
     },
 }
 
@@ -263,7 +239,6 @@ USE_L10N = True
 USE_TZ = True
 
 
-WAGTAIL_SITE_NAME = 'SunDog'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
@@ -386,14 +361,12 @@ TINYMCE_DEFAULT_CONFIG = {
     'toolbar': [
         ','.join(row)
         for row in [
-
             [
                 'styleselect',
                 'formatselect',
                 'fontselect',
                 'fontsizeselect',
             ],
-
             [
                 'newdocument'
                 '|',
@@ -414,7 +387,6 @@ TINYMCE_DEFAULT_CONFIG = {
                 'alignjustify',
                 'alignnone',
             ],
-
             [
                 'cut',
                 'copy',
@@ -436,7 +408,6 @@ TINYMCE_DEFAULT_CONFIG = {
                 'image',
                 'code',
             ],
-
             [
                 'insertdatetime',
                 'preview',
@@ -460,7 +431,6 @@ TINYMCE_DEFAULT_CONFIG = {
                 '|',
                 'pagebreak',
             ],
-
         ]
     ],
 }

@@ -1,0 +1,76 @@
+{% extends "app-base.html" %}
+{% load staticfiles my_filters %}
+{% block content %}
+    <div class="row wrapper border-bottom white-bg page-heading">
+        <div class="col-lg-10 m-t-md">
+            <ol class="breadcrumb">
+                <li>
+                    <a href="">Admin</a>
+                </li>
+                <li>
+                    <a href="">Companies</a>
+                </li>
+                <li class="active">
+                    <strong>Compensation Templates</strong>
+                </li>
+            </ol>
+        </div>
+    </div>
+    <div class="col-xs-12">
+        <select id="comp-temp-chooser" class="col-xs-2 no-padding-sides m-t-md">
+            {% for template in compensation_templates_choices %}
+                <option value="{{template.0}}" >{{template.1}}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-xs-12 m-t-md">
+        <h3>Add Compensation Template</h3>
+        <form id="add-compensation-template-form" class="m-t-md" action="{% url 'add_compensation_template' company_id=company_id %}" method="post">
+            {% csrf_token %}
+            <div class="col-xs-12 no-padding-sides no-padding-top m-b-md border-bottom p-md">
+                <div class="inline m-r-md">
+                    <label>Template Name</label>
+                    {{ form.name }}
+                </div>
+                <div class="inline m-r-md">
+                    <label>Type</label>
+                    {{ form.type }}
+                </div>
+                <div class="inline m-r-md">
+                    <label>Available For</label>
+                    {{ form.available_for }}
+                </div>
+                <div class="pull-right"><button class="btn btn-primary" type="submit">Save</button></div>
+            </div>
+            <div>
+                <button id="add-fee" class="btn btn-primary m-r-xs" type="button">Add Payee</button>
+                <button id="remove-last-fee" class="btn btn-primary" type="button" style="display: none;">Remove Last Payee</button>
+            </div>
+            <div id="fees">
+                {% for form_payee in forms %}
+                <div id="fee-{{ form_payee.prefix }}" class="col-xs-4 no-padding-sides m-t-md">
+                    <div class="col-xs-3 no-padding-sides">
+                        <label>Payee <span>{{ form_payee.prefix }}</span></label>
+                        {{ form_payee.type }}
+                    </div>
+                    <div class="col-xs-6">
+                        <label>&nbsp;</label>
+                        {{ form_payee.payee }}
+                    </div>
+                    <div class="col-xs-3 no-padding-sides">
+                        <label>Fee</label>
+                        {{ form_payee.fee_amount }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </form>
+    </div>
+    <script type="text/javascript">
+        var formCount = {{ forms|length }};
+        var formErrors = {{ form_errors|jsonify }};
+        var addCompensationTemplateUrl = '{% url 'add_compensation_template' company_id=company_id %}';
+        var editCompensationTemplateUrl = '{% url 'edit_compensation_template' company_id=company_id compensation_template_id=0 %}';
+    </script>
+    <script src="{% static "js/company/add_compensation_template.js" %}"></script>
+{% endblock %}

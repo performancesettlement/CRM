@@ -236,6 +236,31 @@ def get_payments_data(data, starting_index=3):
     return payments
 
 
+def get_forms(data, form_class, prefix=1, instances=None):
+    forms = []
+    while True:
+        form_data = get_data(str(prefix), data)
+        if form_data:
+            kwargs = {'prefix': prefix}
+            if instances:
+                got_ids = [value for key, value in form_data.items() if '_id' in key]
+                entity_id = int(got_ids[0]) if got_ids else None
+                if entity_id:
+                    instances_ids = [instance.pk for instance in instances]
+                    try:
+                        i = instances_ids.index(entity_id)
+                    except ValueError:
+                        i = -1
+                    if i >= 0:
+                        instance = instances.pop(i)
+                        kwargs['instance'] = instance
+            forms.append(form_class(form_data, **kwargs))
+            prefix += 1
+        else:
+            break
+    return forms, instances
+
+
 def get_next_work_date(date):
     week_day = date.weekday()
     if week_day in [5, 6]:

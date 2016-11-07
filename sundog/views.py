@@ -8,6 +8,7 @@ from django.db import transaction
 from django.http import Http404
 from django.http.response import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, render_to_response, redirect
+from django.urls import reverse
 
 from django_auth_app.utils import serialize_user
 from numpy import arange
@@ -19,11 +20,13 @@ from sundog.decorators import bypass_impersonation_login_required
 from sundog.forms import ContactForm, ImpersonateUserForm, StageForm, StatusForm, \
     CampaignForm, SourceForm, ContactStatusForm, BankAccountForm, NoteForm, CallForm, EmailForm, UploadedForm, \
     ExpensesForm, IncomesForm, CreditorForm, DebtForm, DebtNoteForm, EnrollmentPlanForm, FeePlanForm, FeeProfileForm, \
-    FeeProfileRuleForm, WorkflowSettingsForm, EnrollmentForm, FeeForm, PaymentForm
+    FeeProfileRuleForm, WorkflowSettingsForm, EnrollmentForm, FeeForm, PaymentForm, CompensationTemplateForm, \
+    CompensationTemplatePayeeForm
 from datetime import datetime, timedelta
 from sundog.models import Contact, Stage, STAGE_TYPE_CHOICES, Status, \
     Campaign, Activity, Uploaded, Expenses, Incomes, Creditor, Debt, DebtNote, Enrollment, EnrollmentPlan, \
-    FeeProfile, FeeProfileRule, WorkflowSettings, DEBT_SETTLEMENT, Payment
+    FeeProfile, FeeProfileRule, WorkflowSettings, DEBT_SETTLEMENT, Payment, Company, CompensationTemplate, \
+    NONE_CHOICE_LABEL
 
 from sundog.services import reorder_stages, reorder_status
 from sundog.templatetags.my_filters import currency, percent
@@ -38,7 +41,7 @@ from sundog.utils import (
     get_or_404,
     get_payments_data,
     to_int,
-)
+    get_forms)
 
 import copy
 import logging
@@ -1529,7 +1532,6 @@ def get_enrollment_plan_info(request, contact_id, enrollment_plan_id):
             data['second_date'] = second_date.strftime(SHORT_DATE_FORMAT)
         response['result'] = 'Ok'
         response['data'] = data
-
     return JsonResponse(response)
 
 
@@ -1545,7 +1547,6 @@ def get_debts_info(request, contact_id):
         est_settlement = contact.est_sett(ids=debt_ids)
         total_payment = est_settlement
         savings = total_debt - total_payment
-
         data = {
             'total_savings': currency(savings),
             'total_sett': currency(est_settlement),
@@ -1553,7 +1554,6 @@ def get_debts_info(request, contact_id):
         }
         response['result'] = 'Ok'
         response['data'] = data
-
     return JsonResponse(response)
 
 
@@ -1612,6 +1612,100 @@ def edit_payment(request, contact_id):
                 else:
                     response['result'] = 'No Enrollment'
     return JsonResponse(response)
+
+
+def add_compensation_template(request, company_id):
+    compensation_templates = CompensationTemplate.objects.filter(company__company_id=company_id)
+    form = CompensationTemplateForm(request.POST or None)
+    forms = [CompensationTemplatePayeeForm(prefix=1)]
+    form_errors = []
+    if request.method == 'POST' and request.POST:
+        forms, _ = get_forms(request.POST, CompensationTemplatePayeeForm)
+        forms_validation = sum(Decimal(form.data[str(form.prefix) + '-fee_amount']) for form in forms) == Decimal('100.00')
+        if form.is_valid() and len(forms) > 0 and all([form.is_valid() for form in forms]) and forms_validation:
+            company = Company.objects.get(company_id=company_id)
+            with transaction.atomic():
+                compensation_template = form.save(commit=False)
+                compensation_template.company = company
+                compensation_template.save()
+                for form_payee in forms:
+                    payee = form_payee.save(commit=False)
+                    payee.compensation_template = compensation_template
+                    payee.save()
+            redirect('add_compensation_template', company_id=company_id)
+        else:
+            list_of_error_lists = list((get_form_errors(form) for form in forms))
+            form_errors = get_form_errors(form) + list(error for sub_list in list_of_error_lists for error in sub_list)
+            if not forms_validation:
+                form_errors.append('The fee amounts of all payees must add 100 percent.')
+    compensation_templates_choices = [('', '--Add new compensation template--')] + \
+                                     [(str(template.compensation_template_id), template.name)
+                                      for template in compensation_templates]
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'form': form,
+        'forms': forms,
+        'company_id': company_id,
+        'form_errors': form_errors,
+        'compensation_templates_choices': compensation_templates_choices,
+        'menu_page': 'companies',
+    }
+    template_path = 'company/add_compensation_template.html'
+    return _render_response(request, context_info, template_path)
+
+
+def edit_compensation_template(request, company_id, compensation_template_id):
+    compensation_templates = CompensationTemplate.objects.filter(company__company_id=company_id)
+    instance = CompensationTemplate.objects.get(compensation_template_id=compensation_template_id)
+    form = CompensationTemplateForm(request.POST or None, instance=instance)
+    instances = list(instance.payees.all())
+    if request.method == 'POST' and request.POST:
+        forms, instances = get_forms(request.POST, CompensationTemplatePayeeForm, instances=instances)
+        forms_validation = sum(Decimal(form.data[str(form.prefix) + '-fee_amount']) for form in forms) == Decimal('100.00')
+        if form.is_valid() and len(forms) > 0 and all([form.is_valid() for form in forms]) and forms_validation:
+            company = Company.objects.get(company_id=company_id)
+            with transaction.atomic():
+                try:
+                    compensation_template = form.save(commit=False)
+                    compensation_template.company = company
+                    compensation_template.save()
+                    for form_payee in forms:
+                        payee = form_payee.save(commit=False)
+                        payee.compensation_template = compensation_template
+                        payee.save()
+                    for instance_to_delete in instances:
+                        instance_to_delete.delete()
+                    response = {'result': 'Ok'}
+                except:
+                    response = {'errors': 'Error saving the data please try again later.'}
+        else:
+            list_of_error_lists = list((get_form_errors(form) for form in forms))
+            form_errors = get_form_errors(form) + list(error for sub_list in list_of_error_lists for error in sub_list)
+            if not forms_validation:
+                form_errors.append('The fee amounts of all payees must add 100 percent.')
+            response = {'errors': form_errors}
+        return JsonResponse(response)
+    else:
+        forms = [CompensationTemplatePayeeForm(instance=payee, prefix=ind + 1) for ind, payee in enumerate(instances)]
+
+        form_errors = []
+    compensation_templates_choices = [('', '--Add new compensation template--')] + \
+                                     [(str(template.compensation_template_id), template.name)
+                                      for template in compensation_templates]
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'form': form,
+        'forms': forms,
+        'company_id': company_id,
+        'form_errors': form_errors,
+        'compensation_templates_choices': compensation_templates_choices,
+        'compensation_template_id': str(compensation_template_id),
+        'menu_page': 'companies',
+    }
+    template_path = 'company/edit_compensation_template.html'
+    return _render_response(request, context_info, template_path)
 
 
 #######################################################################

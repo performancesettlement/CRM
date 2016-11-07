@@ -5,7 +5,9 @@ from django.db.models import Q
 from django_auth_app import enums
 from sundog.models import Contact, Stage, Status, Campaign, Source, BankAccount, Note, Call,\
     Email, DEBT_SETTLEMENT, Uploaded, Incomes, Expenses, Creditor, Debt, DebtNote, EnrollmentPlan, FeePlan, FeeProfile,\
-    FeeProfileRule, WorkflowSettings, Enrollment, Fee, AMOUNT_CHOICES, Payment, PAYMENT_TYPE_CHOICES
+    FeeProfileRule, WorkflowSettings, Enrollment, Fee, AMOUNT_CHOICES, Payment, PAYMENT_TYPE_CHOICES, \
+    CompensationTemplate, CompensationTemplatePayee, NONE_CHOICE_LABEL, Payee, COMPENSATION_TEMPLATE_PAYEE_TYPE_CHOICES, \
+    AVAILABLE_FOR_CHOICES, COMPENSATION_TEMPLATE_TYPES_CHOICES
 
 from sundog import services
 from sundog.constants import (
@@ -517,5 +519,34 @@ class PaymentForm(forms.ModelForm):
             'memo': forms.Select(attrs={'class': 'col-xs-8 no-padding-sides'}),
             'action': forms.Select(attrs={'class': 'col-xs-8 no-padding-sides'}),
         }
-        exclude = ['created_at']
+        fields = '__all__'
 
+
+class CompensationTemplateForm(forms.ModelForm):
+    available_for = forms.ChoiceField(choices=AVAILABLE_FOR_CHOICES,
+                                      widget=forms.Select(attrs={'class': 'col-xs-12 no-padding-sides'}))
+    type = forms.ChoiceField(choices=COMPENSATION_TEMPLATE_TYPES_CHOICES,
+                             widget=forms.Select(attrs={'class': 'col-xs-12 no-padding-sides'}))
+
+    class Meta:
+        model = CompensationTemplate
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'col-xs-12 no-padding-sides'})
+        }
+        exclude = ['company']
+
+    def __init__(self, *args, **kwargs):
+        super(CompensationTemplateForm, self).__init__(*args, **kwargs)
+
+
+class CompensationTemplatePayeeForm(forms.ModelForm):
+
+    payee = forms.ModelChoiceField(empty_label=NONE_CHOICE_LABEL, queryset=Payee.objects.all(),
+                                   widget=forms.Select(attrs={'class': 'col-xs-12 no-padding-sides'}))
+    type = forms.ChoiceField(choices=COMPENSATION_TEMPLATE_PAYEE_TYPE_CHOICES,
+                             widget=forms.Select(attrs={'class': 'col-xs-12 no-padding-sides'}))
+
+    class Meta:
+        model = CompensationTemplatePayee
+        widgets = {}
+        exclude = ['compensation_template']

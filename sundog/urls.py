@@ -12,10 +12,7 @@ urlpatterns = module_urls(views) + package_urls(sundog.view) + [
 
     url(r'^accounts/', include('allauth.urls')),
 
-    url(
-        r'^account/',
-        include('django_auth_app.urls', namespace='django_auth_app')
-    ),
+    url(r'^account/', include('django_auth_app.urls', namespace='django_auth_app')),
 
     url(r'^avatar/', include('avatar.urls')),
 
@@ -80,6 +77,9 @@ urlpatterns = module_urls(views) + package_urls(sundog.view) + [
     url(r'^profile/stop_impersonate_user/$', views.stop_impersonate_user, name='stop_impersonate_user'),
     url(r'^admin/update_preferences_for_section_collapsed_state/$', ajax.update_preferences_for_section_collapsed_state, name='update_section_collapsed_state'),
     url(r'^admin/get_preferences_for_sections_collapsed_state/$', ajax.get_preferences_for_sections_collapsed_state, name='get_sections_collapsed_state'),
+
+    url(r'^company/(?P<company_id>\d+)/compensationTemplate/add/$', views.add_compensation_template, name='add_compensation_template'),
+    url(r'^company/(?P<company_id>\d+)/compensationTemplate/(?P<compensation_template_id>\d+)/edit/$', views.edit_compensation_template, name='edit_compensation_template'),
 ]
 
 handler404 = 'sundog.views.render404'
