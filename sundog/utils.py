@@ -94,6 +94,23 @@ def get_data(prefix, post_data):
     return data
 
 
+def get_enum_name(code, names, default=''):
+    return (
+        str(
+            next(
+                (
+                    name
+                    for code_, name in names
+                    if code_ == code
+                ),
+                default,
+            ),
+        )
+        if code
+        else default
+    )
+
+
 def const(value, *_, **__):
     return lambda *_, **__: value
 
@@ -103,14 +120,6 @@ def catching(computation, exception, catcher):
         return computation()
     except exception as e:
         return catcher(e)
-
-
-def default(computation, value):
-    return catching(
-        computation=computation,
-        exception=Exception,
-        catcher=const(value),
-    )
 
 
 # From https://djangosnippets.org/snippets/2328/

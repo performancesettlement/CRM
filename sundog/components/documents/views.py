@@ -1,18 +1,20 @@
 from datatableview import Datatable
-from datatableview.columns import CompoundColumn, DisplayColumn, TextColumn
 from datatableview.helpers import make_processor, through_filter
 from datatableview.views import XEditableDatatableView
 from django.contrib.auth.decorators import login_required
 from django.forms.models import ModelForm
 from django.forms.widgets import Select, SelectMultiple
 from django.template.defaultfilters import date
-from django.template.loader import render_to_string
 from django.views.generic.edit import UpdateView
 from fm.views import AjaxCreateView, AjaxDeleteView, AjaxUpdateView
 from settings import SHORT_DATETIME_FORMAT
 from sundog.components.documents.models import Document
 from sundog.routing import decorate_view, route
-from sundog.utils import PDFView, format_column, template_column
+from sundog.utils import (
+    PDFView,
+    format_column,
+    template_column,
+)
 
 
 class DocumentsCRUDViewMixin:
