@@ -10,7 +10,14 @@ from django.views.generic.edit import UpdateView
 from fm.views import AjaxCreateView, AjaxDeleteView, AjaxUpdateView
 from settings import SHORT_DATETIME_FORMAT
 from sundog.components.documents.models import Document
-from sundog.models import Contact
+from sundog.models import (
+    Company,
+    Contact,
+    DEBT_SETTLEMENT,
+    LeadSource,
+    Stage,
+    Status,
+)
 from sundog.routing import decorate_view, route
 from sundog.utils import (
     PDFView,
@@ -158,14 +165,33 @@ class DocumentsPreviewPDF(DocumentsCRUDViewMixin, PDFView):
         }
 
     def default_contact(self):
+
+        fake_id = 0
+
+        def get_fake_id():
+            nonlocal fake_id
+            fake_id -= 1
+            return fake_id
+
+        status = Status(
+            status_id=get_fake_id(),
+            name='Test status',
+            stage=Stage(
+                stage_id=-2,
+                name='Test stage',
+                order=0,
+                type=DEBT_SETTLEMENT,
+            ),
+        )
+
         return Contact(
-            contact_id=-1,
+            contact_id=get_fake_id(),
             first_name='Test',
             middle_name='Ing',
             last_name='User',
             previous_name='',
-            phone_number='8885551234',
-            mobile_number='8887771234',
+            phone_number='9165550100',
+            mobile_number='9165550101',
             email='test.user@example.com',
             birth_date=date(1983, 10, 4),
             identification='000-123-4567',
@@ -174,8 +200,8 @@ class DocumentsPreviewPDF(DocumentsCRUDViewMixin, PDFView):
             co_applicant_middle_name='CoIng',
             co_applicant_last_name='CoUser',
             co_applicant_previous_name='Co Previous Name',
-            co_applicant_phone_number='8882221234',
-            co_applicant_mobile_number='8884441234',
+            co_applicant_phone_number='9165550102',
+            co_applicant_mobile_number='9165550103',
             co_applicant_email='co.test.user@example.com',
             co_applicant_birth_date=date(1984, 11, 5),
             co_applicant_identification='000-765-4321',
@@ -196,12 +222,12 @@ class DocumentsPreviewPDF(DocumentsCRUDViewMixin, PDFView):
             employment_status='retired',
             position='Senior Manager',
             length_of_employment='20 years',
-            work_phone='8886661234',
+            work_phone='9165550104',
             co_applicant_employer='Co Testing Employer, Inc',
             co_applicant_employment_status='employed',
             co_applicant_position='Supervisor',
             co_applicant_length_of_employment='5 years',
-            co_applicant_work_phone='8883331234',
+            co_applicant_work_phone='9165550105',
             hardships='loss_of_employment',
             hardship_description=(
                 'I was involved in a major car accident and had to take 3'
@@ -218,11 +244,42 @@ class DocumentsPreviewPDF(DocumentsCRUDViewMixin, PDFView):
             authorization_form_on_file='yes',
             active=True,
             assigned_to=self.request.user,
-            # call_center_representative=ForeignKey(User),                # TODO
-            # lead_source=ForeignKey(LeadSource),                         # TODO
-            # company=ForeignKey(Company, null=True, blank=True),         # TODO
-            # stage=ForeignKey(Stage, blank=True, null=True),             # TODO
-            # status=ForeignKey(Status, blank=True, null=True),           # TODO
+            call_center_representative=self.request.user,
+            lead_source=LeadSource(
+                lead_source_id=get_fake_id(),
+                name='Test lead source',
+            ),
+            company=Company(
+                company_id=get_fake_id(),
+                active=True,
+                company_type='law_firm',
+                parent_company=None,
+                name='Testing Company, Inc',
+                contact_name='Testing Contact',
+                # company_code='',  # TODO
+                # ein='',  # TODO
+                address='987 Fake St.',
+                address_2='APT 9',
+                city='Belmont',
+                state='CA',
+                zip='94002',
+                phone='9165550106',
+                fax='9165550107',
+                email='testing.company@example.com',
+                # domain='',  # TODO
+                timezone='pacific',
+                account_exec='user_test',
+                theme='default',
+                # upload_logo=FileField(...),  # TODO
+                userfield_1='Test user field 1',
+                userfield_2='Test user field 2',
+                userfield_3='Test user field 3',
+                # docusign_api_acct='',  # TODO
+                # docusign_api_user='',  # TODO
+                # docusign_password='',  # TODO
+            ),
+            stage=status.stage,
+            status=status,
             last_status_change=date.today(),
             created_at=date.today() - timedelta(days=2),
             updated_at=date.today() - timedelta(days=1),

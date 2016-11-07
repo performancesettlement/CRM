@@ -51,8 +51,8 @@ def contact_context(contact):
 
         def phone_parts(prefix, number):
             return {
-                prefix + 'PHONE_AREA': d(lambda: number[0:2]),
-                prefix + 'PHONE_PRE': d(lambda: number[3:5]),
+                prefix + 'PHONE_AREA': d(lambda: number[0:3]),
+                prefix + 'PHONE_PRE': d(lambda: number[3:6]),
                 prefix + 'PHONE_SUFF': d(lambda: number[6:]),
             }
 
@@ -96,11 +96,16 @@ def contact_context(contact):
                 'SSN': contact.identification,
                 # 'ENCSSN': ,  # TODO: Contact's Encrypted Social Security Number  # noqa
                 **{
-                    'SSN' + str(n):
-                    d(lambda: get_attribute('identification')[n])
-                    for n in range(1, 10)
+                    'SSN' + str(n + 1):
+                        d(
+                            lambda:
+                            get_attribute('identification')
+                            .replace('-', '')
+                            [n]
+                        )
+                    for n in range(0, 9)
                 },
-                'DOB': str(get_attribute('birth_date')),
+                'DOB': format(get_attribute('birth_date'), 'm/d/Y'),
             }.items()
         }
 
