@@ -15,7 +15,7 @@ from sundog.utils import format_price, get_now
 
 import copy
 import logging
-import sundog.view
+import sundog.components
 import sys
 
 
@@ -1437,5 +1437,5 @@ class CompensationTemplatePayee(models.Model):
     payee = models.ForeignKey(Payee, related_name='compensation_template_payees')
 
 
-for model in package_models(sundog.view):
+for model in package_models(sundog.components):
     setattr(sys.modules[__name__], model.__name__, model)

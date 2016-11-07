@@ -5,9 +5,9 @@ from sundog import ajax, views
 from sundog.routing import module_urls, package_urls
 
 import settings
-import sundog.view
+import sundog.components
 
-urlpatterns = module_urls(views) + package_urls(sundog.view) + [
+urlpatterns = module_urls(views) + package_urls(sundog.components) + [
     url(r'^admin/', include(admin.site.urls)),
 
     url(r'^accounts/', include('allauth.urls')),

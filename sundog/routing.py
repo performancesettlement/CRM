@@ -3,7 +3,7 @@ from django.db.models import Model
 from django.utils.decorators import method_decorator
 from django.views import View
 from importlib import import_module
-from pkgutil import walk_packages
+from pkgutil import iter_modules
 from sys import modules
 
 
@@ -91,8 +91,7 @@ decorate_view = (
 def filter_package_modules(package, filter):
     return [
         x
-        for loader, name, is_pkg in walk_packages(package.__path__)
-        for module in [import_module(package.__package__ + '.' + name)]
+        for module in walk_packages(package)
         for x in filter(module)
     ]
 
@@ -130,3 +129,21 @@ def package_models(package):
             if isinstance(value, type) and issubclass(value, Model)
         ]
     )
+
+
+# The Python standard library implementation of walk_packages is wrong; see
+#
+#     https://hg.python.org/cpython/file/3.5/Lib/pkgutil.py
+#
+# The version included here is fixed although less general.
+
+def walk_packages(root):
+    for importer, name, ispkg in iter_modules(root.__path__):
+        try:
+            module = import_module(root.__name__ + '.' + name)
+            yield module
+
+            if ispkg:
+                yield from walk_packages(module)
+        except ImportError:
+            continue
