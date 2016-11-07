@@ -41,11 +41,67 @@ def contact_context(contact):
             catcher=const(''),
         )
 
-    def phone_parts(prefix, number):
+    def applicant_information(prefix='', attribute_prefix=''):
+        def get_attribute(attribute):
+            return getattr(
+                contact,
+                attribute_prefix + attribute,
+                '',
+            )
+
+        def phone_parts(prefix, number):
+            return {
+                prefix + 'PHONE_AREA': d(lambda: number[0:2]),
+                prefix + 'PHONE_PRE': d(lambda: number[3:5]),
+                prefix + 'PHONE_SUFF': d(lambda: number[6:]),
+            }
+
         return {
-            prefix + 'PHONE_AREA': d(lambda: number[0:2]),
-            prefix + 'PHONE_PRE': d(lambda: number[3:5]),
-            prefix + 'PHONE_SUFF': d(lambda: number[6:]),
+            prefix + key: value
+            for key, value in {
+                'FIRSTNAME': get_attribute('first_name'),
+                'LASTNAME': get_attribute('last_name'),
+                'MIDDLENAME': get_attribute('middle_name'),
+                'FULLNAME': '{first_name} {last_name}'.format(
+                    first_name=get_attribute('first_name'),
+                    last_name=get_attribute('last_name'),
+                ),
+                'PHONE': get_attribute('phone_number'),
+                'PHONE2': get_attribute('work_phone'),
+                'PHONE3': get_attribute('mobile_number'),
+                **phone_parts('HOME', get_attribute('phone_number')),
+                **phone_parts('WORK', get_attribute('work_phone')),
+                **phone_parts('CELL', get_attribute('mobile_number')),
+                'EMAIL': get_attribute('email'),
+                # 'FAX': ,  # TODO: Fax
+                'ADDRESS': get_attribute('address_1'),
+                'ADDRESS2': get_attribute('address_2'),
+                'CITY': get_attribute('city'),
+                'STATE': get_attribute('state'),
+                'STATEFULL': get_enum_name(
+                    code=get_attribute('state'),
+                    names=US_STATES,
+                ),
+                'ZIP': get_attribute('zip_code'),
+                'FULLADDRESS': (
+                    '{address_1}, {address_2}, {city} {state} {zip_code}'
+                    .format(
+                        address_1=get_attribute('address_1'),
+                        address_2=get_attribute('address_2'),
+                        city=get_attribute('city'),
+                        state=get_attribute('state'),
+                        zip_code=get_attribute('zip_code'),
+                    )
+                ),
+                'SSN': contact.identification,
+                # 'ENCSSN': ,  # TODO: Contact's Encrypted Social Security Number  # noqa
+                **{
+                    'SSN' + str(n):
+                    d(lambda: get_attribute('identification')[n])
+                    for n in range(1, 10)
+                },
+                'DOB': str(get_attribute('birth_date')),
+            }.items()
         }
 
     today = date.today()
@@ -55,91 +111,9 @@ def contact_context(contact):
         'ID': contact.pk,
         'CUSTOMERID': contact.pk,
 
-        # Applicant information:
-        'FIRSTNAME': contact.first_name,
-        'LASTNAME': contact.last_name,
-        'MIDDLENAME': contact.middle_name,
-        'FULLNAME': '{first_name} {last_name}'.format(
-            first_name=contact.first_name or '',
-            last_name=contact.last_name or '',
-        ),
-        'PHONE': contact.phone_number,
-        'PHONE2': contact.work_phone,
-        'PHONE3': contact.mobile_number,
-        **phone_parts('HOME', contact.phone_number),
-        **phone_parts('WORK', contact.work_phone),
-        **phone_parts('CELL', contact.mobile_number),
-        'EMAIL': contact.email,
-        # 'FAX': ,  # TODO: Fax
-        'ADDRESS': contact.address_1,
-        'ADDRESS2': contact.address_2,
-        'CITY': contact.city,
-        'STATE': contact.state,
-        'STATEFULL': get_enum_name(
-            code=contact.state,
-            names=US_STATES,
-        ),
-        'ZIP': contact.zip_code,
-        'FULLADDRESS': (
-            '{address_1}, {address_2}, {city} {state} {zip_code}'.format(
-                address_1=contact.address_1 or '',
-                address_2=contact.address_2 or '',
-                city=contact.city or '',
-                state=contact.state or '',
-                zip_code=contact.zip_code or '',
-            )
-        ),
-        'SSN': contact.identification,
-        # 'ENCSSN': ,  # TODO: Contact's Encrypted Social Security Number
-        **{
-            'SSN' + str(n):
-                d(lambda: contact.identification[n])
-            for n in range(1, 10)
-        },
-        'DOB': str(contact.birth_date),
-
-        # Co-applicant information:
-        'COFIRSTNAME': contact.co_applicant_first_name,
-        'COLASTNAME': contact.co_applicant_last_name,
-        'COMIDDLENAME': contact.co_applicant_middle_name,
-        'COFULLNAME': '{first_name} {last_name}'.format(
-            first_name=contact.co_applicant_first_name,
-            last_name=contact.co_applicant_last_name,
-        ),
-        'COPHONE': contact.co_applicant_phone_number,
-        'COPHONE2': contact.co_applicant_work_phone,
-        'COPHONE3': contact.co_applicant_mobile_number,
-        **phone_parts('COHOME', contact.co_applicant_phone_number),
-        **phone_parts('COWORK', contact.co_applicant_work_phone),
-        **phone_parts('COCELL', contact.co_applicant_mobile_number),
-        'COEMAIL': contact.co_applicant_email,
-        # 'COFAX': ,  # TODO: Fax
-        'COADDRESS': contact.co_applicant_address_1,
-        'COADDRESS2': contact.co_applicant_address_2,
-        'COCITY': contact.co_applicant_city,
-        'COSTATE': contact.co_applicant_state,
-        'COSTATEFULL': get_enum_name(
-            code=contact.co_applicant_state,
-            names=US_STATES,
-        ),
-        'COZIP': contact.co_applicant_zip_code,
-        'COFULLADDRESS': (
-            '{address_1}, {address_2}, {city} {state} {zip_code}'.format(
-                address_1=contact.co_applicant_address_1,
-                address_2=contact.co_applicant_address_2,
-                city=contact.co_applicant_city,
-                state=contact.co_applicant_state,
-                zip_code=contact.co_applicant_zip_code,
-            )
-        ),
-        'COSSN': contact.co_applicant_identification,
-        # 'COENCSSN': ,  # TODO: Contact's Encrypted Social Security Number
-        **{
-            'COSSN' + str(n):
-                d(lambda: contact.co_applicant_identification[n])
-            for n in range(1, 10)
-        },
-        'CODOB': str(contact.co_applicant_birth_date),
+        # Applicant and co-applicant information:
+        **applicant_information(),
+        **applicant_information(prefix='CO', attribute_prefix='co_applicant_'),
 
         # Bank account information:
         'NAMEONACCT': d(lambda: contact.bank_account.name_on_account),
@@ -217,14 +191,13 @@ class Document(Model):
 
     def render(
         self,
-        contact,
         context={},
     ):
         return HTML(
             string=render(
                 template=self.template_body,
                 context={
-                    **contact_context(contact),
+                    **contact_context(context['contact']),
                     **context,
                 },
             ),
@@ -268,13 +241,11 @@ class GeneratedDocument(Model):
 
     def render(
         self,
-        document,
-        contact,
         context={},
     ):
         return HTML(
             string=render(
-                template=document.template_body,
+                template=self.template.template_body,
                 context={
                     **contact_context(self.contact),
                     **context,
