@@ -329,6 +329,7 @@ class Contact(models.Model):
         permissions = (
             ('import_clients', 'Can import clients'),
         )
+        get_latest_by = 'created_at'
 
     def __init__(self, *args, **kwargs):
         super(Contact, self).__init__(*args, **kwargs)
@@ -636,6 +637,9 @@ class Enrollment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 
+    class Meta:
+        get_latest_by = 'created_at'
+
     def __init__(self, *args, **kwargs):
         super(Enrollment, self).__init__(*args, **kwargs)
         for custodial_choice in CUSTODIAL_ACCOUNT_CHOICES:
@@ -733,6 +737,9 @@ class BankAccount(models.Model):
     phone = models.CharField(max_length=10, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+
+    class Meta:
+        get_latest_by = 'created_at'
 
     def info_complete(self):
         return True if self.bank_name and self.name_on_account and self.account_number and\
@@ -846,6 +853,9 @@ class Payment(models.Model):
     def __str__(self):
         return self.type + ': ' + self.date.strftime(SHORT_DATE_FORMAT) + ' - ' + currency(self.amount)
 
+    class Meta:
+        get_latest_by = 'created_at'
+
 
 ACTIVITY_TYPE_CHOICES = (
     ('general', 'General'),
@@ -888,6 +898,9 @@ class Activity(models.Model):
     description = models.CharField(max_length=300)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     created_by = models.ForeignKey(User, blank=True, null=True)
+
+    class Meta:
+        get_latest_by = 'created_at'
 
     def get_type(self):
         for activity_type in ACTIVITY_TYPE_CHOICES:
@@ -936,6 +949,9 @@ class Call(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     created_by = models.ForeignKey(User, blank=True, null=True)
 
+    class Meta:
+        get_latest_by = 'created_at'
+
 
 @receiver(post_save, sender=Call)
 def add_call_activity(sender, instance, **kwargs):
@@ -962,6 +978,9 @@ class Email(models.Model):
     attachment = models.CharField(max_length=300, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     created_by = models.ForeignKey(User, related_name='sent_emails', blank=True, null=True)
+
+    class Meta:
+        get_latest_by = 'created_at'
 
 
 NOTE_TYPE_CHOICES = (
@@ -994,6 +1013,9 @@ class Note(models.Model):
     type = models.CharField(max_length=20, choices=NOTE_TYPE_CHOICES)
     cc = models.CharField(max_length=1000, blank=True, null=True)
     created_by = models.ForeignKey(User, blank=True, null=True)
+
+    class Meta:
+        get_latest_by = 'created_at'
 
 
 @receiver(post_save, sender=Note)
@@ -1097,6 +1119,9 @@ class Uploaded(models.Model):
     mime_type = models.CharField(max_length=100, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     created_by = models.ForeignKey(User, related_name='uploaded_files', blank=True, null=True)
+
+    class Meta:
+        get_latest_by = 'created_at'
 
     def __init__(self, *args, **kwargs):
         super(Uploaded, self).__init__(*args, **kwargs)
@@ -1456,6 +1481,9 @@ class Campaign(models.Model):
     priority = models.PositiveSmallIntegerField(null=True, blank=True, choices=CAMPAIGN_PRIORITY_CHOICES)
     cost = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
     purchase_amount = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+
+    class Meta:
+        get_latest_by = 'created_at'
 
     def __str__(self):
         return '%s' % self.title
