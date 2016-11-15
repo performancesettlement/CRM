@@ -20,17 +20,54 @@
                         <label class="col-xs-4 no-padding-sides"> Sub Type </label>
                         {{ form_add_payment.sub_type }}
                     </div>
+                    <div class="associated-settlement col-xs-12 form-group m-b-xs no-padding" style="display: none;">
+                        <label class="col-xs-4 no-padding-sides"> Associated Settlement </label>
+                        {{ form_add_payment.associated_settlement }}
+                    </div>
+                    <div class="associated-payment col-xs-12 form-group m-b-xs no-padding" style="display: none;">
+                        <label class="col-xs-4 no-padding-sides"> Associated Payment </label>
+                        {{ form_add_payment.associated_payment }}
+                    </div>
+                    <div class="account-details" style="display: none;">
+                        <div class="col-xs-12 form-group m-b-xs no-padding">
+                            <label class="col-xs-4 no-padding-sides"> Account Number </label>
+                            {{ form_add_payment.account_number }}
+                        </div>
+                        <div class="col-xs-12 form-group m-b-xs no-padding">
+                            <label class="col-xs-4 no-padding-sides"> Routing Number </label>
+                            {{ form_add_payment.routing_number }}
+                        </div>
+                        <div class="col-xs-12 form-group m-b-xs no-padding">
+                            <label class="col-xs-4 no-padding-sides"> Account Type </label>
+                            {{ form_add_payment.account_type }}
+                        </div>
+                    </div>
+                    <div class="address col-xs-12 form-group m-b-xs no-padding" style="display: none;">
+                        <label class="col-xs-4 no-padding-sides"> Address </label>
+                        {{ form_add_payment.address }}
+                    </div>
                     <div class="col-xs-12 form-group m-b-xs no-padding">
                         <label class="col-xs-4 no-padding-sides"> Process Date </label>
                         {{ form_add_payment.date }}
                     </div>
                     <div class="col-xs-12 form-group m-b-xs no-padding">
                         <label class="col-xs-4 no-padding-sides"> Amount </label>
-                        {{ form_add_payment.amount }}
+                        <div class="col-xs-8 no-padding input-group">
+                            <span class="input-group-addon green">$</span>
+                            {{ form_add_payment.amount }}
+                        </div>
                     </div>
                     <div class="col-xs-12 form-group m-b-xs no-padding">
                         <label class="col-xs-4 no-padding-sides"> Memo </label>
                         {{ form_add_payment.memo }}
+                    </div>
+                    <div class="paid-to col-xs-12 form-group m-b-xs no-padding" style="display: none;">
+                        <label class="col-xs-4 no-padding-sides"> Paid To </label>
+                        {{ form_add_payment.paid_to }}
+                    </div>
+                    <div class="from-payee col-xs-12 form-group m-b-xs no-padding" style="display: none;">
+                        <label class="col-xs-4 no-padding-sides"> From Payee </label>
+                        {{ form_add_payment.payee }}
                     </div>
                     <div class="col-xs-12 form-group m-b-xs no-padding">
                         <label class="col-xs-4 no-padding-sides"> Action </label>

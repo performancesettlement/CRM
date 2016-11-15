@@ -77,6 +77,12 @@
                     {{ form.custodial_account }}
                 </div>
             </div>
+            <div class="col-xs-12 no-padding-sides">
+                <h4>Choose Comp Template</h4>
+                <div class="border col-xs-12 m-b-xs p-xs">
+                    {{ form.comp_template_chooser }}
+                </div>
+            </div>
         </div>
         <div class="col-xs-8 no-padding-sides">
             <h4>Program Snapshot</h4>
@@ -156,5 +162,5 @@
         var getEnrollmentPlanInfoUrl = "{% url "get_enrollment_plan_info" contact_id=contact.contact_id enrollment_plan_id=0 %}";
         var getDebtsInfoUrl = "{% url "get_debts_info" contact_id=contact.contact_id %}";
     </script>
-    <script src="{% static "js/contact/add_contact_enrollment.js" %}"></script>
+    <script src="{% static "js/contact/edit_contact_enrollment.js" %}"></script>
 {% endblock %}

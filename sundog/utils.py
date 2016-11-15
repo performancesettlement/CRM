@@ -80,22 +80,6 @@ def format_price(price):
     return str(price.quantize(TWO_PLACES))
 
 
-def get_now(timezone=pytz.utc):
-    now = datetime.utcnow()
-    now = now.replace(tzinfo=timezone)
-    return now
-
-
-def hash_password(bank_account):
-    salt = uuid.uuid4().hex
-    password = bank_account.account_number
-    bank_account.account_number = hashlib.sha512(
-        (password + salt).encode('utf-8')
-    ).hexdigest()
-    bank_account.account_number_salt = salt
-    bank_account.account_number_last_4_digits = password[-4:]
-
-
 def get_data(prefix, post_data):
     data = {}
     for data_key in post_data.keys():
@@ -221,7 +205,7 @@ def get_payments_data(data, starting_index=3):
             date = datetime.strptime(
                 payment_data.pop(prefix + '-date'),
                 SHORT_DATE_FORMAT
-            )
+            ).replace(tzinfo=pytz.utc)
             amount = Decimal(payment_data.pop(prefix + '-amount'))
             payment = {
                 'date': date,

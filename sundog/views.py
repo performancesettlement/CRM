@@ -9,6 +9,7 @@ from django.http import Http404
 from django.http.response import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, render_to_response, redirect
 from django.urls import reverse
+from django.utils.timezone import now
 
 from django_auth_app.utils import serialize_user
 from numpy import arange
@@ -20,13 +21,12 @@ from sundog.decorators import bypass_impersonation_login_required
 from sundog.forms import ContactForm, ImpersonateUserForm, StageForm, StatusForm, \
     CampaignForm, SourceForm, ContactStatusForm, BankAccountForm, NoteForm, CallForm, EmailForm, UploadedForm, \
     ExpensesForm, IncomesForm, CreditorForm, DebtForm, DebtNoteForm, EnrollmentPlanForm, FeePlanForm, FeeProfileForm, \
-    FeeProfileRuleForm, WorkflowSettingsForm, EnrollmentForm, FeeForm, PaymentForm, CompensationTemplateForm, \
+    FeeProfileRuleForm, WorkflowSettingsForm, EnrollmentForm, PaymentForm, CompensationTemplateForm, \
     CompensationTemplatePayeeForm
 from datetime import datetime, timedelta
 from sundog.models import Contact, Stage, STAGE_TYPE_CHOICES, Status, \
     Campaign, Activity, Uploaded, Expenses, Incomes, Creditor, Debt, DebtNote, Enrollment, EnrollmentPlan, \
-    FeeProfile, FeeProfileRule, WorkflowSettings, DEBT_SETTLEMENT, Payment, Company, CompensationTemplate, \
-    NONE_CHOICE_LABEL
+    FeeProfile, FeeProfileRule, WorkflowSettings, DEBT_SETTLEMENT, Payment, Company, CompensationTemplate
 
 from sundog.services import reorder_stages, reorder_status
 from sundog.templatetags.my_filters import currency, percent
@@ -37,7 +37,6 @@ from sundog.utils import (
     get_fees_values,
     get_form_errors,
     get_next_work_date,
-    get_now,
     get_or_404,
     get_payments_data,
     to_int,
@@ -66,14 +65,7 @@ def index(request):
 
 @login_required
 def contact_dashboard(request, contact_id):
-    contact = (
-        Contact
-        .objects
-        .prefetch_related('contact_debts')
-        .get(
-            contact_id=contact_id,
-        )
-    )
+    contact = Contact.objects.prefetch_related('contact_debts').get(contact_id=contact_id)
     bank_account = contact.bank_account.all() if contact else None
     bank_account = bank_account[0] if bank_account else None
     form_bank_account = BankAccountForm(instance=bank_account)
@@ -845,7 +837,7 @@ def add_enrollment_plan(request):
             if fee_data_2:
                 form_errors += get_form_errors(form_fee_2)
     plans = [('', '--New Plan--')] + [
-        (plan.enrollment_plan_id, plan.name) for plan in enrollment_plans
+        (str(plan.enrollment_plan_id), plan.name) for plan in enrollment_plans
     ]
     has_second_fee = (
         form_errors and
@@ -924,22 +916,11 @@ def edit_enrollment_plan(request, enrollment_plan_id):
                 form_errors += get_form_errors(form_fee_2)
             response = {'errors': form_errors}
         return JsonResponse(response)
-    plans = [
-        ('', '--New Plan--'),
-    ] + [
-        (plan.enrollment_plan_id, plan.name)
-        for plan in enrollment_plans
-    ]
+    plans = [('', '--New Plan--')] + [(str(plan.enrollment_plan_id), plan.name) for plan in enrollment_plans]
     form_fee_2 = FeePlanForm(prefix='2')
     if len(fees) > 1:
         form_fee_2 = FeePlanForm(prefix='2', instance=fees[1])
-    has_second_fee = (
-        form_errors and
-        next(
-            (x for x in form_errors if '2-' in x),
-            False,
-        )
-    ) or (len(fees) > 1)
+    has_second_fee = (form_errors and next((x for x in form_errors if '2-' in x), False)) or (len(fees) > 1)
     context_info = {
         'request': request,
         'user': request.user,
@@ -1030,13 +1011,7 @@ def add_fee_profile(request):
                 for sub_list in list_of_error_lists
                 for error in sub_list
             )
-    profiles = (
-        [('', '--Add Profile--')] +
-        [
-            (profile.fee_profile_id, profile.name)
-            for profile in fee_profiles
-        ]
-    )
+    profiles = [('', '--Add Profile--')] + [(str(profile.fee_profile_id), profile.name) for profile in fee_profiles]
     context_info = {
         'request': request,
         'user': request.user,
@@ -1137,13 +1112,7 @@ def edit_fee_profile(request, fee_profile_id):
         )
         for i in range(number_of_previous_rule_count + 1, 11)
     ]
-    profiles = (
-        [('', '--Add Profile--')] +
-        [
-            (profile.fee_profile_id, profile.name)
-            for profile in fee_profiles
-        ]
-    )
+    profiles = [('', '--Add Profile--')] + [(str(profile.fee_profile_id), profile.name) for profile in fee_profiles]
     context_info = {
         'request': request,
         'user': request.user,
@@ -1294,7 +1263,8 @@ def workflow_settings_save(request):
 
 @login_required
 def add_contact_enrollment(request, contact_id):
-    contact = Contact.objects.prefetch_related('contact_debts').prefetch_related('incomes').prefetch_related('expenses').get(contact_id=contact_id)
+    contact = Contact.objects.prefetch_related('contact_debts').prefetch_related('incomes').prefetch_related('expenses').prefetch_related('bank_account').get(contact_id=contact_id)
+    bank_account = contact.bank_account.all().first()
     try:
         enrollment = Enrollment.objects.get(contact=contact)
     except Enrollment.DoesNotExist:
@@ -1305,43 +1275,28 @@ def add_contact_enrollment(request, contact_id):
     if request.method == 'POST' and request.POST:
         post_data = request.POST.copy()
         if 'first_date' not in post_data:
-            post_data['first_date'] = (get_now() + timedelta(days=1)).strftime(SHORT_DATE_FORMAT)
+            post_data['first_date'] = (now() + timedelta(days=1)).strftime(SHORT_DATE_FORMAT)
         form = EnrollmentForm(contact, post_data)
-        form_fee_1 = FeeForm(get_data('1', post_data), prefix='1')
-        form_fee_2 = None
-        form_2_data = get_data('2', post_data)
-        if form_2_data:
-            form_fee_2 = FeeForm(form_2_data, prefix='2')
-        if form.is_valid() and form_fee_1.is_valid() and (not form_fee_2 or (form_fee_2 and form_fee_2.is_valid())):
+        if bank_account.info_complete() and form.is_valid():
             with transaction.atomic():
                 enrollment = form.save()
-                fee_1 = form_fee_1.save(commit=False)
-                fee_1.enrollment = enrollment
-                fee_1.save()
-                if form_fee_2:
-                    fee_2 = form_fee_2.save(commit=False)
-                    fee_2.enrollment = enrollment
-                    fee_2.save()
                 payments_data = get_payments_data(post_data)
                 for payment_data in payments_data:
                     date = payment_data.pop('date')
                     amount = payment_data.pop('amount')
-                    for key, value in payment_data.items():
-                        amount -= value
-                        payment = Payment(date=date, amount=amount, status='open', type='ACH Client Debit',
-                                          enrollment=enrollment, charge_type='payment')
+                    payment = Payment(date=date, amount=amount, status='open', type='ACH Client Debit',
+                                      enrollment=enrollment, charge_type='payment', address=contact.address_1,
+                                      account_number=bank_account.account_number,
+                                      routing_number=bank_account.routing_number,
+                                      account_type=bank_account.account_type)
                     payment.save()
-                    for key, value in payment_data.items():
-                        fee = Payment(date=date, amount=value, type=key, status='open', enrollment=enrollment,
-                                      charge_type='fee', related_payment=payment)
-                        fee.save()
             response_data = 'Ok'
             response = {'result': response_data,
                         'redirect_url': reverse('contact_enrollment_details', kwargs={'contact_id': contact_id})}
         else:
-            form_errors = get_form_errors(form) + get_form_errors(form_fee_1)
-            if form_fee_2:
-                form_errors += get_form_errors(form_fee_2)
+            form_errors = get_form_errors(form)
+            if not bank_account:
+                form_errors.append('Contact must have a bank account.')
             response = {'errors': form_errors}
         return JsonResponse(response)
     debts = list(contact.contact_debts.all())
@@ -1350,6 +1305,7 @@ def add_contact_enrollment(request, contact_id):
         'request': request,
         'user': request.user,
         'contact': contact,
+        'bank_account': bank_account,
         'debts': debts,
         'form': form,
         'fixed_values': FIXED_VALUES,
@@ -1357,6 +1313,62 @@ def add_contact_enrollment(request, contact_id):
         'menu_page': 'contacts',
     }
     template_path = 'contact/add_contact_enrollment.html'
+    return _render_response(request, context_info, template_path)
+
+
+@login_required
+def edit_contact_enrollment(request, contact_id):
+    contact = Contact.objects.prefetch_related('contact_debts').prefetch_related('incomes').prefetch_related('expenses').prefetch_related('bank_account').get(contact_id=contact_id)
+    bank_account = contact.bank_account.all().first()
+    try:
+        instance = Enrollment.objects.get(contact=contact)
+    except Enrollment.DoesNotExist:
+        instance = None
+    if not instance:
+        return redirect('add_contact_enrollment', contact_id=contact_id)
+    form_errors = []
+    if request.method == 'POST' and request.POST:
+        post_data = request.POST.copy()
+        if 'first_date' not in post_data:
+            post_data['first_date'] = (now() + timedelta(days=1)).strftime(SHORT_DATE_FORMAT)
+        form = EnrollmentForm(contact, post_data, instance=instance)
+        if form.is_valid():
+            with transaction.atomic():
+                enrollment = form.save()
+                payments_to_delete = enrollment.payments.filter(status='open')
+                for payment in payments_to_delete:
+                    payment.delete()
+                payments_data = get_payments_data(post_data)
+                for payment_data in payments_data:
+                    date = payment_data.pop('date')
+                    amount = payment_data.pop('amount')
+                    payment = Payment(date=date, amount=amount, status='open', type='ACH Client Debit',
+                                      enrollment=enrollment, charge_type='payment', address=contact.address_1,
+                                      account_number=bank_account.account_number,
+                                      routing_number=bank_account.routing_number,
+                                      account_type=bank_account.account_type)
+                    payment.save()
+            response_data = 'Ok'
+            response = {'result': response_data,
+                        'redirect_url': reverse('contact_enrollment_details', kwargs={'contact_id': contact_id})}
+        else:
+            form_errors = get_form_errors(form)
+            response = {'errors': form_errors}
+        return JsonResponse(response)
+    debts = list(contact.contact_debts.all())
+    form = EnrollmentForm(contact)
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'contact': contact,
+        'bank_account': bank_account,
+        'debts': debts,
+        'form': form,
+        'fixed_values': FIXED_VALUES,
+        'form_errors': form_errors,
+        'menu_page': 'contacts',
+    }
+    template_path = 'contact/edit_contact_enrollment.html'
     return _render_response(request, context_info, template_path)
 
 
@@ -1369,9 +1381,9 @@ def contact_enrollment_details(request, contact_id):
         enrollment = None
     if not enrollment:
         return redirect('add_contact_enrollment', contact_id=contact_id)
-    form_add_payment = PaymentForm()
-    form_edit_payment = PaymentForm()
-    payments = list(enrollment.payments.all())
+    form_add_payment = PaymentForm(enrollment=enrollment)
+    form_edit_payment = PaymentForm(enrollment=enrollment)
+    payments = list(enrollment.payments.prefetch_related('enrollment').all())
     context_info = {
         'request': request,
         'user': request.user,
@@ -1393,9 +1405,9 @@ def get_enrollment_plan_info(request, contact_id, enrollment_plan_id):
     response = {'result': None}
     if request.method == 'GET' and request.GET:
         contact = Contact.objects.prefetch_related('contact_debts').get(contact_id=contact_id)
-        now = get_now()
+        date_now = now()
         first_date_str = request.GET.get('first_date')
-        first_date = datetime.strptime((first_date_str if first_date_str else (now + timedelta(days=1)).strftime(SHORT_DATE_FORMAT)), SHORT_DATE_FORMAT)
+        first_date = datetime.strptime((first_date_str if first_date_str else (date_now + timedelta(days=1)).strftime(SHORT_DATE_FORMAT)), SHORT_DATE_FORMAT)
         start_date_str = request.GET.get('start_date')
         start_date = datetime.strptime((start_date_str if start_date_str else (first_date + timedelta(days=32)).strftime(SHORT_DATE_FORMAT)), SHORT_DATE_FORMAT)
         second_date_str = request.GET.get('second_date')
@@ -1561,6 +1573,8 @@ def get_debts_info(request, contact_id):
 def add_payment(request, contact_id):
     response = {'result': None}
     if request.method == 'POST' and request.POST:
+        contact = Contact.objects.get(contact_id=contact_id)
+        bank_account = contact.bank_account.all().first()
         try:
             enrollment = Enrollment.objects.get(contact__contact_id=contact_id)
         except Enrollment.DoesNotExist:
@@ -1569,8 +1583,18 @@ def add_payment(request, contact_id):
             form = PaymentForm(request.POST)
             if form.is_valid():
                 payment = form.save(commit=False)
-                payment.enrollment = enrollment
                 payment.status = 'open'
+                payment.enrollment = enrollment
+                if not payment.address:
+                    payment.address = contact.address_1
+                if bank_account:
+                    if not payment.account_number:
+                        payment.account_number = bank_account.account_number
+                    if not payment.routing_number:
+                        payment.routing_number = bank_account.routing_number
+                    if not payment.account_type:
+                        payment.account_type = bank_account.account_type
+                payment.added_manually = True
                 payment.save()
                 response['result'] = 'Ok'
             else:
@@ -1594,10 +1618,9 @@ def edit_payment(request, contact_id):
             except:
                 pass
             if instance:
-                form = PaymentForm(request.POST)
+                form = PaymentForm(request.POST, instance=instance)
                 if form.is_valid():
                     payment = form.save(commit=False)
-                    payment.enrollment = enrollment
                     payment.save()
                     response['result'] = 'Ok'
                     response['data'] = {
@@ -1608,9 +1631,19 @@ def edit_payment(request, contact_id):
                         'sub_type': payment.sub_type,
                         'memo': payment.memo,
                         'amount': payment.amount,
+                        'enrollment': payment.enrollment.enrollment_id,
+                        'account_number': payment.account_number,
+                        'routing_number': payment.routing_number,
+                        'account_type': payment.account_type,
+                        'associated_settlement': payment.associated_settlement,
+                        'associated_payment': payment.associated_payment,
+                        'address': payment.address,
+                        'paid_to': payment.paid_to.payee_id if payment.paid_to else '',
+                        'payee': payment.payee.payee_id if payment.payee else '',
                     }
                 else:
-                    response['result'] = 'No Enrollment'
+                    form_errors = get_form_errors(form)
+                    response = {'errors': form_errors, 'result': 'No Enrollment'}
     return JsonResponse(response)
 
 

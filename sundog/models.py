@@ -6,12 +6,15 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils.timezone import now
 from django_auth_app import enums
 from numpy import arange
 from settings import MEDIA_PRIVATE
+from sundog.constants import SHORT_DATE_FORMAT
 from sundog.media import S3PrivateFileField
 from sundog.routing import package_models
-from sundog.utils import format_price, get_now
+from sundog.templatetags.my_filters import currency
+from sundog.utils import format_price
 
 import copy
 import logging
@@ -425,7 +428,7 @@ class Contact(models.Model):
     def get_time_in_status(self):
         time_in_status = 'N/A'
         if self.last_status_change:
-            seconds = (get_now() - self.last_status_change).total_seconds()
+            seconds = (now() - self.last_status_change).total_seconds()
             days, seconds = divmod(seconds, 86400)
             hours, seconds = divmod(seconds, 3600)
             minutes, seconds = divmod(seconds, 60)
@@ -443,7 +446,7 @@ class Contact(models.Model):
         if self.contact_id is not None:
             orig = Contact.objects.get(contact_id=self.contact_id)
             if orig.status != self.status:
-                self.last_status_change = get_now()
+                self.last_status_change = now()
         if self.identification == '':
             self.identification = None
         if self.co_applicant_identification == '':
@@ -542,6 +545,71 @@ class FeePlan(models.Model):
     discount = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
 
 
+ACCOUNT_TYPE_CHOICES = (
+    (None, NONE_CHOICE_LABEL),
+    ('checking', 'Checking'),
+    ('savings', 'Savings'),
+)
+
+
+class Payee(models.Model):
+    payee_id = models.AutoField(primary_key=True)
+    default_for_company = models.BooleanField(default=False)
+    name = models.CharField(max_length=100)
+    bank_name = models.CharField(max_length=100)
+    routing_number = models.CharField(max_length=20)
+    account_number = models.CharField(max_length=30)
+    account_type = models.CharField(max_length=8, choices=ACCOUNT_TYPE_CHOICES)
+    name_on_account = models.CharField(max_length=100)
+    company = models.ForeignKey(Company, blank=True, null=True)
+
+    def __init__(self, *args, **kwargs):
+        super(Payee, self).__init__(*args, **kwargs)
+        self.str = str(self.payee_id) + '-' + self.name + ' ***' + self.account_number[-4:]
+
+    def __str__(self):
+        return self.str
+
+
+COMPENSATION_TEMPLATE_TYPES_CHOICES = (
+    ('flat', 'Flat Amoritization'),
+    ('variable', 'Variable Amortization'),
+    ('formula', 'Formula Based'),
+)
+
+AVAILABLE_FOR_CHOICES = (
+    ('this_company', 'This Company'),
+    ('all_companies', 'All Companies'),
+)
+
+
+class CompensationTemplate(models.Model):
+    compensation_template_id = models.AutoField(primary_key=True)
+    company = models.ForeignKey(Company)
+    name = models.CharField(max_length=100)
+    type = models.CharField(max_length=20, choices=COMPENSATION_TEMPLATE_TYPES_CHOICES)
+    available_for = models.CharField(max_length=20, choices=AVAILABLE_FOR_CHOICES)
+
+    def __str__(self):
+        return self.name
+
+
+COMPENSATION_TEMPLATE_PAYEE_TYPE_CHOICES = (
+    ('credit', 'Credit'),
+    ('transfer', 'Transfer'),
+    ('transfer_credit', 'Transfer Credit'),
+)
+
+
+class CompensationTemplatePayee(models.Model):
+    compensation_template_payee_id = models.AutoField(primary_key=True)
+    compensation_template = models.ForeignKey(CompensationTemplate, related_name='payees')
+    type = models.CharField(max_length=20, choices=COMPENSATION_TEMPLATE_PAYEE_TYPE_CHOICES)
+    fee_amount = models.DecimalField(max_digits=5, decimal_places=2, validators=[MaxValueValidator(Decimal('100.00')),
+                                                                                 MinValueValidator(Decimal('0.01'))])
+    payee = models.ForeignKey(Payee, related_name='compensation_template_payees')
+
+
 CUSTODIAL_ACCOUNT_CHOICES = [('epps', 'EPPS'), ('dpg', 'DPG Custodial')]
 
 
@@ -550,7 +618,7 @@ class Enrollment(models.Model):
     enrollment_plan = models.ForeignKey(EnrollmentPlan, related_name='enrollments_linked', blank=True, null=True)
     contact = models.ForeignKey(Contact, related_name='enrollments', blank=True, null=True)
     custodial_account = models.CharField(max_length=4, choices=CUSTODIAL_ACCOUNT_CHOICES, default='epps')
-    comp_template_chooser = models.CharField(max_length=20, blank=True, null=True)
+    comp_template_chooser = models.ForeignKey(CompensationTemplate, blank=True, null=True)
     program_length = models.CharField(max_length=4)
     start_date = models.DateTimeField()
     first_date = models.DateTimeField()
@@ -567,9 +635,9 @@ class Enrollment(models.Model):
 
     def next_payment(self):
         date = None
-        now = get_now()
+        date_now = now()
         for payment in list(self.payments.all()):
-            if now < payment.date:
+            if date_now < payment.date:
                 date = payment.date
                 break
         return date
@@ -613,17 +681,32 @@ class Enrollment(models.Model):
         return Decimal('0.00')
 
 
-class Fee(models.Model):
-    fee_id = models.AutoField(primary_key=True)
-    amount = models.CharField(max_length=20)
-    fee_plan = models.ForeignKey(FeePlan, related_name='fees_related', blank=True, null=True)
-    enrollment = models.ForeignKey(Enrollment, related_name='fees', blank=True, null=True)
-
-ACCOUNT_TYPE_CHOICES = (
-    (None, NONE_CHOICE_LABEL),
-    ('checking', 'Checking'),
-    ('savings', 'Savings'),
+SETTLEMENT_OFFER_MADE_BY_CHOICES = (
+    ('negotiator', 'Negotiator'),
+    ('client', 'Client'),
 )
+
+SETTLEMENT_OFFER_STATUS_CHOICES = (
+    ('in_review', 'In-Review'),
+    ('declined', 'Declined'),
+    ('accepted', 'Accepted'),
+    ('client_auth_needed', 'Client Authorization is Needed'),
+    ('sett_letter_needed', 'Settlement Letter is Needed'),
+    ('client_auth_sett_letter_needed', 'Client Authorization and Settlement Letter are Needed'),
+)
+
+
+class SettlementOffer(models.Model):
+    contact = models.ForeignKey(Contact)
+    made_by = models.CharField(max_length=10, choices=SETTLEMENT_OFFER_MADE_BY_CHOICES)
+    negotiator = models.ForeignKey(User)
+    status = models.CharField(max_length=40, choices=SETTLEMENT_OFFER_STATUS_CHOICES)
+    date = models.DateTimeField()
+    valid_until = models.DateTimeField()
+    debt_amount = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    offer_amount = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    settlement_fee = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    notes = models.CharField(max_length=1000, blank=True, null=True)
 
 
 class BankAccount(models.Model):
@@ -643,11 +726,12 @@ class BankAccount(models.Model):
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 
     def info_complete(self):
-        return self.bank_name and self.name_on_account and self.account_number and self.account_type and self.routing_number
+        return True if self.bank_name and self.name_on_account and self.account_number and\
+                       self.account_type and self.routing_number else False
 
 
 MEMO_CHOICES = (
-    (None, '--Select--'),
+    (None, NONE_CHOICE_LABEL),
     ('deferred_fees', 'Deferred Fees'),
     ('graduation_refund', 'Graduation Refund'),
     ('litigation_defense_fee', 'Litigation Defense Fee'),
@@ -660,12 +744,13 @@ MEMO_CHOICES = (
 )
 
 ACTION_CHOICES = (
-    (None, '--Select--'),
+    (None, NONE_CHOICE_LABEL),
     ('schedule_transaction', 'Schedule Transaction'),
 )
 
 PAYMENT_TYPE_CHOICES = (
-    (None, '--Select--'),
+    (None, NONE_CHOICE_LABEL),
+    ('ACH Client Debit', 'ACH Client Debit'),
     ('Earned Performance Fee', 'Earned Performance Fee'),
     ('Retained Performance Fee', 'Retained Performance Fee'),
     ('Client Refund', 'Client Refund'),
@@ -675,9 +760,10 @@ PAYMENT_TYPE_CHOICES = (
 )
 
 PAYMENT_SUB_TYPE_CHOICES = (
-    (None, '--Select--'),
+    (None, NONE_CHOICE_LABEL),
+    ('ach_check_by_phone', 'ACH / Check By Phone'),
     ('advance_recoup', 'Advance Recoup'),
-    ('Bank_wire', 'Bank Wire'),
+    ('bank_wire', 'Bank Wire'),
     ('check', 'Check'),
     ('check_2nd_day', 'Check 2nd Day'),
     ('check_overnight', 'Check Overnight'),
@@ -716,11 +802,19 @@ class Payment(models.Model):
     memo = models.CharField(max_length=30, choices=MEMO_CHOICES, blank=True, null=True)
     action = models.CharField(max_length=20, choices=ACTION_CHOICES, blank=True, null=True)
     trans_id = models.CharField(max_length=20, blank=True, null=True)
-    payee = models.ForeignKey(Company, related_name='payments', blank=True, null=True)
+    payee = models.ForeignKey(Payee, related_name='payments', blank=True, null=True)
+    paid_to = models.ForeignKey(Payee, related_name='payments_received', blank=True, null=True)
+    account_number = models.CharField(max_length=30, blank=True, null=True)
+    routing_number = models.CharField(max_length=20, blank=True, null=True)
+    account_type = models.CharField(max_length=10, choices=ACCOUNT_TYPE_CHOICES, blank=True, null=True)
+    address = models.CharField(max_length=1000, blank=True, null=True)
     status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, blank=True, null=True)
     transaction_type = models.CharField(max_length=10, choices=PAYMENT_TRANSACTION_TYPE_CHOICES, blank=True, null=True)
     charge_type = models.CharField(max_length=10, choices=PAYMENT_CHARGE_TYPE_CHOICES, default='payment')
-    related_payment = models.ForeignKey('self', related_name='parent_payment', blank=True, null=True)
+    parent = models.ForeignKey('self', related_name='dependants', blank=True, null=True)
+    associated_payment = models.ForeignKey('self', related_name='associated_payment_from', blank=True, null=True)
+    associated_settlement = models.ForeignKey('self', related_name='associated_settlement_from', blank=True, null=True)
+    added_manually = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['date']
@@ -739,6 +833,9 @@ class Payment(models.Model):
             if status_choice[0] == self.status:
                 self.status_label = status_choice[1]
                 break
+
+    def __str__(self):
+        return self.type + ': ' + self.date.strftime(SHORT_DATE_FORMAT) + ' - ' + currency(self.amount)
 
 
 ACTIVITY_TYPE_CHOICES = (
@@ -1374,68 +1471,6 @@ class Campaign(models.Model):
 
     def __str__(self):
         return '%s' % self.title
-
-
-class Payee(models.Model):
-    payee_id = models.AutoField(primary_key=True)
-    default_for_company = models.BooleanField(default=False)
-    name = models.CharField(max_length=100)
-    bank_name = models.CharField(max_length=100)
-    routing_number = models.CharField(max_length=20)
-    account_number = models.CharField(max_length=30)
-    account_type = models.CharField(max_length=8, choices=ACCOUNT_TYPE_CHOICES)
-    name_on_account = models.CharField(max_length=100)
-    related_entity_id = models.IntegerField()
-    related_entity_name = models.CharField(max_length=20, choices=[('Company', 'Company'), ('User', 'User')])
-
-    def __init__(self, *args, **kwargs):
-        super(Payee, self).__init__(*args, **kwargs)
-        # app_label = self.__class__._meta.app_label
-        # self.related_entity = apps.get_model(app_label=app_label, model_name=self.related_entity_name)
-        self.str = str(self.payee_id) + '-' + self.name + ' ***' + self.account_number[-4:]
-
-    def __str__(self):
-        return self.str
-
-
-COMPENSATION_TEMPLATE_TYPES_CHOICES = (
-    ('flat', 'Flat Amoritization'),
-    ('variable', 'Variable Amortization'),
-    ('formula', 'Formula Based'),
-)
-
-AVAILABLE_FOR_CHOICES = (
-    ('this_company', 'This Company'),
-    ('all_companies', 'All Companies'),
-)
-
-
-class CompensationTemplate(models.Model):
-    compensation_template_id = models.AutoField(primary_key=True)
-    company = models.ForeignKey(Company)
-    name = models.CharField(max_length=100)
-    type = models.CharField(max_length=20, choices=COMPENSATION_TEMPLATE_TYPES_CHOICES)
-    available_for = models.CharField(max_length=20, choices=AVAILABLE_FOR_CHOICES)
-
-    def __str__(self):
-        return self.name
-
-
-COMPENSATION_TEMPLATE_PAYEE_TYPE_CHOICES = (
-    ('credit', 'Credit'),
-    ('transfer', 'Transfer'),
-    ('transfer_credit', 'Transfer Credit'),
-)
-
-
-class CompensationTemplatePayee(models.Model):
-    compensation_template_payee_id = models.AutoField(primary_key=True)
-    compensation_template = models.ForeignKey(CompensationTemplate, related_name='payees')
-    type = models.CharField(max_length=20, choices=COMPENSATION_TEMPLATE_PAYEE_TYPE_CHOICES)
-    fee_amount = models.DecimalField(max_digits=5, decimal_places=2, validators=[MaxValueValidator(Decimal('100.00')),
-                                                                                 MinValueValidator(Decimal('0.01'))])
-    payee = models.ForeignKey(Payee, related_name='compensation_template_payees')
-
 
 for model in package_models(sundog.components):
     setattr(sys.modules[__name__], model.__name__, model)

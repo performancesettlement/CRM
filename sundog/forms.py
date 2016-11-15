@@ -2,10 +2,11 @@ from django import forms
 from django.contrib.auth.models import User
 from django.core.validators import validate_email
 from django.db.models import Q
+import pytz
 from django_auth_app import enums
 from sundog.models import Contact, Stage, Status, Campaign, Source, BankAccount, Note, Call,\
     Email, DEBT_SETTLEMENT, Uploaded, Incomes, Expenses, Creditor, Debt, DebtNote, EnrollmentPlan, FeePlan, FeeProfile,\
-    FeeProfileRule, WorkflowSettings, Enrollment, Fee, AMOUNT_CHOICES, Payment, PAYMENT_TYPE_CHOICES, \
+    FeeProfileRule, WorkflowSettings, Enrollment, AMOUNT_CHOICES, Payment, PAYMENT_TYPE_CHOICES, \
     CompensationTemplate, CompensationTemplatePayee, NONE_CHOICE_LABEL, Payee, COMPENSATION_TEMPLATE_PAYEE_TYPE_CHOICES, \
     AVAILABLE_FOR_CHOICES, COMPENSATION_TEMPLATE_TYPES_CHOICES
 
@@ -422,7 +423,7 @@ class EnrollmentForm(forms.ModelForm):
         model = Enrollment
         widgets = {
             'enrollment_plan': forms.Select(attrs={'class': 'col-xs-12 no-padding-sides'}),
-            'comp_template_chooser': forms.Select(choices=[('', 'EPPS Compensation Template')], attrs={'class': 'col-xs-12 no-padding-sides'}),
+            'comp_template_chooser': forms.Select(attrs={'class': 'col-xs-12 no-padding-sides'}),
             'start_date': forms.DateInput(format=SHORT_DATE_FORMAT, attrs={'placeholder': 'mm/dd/yyyy', 'data-provide': 'datepicker'}),
             'first_date': forms.DateInput(format=SHORT_DATE_FORMAT, attrs={'placeholder': 'mm/dd/yyyy', 'data-provide': 'datepicker'}),
             'second_date': forms.DateInput(format=SHORT_DATE_FORMAT, attrs={'placeholder': 'mm/dd/yyyy', 'data-provide': 'datepicker'}),
@@ -436,7 +437,6 @@ class EnrollmentForm(forms.ModelForm):
             debt_ids = kwargs['debt_ids']
         super(EnrollmentForm, self).__init__(*args, **kwargs)
         self.fields['contact'].initial = contact
-        self.fields['comp_template_chooser'].empty_label = None
         queryset = EnrollmentPlan.objects.all()
         debt_amount = contact.total_enrolled_current_debts(ids=debt_ids)
         queryset.filter(Q(debt_amount_flag=False) | Q(debt_amount_flag=True, debt_amount_from__gte=debt_amount,
@@ -479,15 +479,6 @@ class FeePlanForm(forms.ModelForm):
                 self.fields['fixed_amount'].widget.attrs.update({'disabled': 'disabled', 'style': 'max-width: 140px; display: none;'})
 
 
-class FeeForm(forms.ModelForm):
-    class Meta:
-        model = Fee
-        widgets = {
-            'fee_id': forms.HiddenInput(),
-        }
-        fields = '__all__'
-
-
 class FeeProfileForm(forms.ModelForm):
     class Meta:
         model = FeeProfile
@@ -503,7 +494,7 @@ class FeeProfileRuleForm(forms.ModelForm):
 
 
 class PaymentForm(forms.ModelForm):
-    date = forms.DateField(required=True,
+    date = forms.DateTimeField(required=True,
                            widget=forms.DateInput(format=SHORT_DATE_FORMAT,
                                                   attrs={'placeholder': 'mm/dd/yyyy',
                                                          'data-provide': 'datepicker',
@@ -512,14 +503,38 @@ class PaymentForm(forms.ModelForm):
     class Meta:
         model = Payment
         widgets = {
+            'enrollment': forms.HiddenInput(),
             'active': forms.CheckboxInput(attrs={'style': 'height: 18px !important;'}),
             'type': forms.Select(choices=PAYMENT_TYPE_CHOICES, attrs={'class': 'col-xs-8 no-padding-sides'}),
             'sub_type': forms.Select(attrs={'class': 'col-xs-8 no-padding-sides'}),
-            'amount': forms.NumberInput(attrs={'class': 'col-xs-8 no-padding-sides'}),
+            'amount': forms.NumberInput(attrs={'class': 'col-xs-12 no-padding-sides'}),
+            'account_number': forms.TextInput(attrs={'class': 'col-xs-8 no-padding-sides'}),
+            'routing_number': forms.TextInput(attrs={'class': 'col-xs-8 no-padding-sides'}),
+            'associated_settlement': forms.Select(attrs={'class': 'col-xs-8 no-padding-sides'}),
+            'associated_payment': forms.Select(attrs={'class': 'col-xs-8 no-padding-sides'}),
+            'account_type': forms.Select(attrs={'class': 'col-xs-8 no-padding-sides'}),
+            'address': forms.Textarea(attrs={'class': 'col-xs-8 no-padding-sides', 'rows': 3}),
+            'paid_to': forms.Select(attrs={'class': 'col-xs-8 no-padding-sides'}),
+            'payee': forms.Select(attrs={'class': 'col-xs-8 no-padding-sides'}),
             'memo': forms.Select(attrs={'class': 'col-xs-8 no-padding-sides'}),
             'action': forms.Select(attrs={'class': 'col-xs-8 no-padding-sides'}),
         }
-        fields = '__all__'
+        exclude = ['charge_type', 'transaction_type', 'parent', 'added_manually', 'trans_id', 'cleared_date',
+                   'created_at', 'status']
+
+    def __init__(self, *args, **kwargs):
+        enrollment = None
+        if 'enrollment' in kwargs:
+            enrollment = kwargs.pop('enrollment')
+        super(PaymentForm, self).__init__(*args, **kwargs)
+        self.fields['enrollment'].initial = enrollment
+        if enrollment:
+            self.fields['associated_payment'].queryset = Payment.objects.filter(charge_type='payment', enrollment=enrollment)
+            self.fields['associated_settlement'].queryset = Payment.objects.filter(charge_type='settlement', enrollment=enrollment)
+
+    def save(self, commit=True):
+        self.cleaned_data['date'] = self.cleaned_data['date'].replace(tzinfo=pytz.utc)
+        return super(PaymentForm, self).save(commit=commit)
 
 
 class CompensationTemplateForm(forms.ModelForm):

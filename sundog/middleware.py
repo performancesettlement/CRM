@@ -1,18 +1,12 @@
 import pytz
 from django.utils import timezone
+from settings import TIME_ZONE
 from sundog.cache.user.info import get_cache_user
 
 
 class TimezoneMiddleware(object):
     def process_request(self, request):
-        try:
-            tzname = request.session.get('django_timezone')
-            if tzname:
-                timezone.activate(pytz.timezone(tzname))
-            else:
-                timezone.deactivate()
-        except:
-            timezone.deactivate()
+        timezone.activate(pytz.timezone(TIME_ZONE))
 
 
 class ImpersonationMiddleware(object):

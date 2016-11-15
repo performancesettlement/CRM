@@ -58,7 +58,7 @@
             <div id="total-fees" class="blue font-medium font-bold">0</div>
         </div>
     </div>
-    <div class="col-xs-12 no-padding-sides m-t-md">
+    <div class="col-xs-12 no-padding-sides m-t-md padding-for-footer">
         <table id="debts-table" class="table table-hover">
             <thead>
                 <tr>
@@ -81,15 +81,24 @@
                     <td class="active"><span class="glyphicon glyphicon-asterisk {% if payment.active %}green{% else %}red{% endif %}"></span></td>
                     <td><span class="glyphicon glyphicon-asterisk {% if payment.cleared_date %}green{% else %}orange{% endif %}"></span></td>
                     <td class="date">{{ payment.date|date:'SHORT_DATE_FORMAT' }}</td>
-                    <td>{% if payment.cleared_date %}{{ payment.cleared_date|date:'SHORT_DATE_FORMAT' }}{% endif %}</td>
+                    <td>{{ payment.cleared_date|date:'SHORT_DATE_FORMAT'|default:'' }}</td>
                     <td class="amount" val="{% if payment.amount %}{{ payment.amount }}{% endif %}">{{ payment.amount|currency }}</td>
-                    <td class="type" val="{% if payment.type %}{{ payment.type }}{% endif %}">{% if payment.type %}{{ payment.type_label }}{% endif %}</td>
+                    <td class="type" val="{{ payment.type|default:'' }}">{{ payment.type_label|default:payment.type }}</td>
                     <td class="hidden sub_type">{% if payment.sub_type %}{{ payment.sub_type }}{% endif %}</td>
                     <td class="hidden action">{% if payment.action %}{{ payment.action }}{% endif %}</td>
                     <td>{% if payment.trans_id %}{{ payment.trans_id }}{% endif %}</td>
                     <td class="memo" val="{% if payment.memo %}{{ payment.memo }}{% endif %}">{% if payment.memo %}{{ payment.memo_label }}{% endif %}</td>
-                    <td>{% if payment.payee %}{{ payment.payee }}{% endif %}</td>
+                    <td>{% if payment.payee %}{{ payment.payee.name }}{% endif %}</td>
                     <td>{% if payment.status %}{{ payment.status_label }}{% endif %}</td>
+                    <td class="hidden enrollment">{{ payment.enrollment.enrollment_id|default:'' }}</td>
+                    <td class="hidden account_number">{{ payment.account_number|default:'' }}</td>
+                    <td class="hidden routing_number">{{ payment.routing_number|default:'' }}</td>
+                    <td class="hidden account_type">{{ payment.account_type|default:'' }}</td>
+                    <td class="hidden associated_settlement">{{ payment.associated_settlement|default:'' }}</td>
+                    <td class="hidden associated_payment">{{ payment.associated_payment|default:'' }}</td>
+                    <td class="hidden address">{{ payment.address|default:'' }}</td>
+                    <td class="hidden paid_to">{{ payment.paid_to|default:'' }}</td>
+                    <td class="hidden payee">{{ payment.payee|default:'' }}</td>
                     <td><a href="" class="edit-payment"><span class="glyphicon glyphicon-edit"></span></a></td>
                 </tr>
             {% endfor %}

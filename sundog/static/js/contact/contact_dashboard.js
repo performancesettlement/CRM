@@ -64,7 +64,7 @@ $(document).ready(function() {
                     $('#id_state').val(response.state);
                     $('#id_city').val(response.city);
                     $('#id_address').val(response.address);
-                    $('#id_phone').val(response.telephone);
+                    $('#id_phone').val(response.telephone.replace(/-/g, ''));
                     $('#id_zip_code').val(response.zip);
                 }
                 else if (response.code === 400) {

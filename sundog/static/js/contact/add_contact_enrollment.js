@@ -191,7 +191,11 @@ $(document).ready(function() {
                 if (firstDateInput.val()) {
                     firstDate = firstDateInput.val();
                 }
-                var secondDate = $('#id_second_date').val();
+                var secondDate = '';
+                var secondDateInput = $('#id_second_date');
+                if (secondDateInput.val()) {
+                    secondDate = secondDateInput.val()
+                }
                 var monthsSelector = $('#id_program_length');
                 var months = monthsSelector.val() != null ? monthsSelector.val() : '';
                 url += '&first_date=' + firstDate + '&second_date=' + secondDate + '&months=' + months;
@@ -321,8 +325,6 @@ $(document).ready(function() {
             showErrorPopup("You can't disable all debts.");
         }
     });
-
-
 
     $('#id_enrollment_plan').change(function() {
         var planId = $('#id_enrollment_plan').val();

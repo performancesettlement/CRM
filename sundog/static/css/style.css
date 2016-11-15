@@ -8226,7 +8226,7 @@ input {
 }
 
 .padding-for-footer {
-    padding-bottom: 95px;
+    padding-bottom: 95px !important;
 }
 
 .activity-type {
