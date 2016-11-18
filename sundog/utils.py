@@ -10,6 +10,7 @@ from django.utils.html import strip_tags
 from django.views.generic.detail import BaseDetailView
 from django_auth_app.services import get_user_timezone
 from sundog.constants import SHORT_DATE_FORMAT
+from weasyprint import CSS
 
 import calendar
 import hashlib
@@ -115,11 +116,19 @@ def const(value, *_, **__):
     return lambda *_, **__: value
 
 
-def catching(computation, exception, catcher):
+def catching(computation, catcher, exception=Exception):
     try:
         return computation()
     except exception as e:
         return catcher(e)
+
+
+def defaulting(computation, value, exception=Exception):
+    return catching(
+        computation=computation,
+        catcher=const(value),
+        exception=exception,
+    )
 
 
 # From https://djangosnippets.org/snippets/2328/
@@ -337,10 +346,32 @@ def template_column(
     )
 
 
+pdf_css = '''
+@media all {
+    .page-break { display: none; }
+}
+
+@media print {
+    .page-break { display: block; page-break-before: always; }
+}
+'''
+
+
 class PDFView(BaseDetailView):
     def render_to_response(self, context):
         return HttpResponse(
-            content=self.object.render(context).write_pdf(),
+            content=(
+                self
+                .object
+                .render(context)
+                .write_pdf(
+                    stylesheets=[
+                        CSS(
+                            string=pdf_css,
+                        ),
+                    ],
+                )
+            ),
             content_type='application/pdf',
         )
 

@@ -11,6 +11,7 @@ from fm.views import AjaxCreateView, AjaxDeleteView, AjaxUpdateView
 from settings import SHORT_DATETIME_FORMAT
 from sundog.components.documents.models import Document
 from sundog.models import (
+    BankAccount,
     Company,
     Contact,
     DEBT_SETTLEMENT,
@@ -173,18 +174,70 @@ class DocumentsPreviewPDF(DocumentsCRUDViewMixin, PDFView):
             fake_id -= 1
             return fake_id
 
+        bank_account = BankAccount(
+            routing_number='011103093',
+            account_number='123456789012345678901234567890',
+            account_type='checking',
+            name_on_account='TEST ING USER',
+            bank_name='Test Bank',
+            address='789 Fake St.',
+            city='Avon',
+            state='CT',
+            zip_code='06001',
+            phone='9165550108',
+            created_at=date.today() - timedelta(days=4),
+            updated_at=date.today() - timedelta(days=3),
+        )
+
+        company = Company(
+            company_id=get_fake_id(),
+            active=True,
+            company_type='law_firm',
+            parent_company=None,
+            name='Testing Company, Inc',
+            contact_name='Testing Contact',
+            # company_code='',  # TODO
+            # ein='',  # TODO
+            address='987 Fake St.',
+            address_2='APT 9',
+            city='Belmont',
+            state='CA',
+            zip='94002',
+            phone='9165550106',
+            fax='9165550107',
+            email='testing.company@example.com',
+            # domain='',  # TODO
+            timezone='pacific',
+            account_exec='user_test',
+            theme='default',
+            # upload_logo=FileField(...),  # TODO
+            userfield_1='Test user field 1',
+            userfield_2='Test user field 2',
+            userfield_3='Test user field 3',
+            # docusign_api_acct='',  # TODO
+            # docusign_api_user='',  # TODO
+            # docusign_password='',  # TODO
+        )
+
+        lead_source = LeadSource(
+            lead_source_id=get_fake_id(),
+            name='Test lead source',
+        )
+
+        stage = Stage(
+            stage_id=-2,
+            name='Test stage',
+            order=0,
+            type=DEBT_SETTLEMENT,
+        )
+
         status = Status(
             status_id=get_fake_id(),
             name='Test status',
-            stage=Stage(
-                stage_id=-2,
-                name='Test stage',
-                order=0,
-                type=DEBT_SETTLEMENT,
-            ),
+            stage=stage,
         )
 
-        return Contact(
+        contact = Contact(
             contact_id=get_fake_id(),
             first_name='Test',
             middle_name='Ing',
@@ -245,42 +298,15 @@ class DocumentsPreviewPDF(DocumentsCRUDViewMixin, PDFView):
             active=True,
             assigned_to=self.request.user,
             call_center_representative=self.request.user,
-            lead_source=LeadSource(
-                lead_source_id=get_fake_id(),
-                name='Test lead source',
-            ),
-            company=Company(
-                company_id=get_fake_id(),
-                active=True,
-                company_type='law_firm',
-                parent_company=None,
-                name='Testing Company, Inc',
-                contact_name='Testing Contact',
-                # company_code='',  # TODO
-                # ein='',  # TODO
-                address='987 Fake St.',
-                address_2='APT 9',
-                city='Belmont',
-                state='CA',
-                zip='94002',
-                phone='9165550106',
-                fax='9165550107',
-                email='testing.company@example.com',
-                # domain='',  # TODO
-                timezone='pacific',
-                account_exec='user_test',
-                theme='default',
-                # upload_logo=FileField(...),  # TODO
-                userfield_1='Test user field 1',
-                userfield_2='Test user field 2',
-                userfield_3='Test user field 3',
-                # docusign_api_acct='',  # TODO
-                # docusign_api_user='',  # TODO
-                # docusign_password='',  # TODO
-            ),
-            stage=status.stage,
-            status=status,
             last_status_change=date.today(),
             created_at=date.today() - timedelta(days=2),
             updated_at=date.today() - timedelta(days=1),
+
+            bank_account=bank_account,
+            company=company,
+            lead_source=lead_source,
+            stage=stage,
+            status=status,
         )
+
+        return contact
