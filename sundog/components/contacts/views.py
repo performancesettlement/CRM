@@ -6,7 +6,6 @@ from datatableview.columns import (
     TextColumn,
 )
 from datatableview.helpers import through_filter
-from datatableview.views import XEditableDatatableView
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.shortcuts import redirect
@@ -17,7 +16,7 @@ from settings import SHORT_DATETIME_FORMAT
 from sundog.middleware import Responder
 from sundog.models import Contact
 from sundog.routing import decorate_view, route
-from sundog.utils import const
+from sundog.utils import SundogDatatableView, const
 
 
 @route(r'^contacts/?$', name='contacts.list')
@@ -25,7 +24,7 @@ from sundog.utils import const
 @route(r'^contacts/lists/$', name='new_list')  # FIXME: Create proper view
 @route(r'^dataSources/$', name='data_sources')  # FIXME: Create proper view
 @decorate_view(login_required)
-class ContactsList(XEditableDatatableView):
+class ContactsList(SundogDatatableView):
     template_name = 'sundog/contacts/list.html'
 
     model = Contact
@@ -36,6 +35,21 @@ class ContactsList(XEditableDatatableView):
     }
 
     default_list = 'my_contacts'
+
+    searchable_columns = [
+        'type_',
+        'created_at',
+        'company',
+        'assigned_to',
+        'full_name',
+        'phone_number',
+        'email',
+        'stage',
+        'status',
+        'data_source',
+        'last_call_activity',
+        'time_in_status',
+    ]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -169,6 +183,8 @@ class ContactsList(XEditableDatatableView):
                 'time_in_status',
                 'actions',
             ]
+
+            footer = True
 
             ordering = [
                 '-created_at',
