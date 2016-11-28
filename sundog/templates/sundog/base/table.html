@@ -16,16 +16,112 @@
   {# datatableview #}
   <script type="text/javascript" src="{% static "js/datatableview.min.js" %}"></script>
 
-  {# Initialization for x-editable tables #}
+  {# Initialization for datatables #}
   <script type="text/javascript">
+
       $.fn.editable.defaults.mode = 'inline';
       datatableview.auto_initialize = false;
+
       $(function() {
-        var xeditable_options = {};
-        datatableview.initialize($('.datatable'), {
-          fnRowCallback: datatableview.make_xeditable(xeditable_options),
+
+        {% comment %}
+        Enable flexible table width; see
+        https://datatables.net/examples/basic_init/flexible_width.html
+        {% endcomment %}
+        $('table.datatable').attr('width', '100%');
+
+        var datatable = datatableview.initialize($('.datatable'), {
+
+          {# Column visibility control button #}
+          buttons: [
+            'colvis',
+          ],
+
+          {% comment %}
+          This is the default Bootstrap layout but adds the buttons extension
+          B control character to the initial row.  See
+          https://datatables.net/reference/option/dom
+          {% endcomment %}
+          dom: (
+            "<'row'<'col-sm-6'Bl><'col-sm-6'f>>" +
+            "<'row'<'col-sm-12'tr>>" +
+            "<'row'<'col-sm-5'i><'col-sm-7'p>>"
+          ),
+
+          {% comment %}
+          x-editable columns initialization options; see
+          http://django-datatable-view.appspot.com/x-editable-columns/
+          {% endcomment %}
+          fnRowCallback: datatableview.make_xeditable({
+            {% block table_view_xeditable_options %}
+            {% endblock table_view_xeditable_options %}
+          }),
+
+          {% comment %}
+          Enable the Responsive extension; see
+          https://datatables.net/extensions/responsive/
+          {% endcomment %}
+          responsive: true,
+
+          {# Insert additional datatable options in derived templates #}
+          {% block table_view_datatable_options %}
+          {% endblock table_view_datatable_options %}
+
         });
+
+        {% comment %}
+        Substitute datatable column footer contents with a text input box for
+        colum-specific filtering for columns with the data-config-searchable
+        attribute set to true.  Other footer cells are left empty.
+        {% endcomment %}
+        $('.datatable thead th').each(
+          function() {
+            $('.datatable tfoot th').eq($(this).index()).html(
+              !$(this).data('config-searchable')
+              ? ''
+              : (
+                '<input' +
+                  ' type="text"' +
+                  ' class="datatable-search-input"' +
+                  ' data-column-name="' + $(this).data('name') + '"' +
+                  ' placeholder="Search"' +
+                ' />'
+              )
+            );
+          }
+        );
+
+        {% comment %}
+        Implement per-column filtering using the datatables search API; see
+        https://datatables.net/reference/api/search()
+        {% endcomment %}
+        datatable.api().columns().every(
+          function() {
+            var column = this;
+            $(
+              'input.datatable-search-input',
+              column.footer()
+            ).on(
+              'keyup change',
+              function() {
+                if (column.search() !== this.value) {
+                  column.search(this.value).draw();
+                }
+              }
+            )
+          }
+        )
+
+        {% comment %}
+        Insert additional JavaScript code in derived templates for datatable
+        initialization.  Note that inserted scripts will have access to local
+        variables, including the datatable instance.
+        {% endcomment %}
+        {% block table_view_initialization %}
+        {% endblock table_view_initialization %}
+
       });
+
   </script>
 
   {% block table_view_head %}
