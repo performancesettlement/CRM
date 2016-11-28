@@ -131,6 +131,18 @@ def defaulting(computation, value, exception=Exception):
     )
 
 
+def mutate(x, f):
+    f(x)
+    return x
+
+
+def modify_dict(dictionary, key, default, function):
+    if key not in dictionary:
+        dictionary[key] = default
+    dictionary[key] = function(dictionary[key])
+    return dictionary
+
+
 # From https://djangosnippets.org/snippets/2328/
 class LongCharField(CharField):
     "A basically unlimited-length CharField."
