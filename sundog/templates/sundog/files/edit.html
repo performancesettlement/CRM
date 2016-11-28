@@ -1,0 +1,37 @@
+{% extends "sundog/base/app.html" %}
+
+
+{% load django_bootstrap_breadcrumbs %}
+
+{% block breadcrumbs %}
+  {{ block.super }}
+  {% breadcrumb "Files" "files.list" %}
+  {% breadcrumb object.title object %}
+{% endblock %}
+
+
+{% block app_view_head %}
+
+  {# bootstrap-select #}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.11.2/css/bootstrap-select.min.css" integrity="sha256-6pWNO2Viaad+qrj8CQ4U9iYrylSPRgLOzaHGtCba1f4=" crossorigin="anonymous" />
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.11.2/js/bootstrap-select.min.js" integrity="sha256-NpjFqxNtMOVQfuoDn4f9ZgUe3ua/MTbmkM8kl+mfU70=" crossorigin="anonymous"></script>
+
+  {# TinyMCE #}
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/4.4.3/tinymce.min.js" integrity="sha256-AuSdEJpOGFPsqPZKZf3Leo0EKuCOyAICY1fwp8jiwwc=" crossorigin="anonymous"></script>
+
+{% endblock app_view_head %}
+
+
+{% block app_view_content %}
+
+  <div class="col-xs-12 no-padding-sides m-t-md">
+    <h3>Edit file</h3>
+    <form action="" method="post">
+      {% csrf_token %}
+      {{ form.media }}
+      {{ form.as_p }}
+      <input type="submit" value="Save">
+    </form>
+  </div>
+
+{% endblock app_view_content %}

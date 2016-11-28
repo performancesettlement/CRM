@@ -40,6 +40,10 @@
             <a href="{% url 'documents' %}">Documents</a>
           </li>
 
+          <li class="menu-elem {% ifequal menu_page "files" %}menu-active{% endifequal %}">
+            <a href="{% url 'files' %}">Files</a>
+          </li>
+
         </ul>
 
         <ul class="nav navbar-top-links navbar-right">

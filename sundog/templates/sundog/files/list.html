@@ -1,0 +1,39 @@
+{% extends "sundog/base/table.html" %}
+
+{% load staticfiles %}
+
+
+{% load django_bootstrap_breadcrumbs %}
+
+{% block breadcrumbs %}
+  {{ block.super }}
+  {% breadcrumb "Files" "files.list" %}
+{% endblock %}
+
+
+{% block title %}
+  {{ block.super }}
+  - Files
+{% endblock title %}
+
+
+{% block table_view_head %}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.11.2/css/bootstrap-select.min.css" integrity="sha256-6pWNO2Viaad+qrj8CQ4U9iYrylSPRgLOzaHGtCba1f4=" crossorigin="anonymous" />
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.11.2/js/bootstrap-select.min.js" integrity="sha256-NpjFqxNtMOVQfuoDn4f9ZgUe3ua/MTbmkM8kl+mfU70=" crossorigin="anonymous"></script>
+{% endblock table_view_head %}
+
+
+{% block table_view_pre_content %}
+  <div class="col-xs-12 m-t-md m-b-md">
+    <div class="inline">
+      <a
+        href="{% url "files.add.ajax" %}"
+        class="fm-create btn btn-primary"
+        data-fm-head="Add File"
+        data-fm-callback="reload"
+      >
+        Add File
+      </a>
+    </div>
+  </div>
+{% endblock table_view_pre_content %}
