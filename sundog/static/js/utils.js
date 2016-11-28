@@ -117,3 +117,8 @@ function handleErrors(response) {
         showErrorPopup(response.errors);
     }
 }
+
+function selectASingleRadioButton(groupSelector, elem) {
+    $(groupSelector).prop('checked', false);
+    $(elem).prop('checked', true);
+}

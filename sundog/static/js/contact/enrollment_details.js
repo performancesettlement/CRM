@@ -94,7 +94,7 @@ $(document).ready(function() {
                 row.find('.account_number').val(data.account_number);
                 row.find('.routing_number').val(data.routing_number);
                 row.find('.account_type').val(data.account_type);
-                row.find('.associated_settlement').val(data.associated_settlement);
+                row.find('.associated_settlement_payment').val(data.associated_settlement_payment);
                 row.find('.associated_payment').val(data.associated_payment);
                 row.find('.address').val(data.address);
                 row.find('.paid_to').val(data.paid_to);
@@ -119,7 +119,7 @@ $(document).ready(function() {
         var accountNumber = row.find('.account_number').html();
         var routingNumber = row.find('.routing_number').html();
         var accountType = row.find('.account_type').html();
-        var associatedSettlement = row.find('.associated_settlement').html();
+        var associatedSettlement = row.find('.associated_settlement_payment').html();
         var associatedPayment = row.find('.associated_payment').html();
         var address = row.find('.address').html();
         var paidTo = row.find('.paid_to').html();
@@ -137,7 +137,7 @@ $(document).ready(function() {
         modal.find('#id_account_number').val(accountNumber);
         modal.find('#id_routing_number').val(routingNumber);
         modal.find('#id_account_type').val(accountType);
-        modal.find('#id_associated_settlement').val(associatedSettlement);
+        modal.find('#id_associated_settlement_payment').val(associatedSettlement);
         modal.find('#id_associated_payment').val(associatedPayment);
         modal.find('#id_address').val(address);
         modal.find('#id_paid_to').val(paidTo);

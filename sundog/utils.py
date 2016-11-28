@@ -74,10 +74,15 @@ def md5_for_file(chunks):
     return md5.hexdigest()
 
 TWO_PLACES = Decimal('0.01')
+FOUR_PLACES = Decimal('0.0001')
+
+
+def roundup_places(number, places=TWO_PLACES):
+    return number.quantize(places)
 
 
 def format_price(price):
-    return str(price.quantize(TWO_PLACES))
+    return str(roundup_places(price))
 
 
 def get_data(prefix, post_data):

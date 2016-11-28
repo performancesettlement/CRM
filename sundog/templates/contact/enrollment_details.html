@@ -19,6 +19,7 @@
     </div>
     <div class="col-xs-12 m-t-md">
         <button class="btn btn-primary" data-toggle="modal" data-target="#add-payment">Add Payment</button>
+        <a class="m-l-xs btn btn-primary" href="{% url "edit_contact_enrollment" contact_id=contact.contact_id %}">Edit Enrollment Plan</a>
     </div>
     <div id="totals" class="col-xs-12 border p-xs m-t-md">
         <div class="inline m-r-md">
@@ -94,7 +95,7 @@
                     <td class="hidden account_number">{{ payment.account_number|default:'' }}</td>
                     <td class="hidden routing_number">{{ payment.routing_number|default:'' }}</td>
                     <td class="hidden account_type">{{ payment.account_type|default:'' }}</td>
-                    <td class="hidden associated_settlement">{{ payment.associated_settlement|default:'' }}</td>
+                    <td class="hidden associated_settlement_payment">{{ payment.associated_settlement_payment|default:'' }}</td>
                     <td class="hidden associated_payment">{{ payment.associated_payment|default:'' }}</td>
                     <td class="hidden address">{{ payment.address|default:'' }}</td>
                     <td class="hidden paid_to">{{ payment.paid_to|default:'' }}</td>

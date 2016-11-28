@@ -130,7 +130,7 @@ $(document).ready(function() {
     $('.radio-file-type').change(function() {
         var elem = $(this);
         var id = elem.attr('id');
-        switchRadios(elem);
+        selectASingleRadioButton('.radio-file-type', elem);
         switchRadiosData(id);
     });
 

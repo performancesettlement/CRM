@@ -19,7 +19,7 @@
             </ol>
         </div>
     </div>
-    <form id="enrollment-form" class="col-xs-12 m-t-md" action="{% url "add_contact_enrollment" contact_id=contact.contact_id %}" method="post">
+    <form id="enrollment-form" class="col-xs-12 m-t-md" action="{% url "edit_contact_enrollment" contact_id=contact.contact_id %}" method="post">
         {% csrf_token %}
         {{ form.contact }}
         <h3>Debt Settlement Enrollment Plan</h3>
@@ -60,13 +60,11 @@
                     </div>
                     <div id="fees" class="col-xs-12 no-padding-sides"></div>
                 </div>
-                {% if plan.select_first_payment %}
                 <div id="first-payment-date" class="col-xs-12 no-padding-sides" style="display: none;">
                     <h4>First Payment Date</h4>
                     {{ form.first_date }}
                 </div>
-                {% endif %}
-                <div class="col-xs-12 no-padding-sides">
+                <div class="col-xs-12 no-padding-sides m-b-xs">
                     <h4>Recurrent Start Date</h4>
                     {{ form.start_date }}
                 </div>
@@ -80,7 +78,7 @@
             <div class="col-xs-12 no-padding-sides">
                 <h4>Choose Comp Template</h4>
                 <div class="border col-xs-12 m-b-xs p-xs">
-                    {{ form.comp_template_chooser }}
+                    {{ form.compensation_template }}
                 </div>
             </div>
         </div>

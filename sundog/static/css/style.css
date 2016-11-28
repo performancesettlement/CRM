@@ -8285,3 +8285,17 @@ input {
 .dynamic-added {
     text-transform: capitalize;
 }
+
+.debt-title {
+    height: 36px !important;
+    line-height: 36px !important;
+}
+
+.made-by-option {
+    height: 26px !important;
+    line-height: 26px !important;
+}
+
+.line-through {
+    text-decoration: line-through;
+}

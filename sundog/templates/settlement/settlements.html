@@ -1,0 +1,96 @@
+{% extends "app-base.html" %}
+{% load staticfiles my_filters admin_urls %}
+{% block content %}
+    <div class="row wrapper border-bottom white-bg page-heading">
+        <div class="col-lg-10 m-t-md">
+            <ol class="breadcrumb">
+                <li class="active">
+                    <strong>Settlements</strong>
+                </li>
+            </ol>
+        </div>
+    </div>
+    <div>
+        <form id="search-form" action="" method="get">
+            <input type="hidden" name="page" value="{{ page.number }}"/>
+        </form>
+    </div>
+    <div id="campaigns" class="col-xs-8 campaign-list">
+        <table class="table table-hover no-footer">
+            <thead>
+            <tr>
+                <th>Contact Name</th>
+                <th>Creditor</th>
+                <th>Created At</th>
+                <th>Created By</th>
+                <th>Modified At</th>
+                <th>Negotiator</th>
+                <th>Offer Made By</th>
+                <th>Offer Status</th>
+                <th>Offer Valid Until</th>
+                <th>Amt At Settlement</th>
+                <th>Settlement Amt</th>
+                <th>Gateway</th>
+                <th>Third Party</th>
+                <th>Settlement %</th>
+                <th>Client Balance</th>
+                <th>Original Debt Amt</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            {% if page.object_list %}
+                {% for settlement in page.object_list %}
+                    <tr>
+                        <td>{{ settlement.settlement_offer.enrollment.contact.full_name_straight }}</td>
+                        <td>{{ settlement.settlement_offer.enrollment.debt.get_owed }}</td>
+                        <td>{{ settlement.created_at|date:'SHORT_DATE_FORMAT' }}</td>
+                        <td>{{ settlement.created_by.get_full_name }}</td>
+                        <td>{{ settlement.updated_at|date:'SHORT_DATE_FORMAT' }}</td>
+                        <td>{{ settlement.settlement_offer.negotiator.get_full_name }}</td>
+                        <td>{{ settlement.settlement_offer.made_by_label }}</td>
+                        <td>{{ settlement.settlement_offer.status_label }}</td>
+                        <td>{{ settlement.settlement_offer.valid_until|date:'SHORT_DATE_FORMAT' }}</td>
+                        <td>{# TODO: add logic when known #}</td>
+                        <td>{{ settlement.settlement_offer.offer_amount|currency }}</td>
+                        <td>{{ settlement.settlement_offer.enrollment.custodial_account_label }}</td>
+                        <td>{# TODO: add logic when known #}</td>
+                        <td>{{ settlement.settlement_offer.get_offer_percentage|percent }}</td>
+                        <td>{{ settlement.settlement_offer.enrollment.contact.client_balance|percent }}</td>
+                        <td>{{ settlement.settlement_offer.offer_amount|currency }}</td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td class="text-center" colspan="12"><strong>No settlements to display!</strong></td>
+                </tr>
+            {% endif %}
+            </tbody>
+        </table>
+        <div class="ibox-footer">
+            {% if page.object_list %}
+                <div class="text-center">
+                    <div class="btn-group">
+                        <button class="btn btn-white prev-page" type="button" {% if page.number == 1 %}
+                                disabled="disabled"
+                        {% endif %} ><i class="fa fa-chevron-left"></i></button>
+                        {% for number in paginator|paginatorRange:page.number %}
+                            {% if number == page.number %}
+                                <button class="btn btn-white active">{{ number }}</button>
+                            {% else %}
+                                <button class="btn btn-white move-page">{{ number }}</button>
+                            {% endif %}
+                        {% endfor %}
+                        <button class="btn btn-white next-page" type="button" {% if page.number == paginator.num_pages %}
+                                disabled="disabled"
+                        {% endif %}><i class="fa fa-chevron-right"></i> </button>
+                    </div>
+                    <div class="col-xs-12 m-t-sm">
+                        {{ page.object_list|length }} of {{ paginator.count }}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <script src="{% static "js/contact/campaigns.js" %}"></script>
+{% endblock %}

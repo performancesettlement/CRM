@@ -30,9 +30,9 @@ $(document).ready(function() {
             '<input type="hidden" name="' + i + '-fee_plan" value="' + fee.fee_plan_id + '">' +
             '<input type="hidden" name="' + i + '-type" value="' + fee.type + '">' +
             '<select id="id_' + i + '-amount" name="' + i + '-amount" class="fee-select">' +
-                options +
+            options +
             '</select>' +
-        '</div>';
+            '</div>';
         return feeHtml;
     }
 
@@ -336,4 +336,6 @@ $(document).ready(function() {
             requestDebtsInfo();
         }
     });
+
+    requestEnrollmentPlanInfo(false, true);
 });

@@ -1,0 +1,141 @@
+{% extends "app-base.html" %}
+{% load staticfiles my_filters admin_urls %}
+{% block extrahead %}
+    <link href="{% static "css/plugins/datapicker/datepicker3.css" %}" rel="stylesheet">
+{% endblock extrahead %}
+{% block content %}
+    <div class="row wrapper border-bottom white-bg page-heading">
+        <div class="col-lg-12 m-t-md">
+            <ol class="breadcrumb">
+                <li>
+                    <a href="{% url "list_contacts" %}">Contacts</a>
+                </li>
+                <li>
+                    <a href="{% url "contact_dashboard" contact_id=contact.contact_id %}">{{ contact.full_name_straight }}</a>
+                </li>
+                <li class="active">
+                    <strong>New Settlement Offer</strong>
+                </li>
+            </ol>
+        </div>
+    </div>
+    <div class="col-xs-4 m-t-md">
+        <div class="col-xs-12 no-padding-sides">
+            <h3>{{ contact.full_name_straight }}</h3>
+            <p>
+                <a class="underlined" href="{% url "contact_enrollment_details" contact_id=contact.contact_id %}" class="m-r-xs">Enrollment Details</a>
+                |
+                <a class="underlined" href="{% url "contact_debts" contact_id=contact.contact_id %}" class="m-l-xs">Creditors</a>
+            </p>
+        </div>
+        <div id="totals" class="col-xs-12 m-t-md no-padding-sides">
+            <div class="inline m-r-md">
+                <div class="m-b-xs font-bold">Client Balance</div>
+                <div class="blue font-medium font-bold">{{ contact.client_balance|currency }}</div>
+            </div>
+            <div class="inline m-r-md">
+                <div class="m-b-xs font-bold">Pending Balance</div>
+                <div class="blue font-medium font-bold">$0.00</div>
+            </div>
+            <div class="inline m-r-md">
+                <div class="m-b-xs font-bold">Sett Commit</div>
+                <div class="blue font-medium font-bold">{{ enrollment.total_payment|currency }}</div>
+            </div>
+        </div>
+        <div id="debts" class="col-xs-12 m-t-md no-padding-sides border-bottom border-top">
+            {% for debt in debts %}
+            <div id="debt-{{ debt.debt_id }}" class="col-xs-12 no-padding-sides">
+                <div class="pull-left">
+                    <div class="inline pull-left m-r-xs">
+                        <input id="debt-{{ debt.debt_id }}-radio" class="debt-radio" type="radio">
+                    </div>
+                    <div class="inline debt-title {% if debt.get_settlement_offer and debt.get_settlement_offer.status == 'accepted' %}line-through{% endif %}">
+                        {{ debt.owed_to.name }} - {{ debt.original_creditor_account_number }}
+                    </div>
+                </div>
+                <div class="pull-right debt-title">
+                    {{ debt.current_debt_amount|currency }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div id="current-offers" class="col-xs-12 no-padding-sides m-t-md">
+            <h3>Current Offers</h3>
+            <div class="border col-xs-12 p-xs">
+                {% if offers %}
+                {% for offer in offers %}
+                <div class="col-xs-12 no-padding-sides">
+                    <div class="pull-left">
+                        <p><a class="underlined" href="{% if offer.status != 'completed' %}{% url "contact_settlement" contact_id=contact.contact_id settlement_offer_id=offer.settlement_offer_id %}{% else %}{# TODO: Add negotiations dashboard link #}{% endif %}">{{ offer.debt.owed_to.name }}</a></p>
+                        <p>{{ offer.offer_amount|currency }} on {{ offer.debt_amount|currency }} - {{ offer.get_offer_percentage|percent }}</p>
+                    </div>
+                    <div class="pull-right">
+                        {{ offer.date|date:'SHORT_DATE_FORMAT' }}
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                No current offers.
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-xs-8 m-t-md border-left">
+        <form id="settlement-offer-form" class="col-xs-12 no-padding-sides padding-for-footer" action="{% url "contact_settlement_offer" contact_id=contact.contact_id %}" method="post">
+            {% csrf_token %}
+            <div class="col-xs-12 no-padding-sides m-t-md">
+                <label class="col-xs-3 no-padding-sides">Made By</label>
+                <div class="col-xs-9 no-padding-sides">
+                    {% for radio in form.made_by %}
+                    <div style="width:auto !important" class="col-xs-6 no-padding-sides">
+                        <div class="pull-left m-r-xs">{{ radio.tag }}</div>
+                        <label class="made-by-option" for="value_{{ forloop.counter0 }}">{{ radio.choice_label }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="col-xs-12 no-padding-sides m-t-md">
+                <label class="col-xs-3 no-padding-sides">Negotiator</label>
+                {{ form.negotiator }}
+            </div>
+            <div class="col-xs-12 no-padding-sides m-t-md">
+                <label class="col-xs-3 no-padding-sides">Offer Status</label>
+                {{ form.status }}
+            </div>
+            <div class="col-xs-12 no-padding-sides m-t-md">
+                <label class="col-xs-3 no-padding-sides">Offer Date</label>
+                {{ form.date }}
+            </div>
+            <div class="col-xs-12 no-padding-sides m-t-md">
+                <label class="col-xs-3 no-padding-sides">Offer Valid Until</label>
+                {{ form.valid_until }}
+            </div>
+            <div class="col-xs-12 no-padding-sides m-t-md">
+                <label class="col-xs-3 no-padding-sides">Debt Amount</label>
+                {{ form.debt_amount }}
+            </div>
+            <div class="col-xs-12 no-padding-sides m-t-md">
+                <label class="col-xs-3 no-padding-sides">Offer Amount</label>
+                {{ form.offer_amount }}
+            </div>
+            <div class="col-xs-12 no-padding-sides m-t-md">
+                <label class="col-xs-3 no-padding-sides">Notes</label>
+                {{ form.notes }}
+            </div>
+            <div class="col-xs-12 m-t-md">
+                Please advise creditors to include the Client Name and/or ClientID {{ contact.contact_id }} with the
+                remittance data of the payments and not DebtPayGateway or your company name.
+            </div>
+            <div class="col-xs-12 m-t-md">
+                <button class="btn btn-primary" type="submit">Save Offer</button>
+            </div>
+        </form>
+    </div>
+    <script src="{% static "js/plugins/datapicker/bootstrap-datepicker.js" %}"></script>
+    <script type="text/javascript">
+        var getDebtOfferUrl = '{% url "get_debt_offer" debt_id=0 %}';
+        var offerSaved = {% if offer_saved %}true{% else %}false{% endif %};
+        var debtId = {{ debt_id }};
+    </script>
+    <script src="{% static "js/contact/contact_settlement_offer.js" %}"></script>
+{% endblock %}

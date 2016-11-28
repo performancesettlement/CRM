@@ -1,20 +1,37 @@
+import copy
+from itertools import chain
 from django import forms
 from django.contrib.auth.models import User
 from django.core.validators import validate_email
 from django.db.models import Q
+from django.utils.encoding import force_text
+from django.utils.safestring import mark_safe
 import pytz
 from django_auth_app import enums
 from sundog.models import Contact, Stage, Status, Campaign, Source, BankAccount, Note, Call,\
     Email, DEBT_SETTLEMENT, Uploaded, Incomes, Expenses, Creditor, Debt, DebtNote, EnrollmentPlan, FeePlan, FeeProfile,\
     FeeProfileRule, WorkflowSettings, Enrollment, AMOUNT_CHOICES, Payment, PAYMENT_TYPE_CHOICES, \
     CompensationTemplate, CompensationTemplatePayee, NONE_CHOICE_LABEL, Payee, COMPENSATION_TEMPLATE_PAYEE_TYPE_CHOICES, \
-    AVAILABLE_FOR_CHOICES, COMPENSATION_TEMPLATE_TYPES_CHOICES
+    AVAILABLE_FOR_CHOICES, COMPENSATION_TEMPLATE_TYPES_CHOICES, SettlementOffer, Settlement, Fee
 
 from sundog import services
 from sundog.constants import (
     SHORT_DATE_FORMAT,
     FIXED_VALUES,
 )
+
+
+DATE_INPUT_SETTINGS = {
+    'format': SHORT_DATE_FORMAT,
+    'attrs': {'placeholder': 'mm/dd/yyyy', 'data-provide': 'datepicker', 'data-date-autoclose': 'true'},
+}
+
+
+def get_date_input_settings(attrs=None):
+    settings = copy.deepcopy(DATE_INPUT_SETTINGS)
+    if attrs:
+        settings['attrs'].update(attrs)
+    return settings
 
 
 class ImpersonateUserForm(forms.ModelForm):
@@ -161,20 +178,8 @@ class CampaignForm(forms.ModelForm):
         exclude = ['created_by', 'created_at', 'updated_at']
         widgets = {
             'campaign_id': forms.HiddenInput(),
-            'start_date': forms.DateInput(
-                format=SHORT_DATE_FORMAT,
-                attrs={
-                    'placeholder': 'mm/dd/yyyy',
-                    'data-provide': 'datepicker',
-                }
-            ),
-            'end_date': forms.DateInput(
-                format=SHORT_DATE_FORMAT,
-                attrs={
-                    'placeholder': 'mm/dd/yyyy',
-                    'data-provide': 'datepicker',
-                }
-            ),
+            'start_date': forms.DateInput(**DATE_INPUT_SETTINGS),
+            'end_date': forms.DateInput(**DATE_INPUT_SETTINGS),
         }
 
 
@@ -358,12 +363,6 @@ class CreditorForm(forms.ModelForm):
         fields = '__all__'
 
 
-DATE_INPUT_SETTINGS = {
-    'format': SHORT_DATE_FORMAT,
-    'attrs': {'placeholder': 'mm/dd/yyyy', 'data-provide': 'datepicker', 'data-date-autoclose': 'true'},
-}
-
-
 class DebtForm(forms.ModelForm):
     note = forms.CharField(required=False, widget=forms.Textarea(
         attrs={'style': 'resize: none;', 'class': 'form-control', 'maxlength': 2000}))
@@ -419,14 +418,15 @@ class EnrollmentPlanForm(forms.ModelForm):
 
 
 class EnrollmentForm(forms.ModelForm):
+    first_date = forms.DateTimeField(required=False, widget=forms.DateInput(**DATE_INPUT_SETTINGS))
+
     class Meta:
         model = Enrollment
         widgets = {
             'enrollment_plan': forms.Select(attrs={'class': 'col-xs-12 no-padding-sides'}),
-            'comp_template_chooser': forms.Select(attrs={'class': 'col-xs-12 no-padding-sides'}),
-            'start_date': forms.DateInput(format=SHORT_DATE_FORMAT, attrs={'placeholder': 'mm/dd/yyyy', 'data-provide': 'datepicker'}),
-            'first_date': forms.DateInput(format=SHORT_DATE_FORMAT, attrs={'placeholder': 'mm/dd/yyyy', 'data-provide': 'datepicker'}),
-            'second_date': forms.DateInput(format=SHORT_DATE_FORMAT, attrs={'placeholder': 'mm/dd/yyyy', 'data-provide': 'datepicker'}),
+            'compensation_template': forms.Select(attrs={'class': 'col-xs-12 no-padding-sides'}),
+            'start_date': forms.DateInput(**DATE_INPUT_SETTINGS),
+            'second_date': forms.DateInput(**DATE_INPUT_SETTINGS),
             'contact': forms.HiddenInput(),
         }
         exclude = ['created_at', 'updated_at']
@@ -479,6 +479,13 @@ class FeePlanForm(forms.ModelForm):
                 self.fields['fixed_amount'].widget.attrs.update({'disabled': 'disabled', 'style': 'max-width: 140px; display: none;'})
 
 
+class FeeForm(forms.ModelForm):
+    class Meta:
+        model = Fee
+        widgets = {}
+        fields = '__all__'
+
+
 class FeeProfileForm(forms.ModelForm):
     class Meta:
         model = FeeProfile
@@ -494,11 +501,8 @@ class FeeProfileRuleForm(forms.ModelForm):
 
 
 class PaymentForm(forms.ModelForm):
-    date = forms.DateTimeField(required=True,
-                           widget=forms.DateInput(format=SHORT_DATE_FORMAT,
-                                                  attrs={'placeholder': 'mm/dd/yyyy',
-                                                         'data-provide': 'datepicker',
-                                                         'class': 'col-xs-8 no-padding-sides'}))
+    date = forms.DateTimeField(required=True, widget=forms.DateInput(**get_date_input_settings(
+        {'class': 'col-xs-8 no-padding-sides'})))
 
     class Meta:
         model = Payment
@@ -510,7 +514,7 @@ class PaymentForm(forms.ModelForm):
             'amount': forms.NumberInput(attrs={'class': 'col-xs-12 no-padding-sides'}),
             'account_number': forms.TextInput(attrs={'class': 'col-xs-8 no-padding-sides'}),
             'routing_number': forms.TextInput(attrs={'class': 'col-xs-8 no-padding-sides'}),
-            'associated_settlement': forms.Select(attrs={'class': 'col-xs-8 no-padding-sides'}),
+            'associated_settlement_payment': forms.Select(attrs={'class': 'col-xs-8 no-padding-sides'}),
             'associated_payment': forms.Select(attrs={'class': 'col-xs-8 no-padding-sides'}),
             'account_type': forms.Select(attrs={'class': 'col-xs-8 no-padding-sides'}),
             'address': forms.Textarea(attrs={'class': 'col-xs-8 no-padding-sides', 'rows': 3}),
@@ -523,14 +527,24 @@ class PaymentForm(forms.ModelForm):
                    'created_at', 'status']
 
     def __init__(self, *args, **kwargs):
-        enrollment = None
+        enrollment, sub_type_choices, attr_class = None, None, None
         if 'enrollment' in kwargs:
             enrollment = kwargs.pop('enrollment')
+        if 'attr_class' in kwargs:
+            attr_class = kwargs.pop('attr_class')
+        if 'sub_type_choices' in kwargs:
+            sub_type_choices = kwargs.pop('sub_type_choices')
         super(PaymentForm, self).__init__(*args, **kwargs)
-        self.fields['enrollment'].initial = enrollment
         if enrollment:
-            self.fields['associated_payment'].queryset = Payment.objects.filter(charge_type='payment', enrollment=enrollment)
-            self.fields['associated_settlement'].queryset = Payment.objects.filter(charge_type='settlement', enrollment=enrollment)
+            self.fields['associated_payment'].queryset = Payment.objects.filter(charge_type='payment',
+                                                                                enrollment=enrollment)
+            self.fields['associated_settlement_payment'].queryset = Payment.objects.filter(charge_type='settlement',
+                                                                                           enrollment=enrollment)
+        if attr_class:
+            for _, field in self.fields.items():
+                field.widget.attrs['class'] = attr_class
+        if sub_type_choices:
+            self.fields['sub_type'].choices = sub_type_choices
 
     def save(self, commit=True):
         self.cleaned_data['date'] = self.cleaned_data['date'].replace(tzinfo=pytz.utc)
@@ -565,3 +579,60 @@ class CompensationTemplatePayeeForm(forms.ModelForm):
         model = CompensationTemplatePayee
         widgets = {}
         exclude = ['compensation_template']
+
+
+class RadioSelectNotNull(forms.RadioSelect):
+    def get_renderer(self, name, value, attrs=None, choices=()):
+        if value is None:
+            value = ''
+        str_value = force_text(value)
+        final_attrs = self.build_attrs(attrs)
+        choices = list(chain(self.choices, choices))
+        if choices[0][0] == '':
+            choices.pop(0)
+        return self.renderer(name, str_value, final_attrs, choices)
+
+
+class SettlementOfferForm(forms.ModelForm):
+    class Meta:
+        model = SettlementOffer
+        widgets = {
+            'made_by': RadioSelectNotNull(attrs={'style': 'margin: 0;'}),
+            'notes': forms.Textarea(),
+            'date': forms.DateInput(**DATE_INPUT_SETTINGS),
+            'valid_until': forms.DateInput(**DATE_INPUT_SETTINGS),
+        }
+        exclude = ['enrollment']
+
+    def __init__(self, user, *args, **kwargs):
+        super(SettlementOfferForm, self).__init__(*args, **kwargs)
+        self.fields['status'].empty_label = None
+        self.fields['negotiator'].empty_label = None
+        self.fields['negotiator'].initial = user
+
+    def _are_dates_valid(self):
+        date = self.cleaned_data.get('date')
+        valid_until = self.cleaned_data.get('valid_until')
+        if date and valid_until and date > valid_until:
+            self.add_error('date', 'Offer valid until date must be higher than offer date.')
+
+    def _is_offer_value_valid(self):
+        offer = self.cleaned_data.get('offer_amount')
+        debt = self.cleaned_data.get('debt_amount')
+        if offer > debt:
+            self.add_error('offer', 'Offer amount must be lower than debt amount.')
+
+    def full_clean(self):
+        super(SettlementOfferForm, self).full_clean()
+        self._are_dates_valid()
+        self._is_offer_value_valid()
+
+
+class SettlementForm(forms.ModelForm):
+    class Meta:
+        model = Settlement
+        widgets = {
+            'extra_info': forms.Textarea(),
+            'letter_date': forms.DateInput(**DATE_INPUT_SETTINGS),
+        }
+        exclude = ['settlement_offer']

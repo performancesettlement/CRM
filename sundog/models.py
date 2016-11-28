@@ -13,7 +13,7 @@ from settings import MEDIA_PRIVATE
 from sundog.constants import SHORT_DATE_FORMAT
 from sundog.media import S3PrivateFileField
 from sundog.routing import package_models
-from sundog.templatetags.my_filters import currency
+from sundog.templatetags.my_filters import currency, percent
 from sundog.utils import format_price
 
 import copy
@@ -618,12 +618,13 @@ class Enrollment(models.Model):
     enrollment_plan = models.ForeignKey(EnrollmentPlan, related_name='enrollments_linked', blank=True, null=True)
     contact = models.ForeignKey(Contact, related_name='enrollments', blank=True, null=True)
     custodial_account = models.CharField(max_length=4, choices=CUSTODIAL_ACCOUNT_CHOICES, default='epps')
-    comp_template_chooser = models.ForeignKey(CompensationTemplate, blank=True, null=True)
+    compensation_template = models.ForeignKey(CompensationTemplate, blank=True, null=True)
     program_length = models.CharField(max_length=4)
     start_date = models.DateTimeField()
     first_date = models.DateTimeField()
     second_date = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    created_by = models.ForeignKey(User, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 
     def __init__(self, *args, **kwargs):
@@ -681,6 +682,156 @@ class Enrollment(models.Model):
         return Decimal('0.00')
 
 
+class Fee(models.Model):
+    fee_id = models.AutoField(primary_key=True)
+    amount = models.DecimalField(max_digits=14, decimal_places=2)
+    fee_plan = models.ForeignKey(FeePlan, related_name='fees_related', blank=True, null=True)
+    type = models.CharField(max_length=128, choices=FEE_TYPE_CHOICES)
+    enrollment = models.ForeignKey(Enrollment, related_name='fees', blank=True, null=True)
+
+
+class Creditor(models.Model):
+    creditor_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=100)
+    first_name = models.CharField(max_length=100, blank=True, null=True)
+    last_name = models.CharField(max_length=100, blank=True, null=True)
+    address_1 = models.CharField(max_length=1000, blank=True, null=True)
+    address_2 = models.CharField(max_length=1000, blank=True, null=True)
+    city = models.CharField(max_length=100, blank=True, null=True)
+    state = models.CharField(max_length=4, choices=enums.US_STATES, blank=True, null=True)
+    zip_code = models.CharField(max_length=100, blank=True, null=True)
+    phone_1 = models.CharField(max_length=10, blank=True, null=True)
+    phone_2 = models.CharField(max_length=10, blank=True, null=True)
+    fax = models.CharField(max_length=10, blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
+    url = models.URLField(blank=True, null=True)
+
+    def __str__(self):
+        return '%s' % self.name
+
+    def total_debts(self):
+        total_debts = Decimal('0.00')
+        all_debts = list(self.creditor_debts.all()) + list(self.bought_debts.all())
+        for debt in all_debts:
+            if (not debt.debt_buyer or (debt.debt_buyer and debt.debt_buyer.creditor_id == self.creditor_id)) and debt.current_debt_amount:
+                total_debts += debt.current_debt_amount
+        return total_debts
+
+    def total_debtors(self):
+        all_debts = list(self.creditor_debts.all()) + list(self.bought_debts.all())
+        count = len(all_debts)
+        for debt in all_debts:
+            if debt.debt_buyer and debt.debt_buyer.creditor_id != self.creditor_id:
+                count -= 1
+        return count
+
+    def avg_settled(self):
+        avg = Decimal('0.00')
+        all_owed_money = Decimal('0.00')
+        all_settled_money = Decimal('0.00')
+        all_debts = list(self.creditor_debts.all()) + list(self.bought_debts.all())
+        for debt in all_debts:
+            if not debt.debt_buyer or (debt.debt_buyer and debt.debt_buyer.creditor_id == self.creditor_id):
+                if debt.original_debt_amount:
+                    all_owed_money += debt.original_debt_amount
+                    all_settled_money += debt.original_debt_amount - debt.current_debt_amount
+        if all_owed_money and all_settled_money:
+            avg = (all_settled_money * Decimal('100')) / all_owed_money
+        return format_price(avg)
+
+
+DEBT_ACCOUNT_TYPE_CHOICES = (
+    (None, NONE_CHOICE_LABEL),
+    ('difficult_creditor', 'Difficult Creditor'),
+    ('payday_loan', 'Payday Loan'),
+    ('standard', 'Standard'),
+)
+
+DEBT_ACCOUNT_EST_SETT = {
+    'difficult_creditor': Decimal('65'),
+    'payday_loan': Decimal('40'),
+    'standard': Decimal('40'),
+}
+
+WHOSE_DEBT_CHOICES = (
+    ('applicant', 'Applicant'),
+    ('co_applicant', 'Co-Applicant'),
+    ('joint', 'Joint'),
+)
+
+
+HAS_SUMMONS_TYPE_CHOICES = (
+    (None, NONE_CHOICE_LABEL),
+    ('yes', 'Yes'),
+    ('no', 'No'),
+)
+
+
+class Debt(models.Model):
+    debt_id = models.AutoField(primary_key=True)
+    contact = models.ForeignKey(Contact, related_name='contact_debts', blank=True, null=True)
+    original_creditor = models.ForeignKey(Creditor, related_name='creditor_debts', blank=True, null=True)
+    original_creditor_account_number = models.CharField(max_length=32)
+    debt_buyer = models.ForeignKey(Creditor, related_name='bought_debts', blank=True, null=True)
+    debt_buyer_account_number = models.CharField(max_length=32, blank=True, null=True)
+    account_type = models.CharField(max_length=20, choices=DEBT_ACCOUNT_TYPE_CHOICES, blank=True, null=True)
+    original_debt_amount = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    current_debt_amount = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    current_payment = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    whose_debt = models.CharField(max_length=20, choices=WHOSE_DEBT_CHOICES, blank=True, null=True)
+    last_payment_date = models.DateTimeField(blank=True, null=True)
+    has_summons = models.CharField(max_length=20, choices=HAS_SUMMONS_TYPE_CHOICES, blank=True, null=True)
+    summons_date = models.DateTimeField(blank=True, null=True)
+    court_date = models.DateTimeField(blank=True, null=True)
+    discovery_date = models.DateTimeField(blank=True, null=True)
+    answer_date = models.DateTimeField(blank=True, null=True)
+    service_date = models.DateTimeField(blank=True, null=True)
+    paperwork_received_date = models.DateTimeField(blank=True, null=True)
+    poa_sent_date = models.DateTimeField(blank=True, null=True)
+    enrolled = models.NullBooleanField(blank=True, null=True)
+
+    def __init__(self, *args, **kwargs):
+        super(Debt, self).__init__(*args, **kwargs)
+        if self.account_type:
+            for choice in DEBT_ACCOUNT_TYPE_CHOICES:
+                if choice[0] == self.account_type:
+                    self.account_type_label = choice[1]
+                    break
+        else:
+            self.account_type_label = self.account_type
+        if self.whose_debt:
+            for choice in WHOSE_DEBT_CHOICES:
+                if choice[0] == self.whose_debt:
+                    self.whose_debt_label = choice[1]
+                    break
+        else:
+            self.whose_debt_label = self.whose_debt
+        if self.has_summons:
+            for choice in HAS_SUMMONS_TYPE_CHOICES:
+                if choice[0] == self.has_summons:
+                    self.has_summons_label = choice[1]
+                    break
+        else:
+            self.has_summons_label = self.has_summons
+
+    def get_settlement_offer(self):
+        return self.offers.all().first()
+
+    def get_est_sett(self):
+        return self.current_debt_amount * (DEBT_ACCOUNT_EST_SETT.get(self.account_type, Decimal('40')) / 100)
+
+    def notes_count(self):
+        return len(self.notes.all())
+
+    def owed_to(self):
+        return self.debt_buyer if self.debt_buyer else self.original_creditor
+
+    def save(self, *args, **kwargs):
+        if self.enrolled is None:
+            self.enrolled = True if self.original_debt_amount and self.original_debt_amount >= Decimal('500') else False
+        super(Debt, self).save(*args, **kwargs)
+
+
 SETTLEMENT_OFFER_MADE_BY_CHOICES = (
     ('negotiator', 'Negotiator'),
     ('client', 'Client'),
@@ -697,16 +848,52 @@ SETTLEMENT_OFFER_STATUS_CHOICES = (
 
 
 class SettlementOffer(models.Model):
-    contact = models.ForeignKey(Contact)
-    made_by = models.CharField(max_length=10, choices=SETTLEMENT_OFFER_MADE_BY_CHOICES)
+    settlement_offer_id = models.AutoField(primary_key=True)
+    enrollment = models.ForeignKey(Enrollment, related_name='settlement_offers')
+    debt = models.ForeignKey(Debt, related_name='offers')
+    made_by = models.CharField(max_length=10, choices=SETTLEMENT_OFFER_MADE_BY_CHOICES, default='negotiator')
     negotiator = models.ForeignKey(User)
-    status = models.CharField(max_length=40, choices=SETTLEMENT_OFFER_STATUS_CHOICES)
+    status = models.CharField(max_length=40, choices=SETTLEMENT_OFFER_STATUS_CHOICES,  default='in_review')
     date = models.DateTimeField()
-    valid_until = models.DateTimeField()
+    valid_until = models.DateTimeField(blank=True, null=True)
     debt_amount = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
     offer_amount = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
-    settlement_fee = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
     notes = models.CharField(max_length=1000, blank=True, null=True)
+
+    def __init__(self, *args, **kwargs):
+        super(SettlementOffer, self).__init__(*args, **kwargs)
+        if self.made_by:
+            for choice in SETTLEMENT_OFFER_MADE_BY_CHOICES:
+                if choice[0] == self.made_by:
+                    self.made_by_label = choice[1]
+                    break
+        if self.status:
+            for choice in SETTLEMENT_OFFER_STATUS_CHOICES:
+                if choice[0] == self.status:
+                    self.status_label = choice[1]
+                    break
+
+    def get_offer_percentage(self):
+        return ((self.offer_amount * 100) / self.debt_amount).quantize(Decimal('.01'))
+
+
+class Settlement(models.Model):
+    settlement_id = models.AutoField(primary_key=True)
+    settlement_offer = models.ForeignKey(SettlementOffer)
+    payable_to = models.CharField(max_length=20)
+    mail_to_company = models.EmailField(max_length=40)
+    no_payments = models.BooleanField(default=False)
+    address = models.CharField(max_length=1000)
+    city = models.CharField(max_length=20)
+    state = models.CharField(max_length=4, choices=enums.US_STATES)
+    zip_code = models.CharField(max_length=10)
+    creditor_reference = models.CharField(max_length=100, blank=True, null=True)  # Account # 5491100095397355: Jamie Ordaz
+    phone = models.CharField(max_length=10, blank=True, null=True)
+    letter_date = models.DateTimeField(blank=True, null=True)
+    extra_info = models.CharField(max_length=1000, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    created_by = models.ForeignKey(User, blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 
 
 class BankAccount(models.Model):
@@ -772,6 +959,14 @@ PAYMENT_SUB_TYPE_CHOICES = (
     ('stop_payment_fee', 'Stop Payment Fee'),
 )
 
+SETTLEMENT_SUB_TYPE_CHOICES = (
+    ('ach_check_by_phone', 'ACH / Check By Phone'),
+    ('bank_wire', 'Bank Wire'),
+    ('check', 'Check'),
+    ('check_2nd_day', 'Check 2nd Day'),
+    ('check_overnight', 'Check Overnight'),
+)
+
 
 PAYMENT_STATUS_CHOICES = (
     ('open', 'Open'),
@@ -786,6 +981,7 @@ PAYMENT_TRANSACTION_TYPE_CHOICES = (
 PAYMENT_CHARGE_TYPE_CHOICES = (
     ('fee', 'Fee'),
     ('payment', 'Payment'),
+    ('settlement', 'Settlement'),
 )
 
 
@@ -813,8 +1009,10 @@ class Payment(models.Model):
     charge_type = models.CharField(max_length=10, choices=PAYMENT_CHARGE_TYPE_CHOICES, default='payment')
     parent = models.ForeignKey('self', related_name='dependants', blank=True, null=True)
     associated_payment = models.ForeignKey('self', related_name='associated_payment_from', blank=True, null=True)
-    associated_settlement = models.ForeignKey('self', related_name='associated_settlement_from', blank=True, null=True)
+    associated_settlement_payment = models.ForeignKey('self', related_name='associated_settlement_payment_from', blank=True, null=True)
+    settlement = models.ForeignKey(Settlement, related_name='settlement_payments', blank=True, null=True)
     added_manually = models.BooleanField(default=False)
+    gateway = models.CharField(max_length=10, choices=CUSTODIAL_ACCOUNT_CHOICES, blank=True, null=True)
 
     class Meta:
         ordering = ['date']
@@ -1266,142 +1464,6 @@ class Expenses(models.Model):
         for attr in attrs:
             total += getattr(self, attr)
         return total
-
-
-class Creditor(models.Model):
-    creditor_id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=100)
-    first_name = models.CharField(max_length=100, blank=True, null=True)
-    last_name = models.CharField(max_length=100, blank=True, null=True)
-    address_1 = models.CharField(max_length=1000, blank=True, null=True)
-    address_2 = models.CharField(max_length=1000, blank=True, null=True)
-    city = models.CharField(max_length=100, blank=True, null=True)
-    state = models.CharField(max_length=4, choices=enums.US_STATES, blank=True, null=True)
-    zip_code = models.CharField(max_length=100, blank=True, null=True)
-    phone_1 = models.CharField(max_length=10, blank=True, null=True)
-    phone_2 = models.CharField(max_length=10, blank=True, null=True)
-    fax = models.CharField(max_length=10, blank=True, null=True)
-    email = models.EmailField(blank=True, null=True)
-    url = models.URLField(blank=True, null=True)
-
-    def __str__(self):
-        return '%s' % self.name
-
-    def total_debts(self):
-        total_debts = Decimal('0.00')
-        all_debts = list(self.creditor_debts.all()) + list(self.bought_debts.all())
-        for debt in all_debts:
-            if (not debt.debt_buyer or (debt.debt_buyer and debt.debt_buyer.creditor_id == self.creditor_id)) and debt.current_debt_amount:
-                total_debts += debt.current_debt_amount
-        return total_debts
-
-    def total_debtors(self):
-        all_debts = list(self.creditor_debts.all()) + list(self.bought_debts.all())
-        count = len(all_debts)
-        for debt in all_debts:
-            if debt.debt_buyer and debt.debt_buyer.creditor_id != self.creditor_id:
-                count -= 1
-        return count
-
-    def avg_settled(self):
-        avg = Decimal('0.00')
-        all_owed_money = Decimal('0.00')
-        all_settled_money = Decimal('0.00')
-        all_debts = list(self.creditor_debts.all()) + list(self.bought_debts.all())
-        for debt in all_debts:
-            if not debt.debt_buyer or (debt.debt_buyer and debt.debt_buyer.creditor_id == self.creditor_id):
-                if debt.original_debt_amount:
-                    all_owed_money += debt.original_debt_amount
-                    all_settled_money += debt.original_debt_amount - debt.current_debt_amount
-        if all_owed_money and all_settled_money:
-            avg = (all_settled_money * Decimal('100')) / all_owed_money
-        return format_price(avg)
-
-
-DEBT_ACCOUNT_TYPE_CHOICES = (
-    (None, NONE_CHOICE_LABEL),
-    ('difficult_creditor', 'Difficult Creditor'),
-    ('payday_loan', 'Payday Loan'),
-    ('standard', 'Standard'),
-)
-
-DEBT_ACCOUNT_EST_SETT = {
-    'difficult_creditor': Decimal('65'),
-    'payday_loan': Decimal('40'),
-    'standard': Decimal('40'),
-}
-
-WHOSE_DEBT_CHOICES = (
-    ('applicant', 'Applicant'),
-    ('co_applicant', 'Co-Applicant'),
-    ('joint', 'Joint'),
-)
-
-
-HAS_SUMMONS_TYPE_CHOICES = (
-    (None, NONE_CHOICE_LABEL),
-    ('yes', 'Yes'),
-    ('no', 'No'),
-)
-
-
-class Debt(models.Model):
-    debt_id = models.AutoField(primary_key=True)
-    contact = models.ForeignKey(Contact, related_name='contact_debts', blank=True, null=True)
-    original_creditor = models.ForeignKey(Creditor, related_name='creditor_debts', blank=True, null=True)
-    original_creditor_account_number = models.CharField(max_length=32)
-    debt_buyer = models.ForeignKey(Creditor, related_name='bought_debts', blank=True, null=True)
-    debt_buyer_account_number = models.CharField(max_length=32, blank=True, null=True)
-    account_type = models.CharField(max_length=20, choices=DEBT_ACCOUNT_TYPE_CHOICES, blank=True, null=True)
-    original_debt_amount = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
-    current_debt_amount = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
-    current_payment = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
-    whose_debt = models.CharField(max_length=20, choices=WHOSE_DEBT_CHOICES, blank=True, null=True)
-    last_payment_date = models.DateTimeField(blank=True, null=True)
-    has_summons = models.CharField(max_length=20, choices=HAS_SUMMONS_TYPE_CHOICES, blank=True, null=True)
-    summons_date = models.DateTimeField(blank=True, null=True)
-    court_date = models.DateTimeField(blank=True, null=True)
-    discovery_date = models.DateTimeField(blank=True, null=True)
-    answer_date = models.DateTimeField(blank=True, null=True)
-    service_date = models.DateTimeField(blank=True, null=True)
-    paperwork_received_date = models.DateTimeField(blank=True, null=True)
-    poa_sent_date = models.DateTimeField(blank=True, null=True)
-    enrolled = models.NullBooleanField(blank=True, null=True)
-
-    def __init__(self, *args, **kwargs):
-        super(Debt, self).__init__(*args, **kwargs)
-        if self.account_type:
-            for choice in DEBT_ACCOUNT_TYPE_CHOICES:
-                if choice[0] == self.account_type:
-                    self.account_type_label = choice[1]
-                    break
-        else:
-            self.account_type_label = self.account_type
-        if self.whose_debt:
-            for choice in WHOSE_DEBT_CHOICES:
-                if choice[0] == self.whose_debt:
-                    self.whose_debt_label = choice[1]
-                    break
-        else:
-            self.whose_debt_label = self.whose_debt
-        if self.has_summons:
-            for choice in HAS_SUMMONS_TYPE_CHOICES:
-                if choice[0] == self.has_summons:
-                    self.has_summons_label = choice[1]
-                    break
-        else:
-            self.has_summons_label = self.has_summons
-
-    def get_est_sett(self):
-        return self.current_debt_amount * (DEBT_ACCOUNT_EST_SETT.get(self.account_type, Decimal('40')) / 100)
-
-    def notes_count(self):
-        return len(self.notes.all())
-
-    def save(self, *args, **kwargs):
-        if self.enrolled is None:
-            self.enrolled = True if self.original_debt_amount and self.original_debt_amount >= Decimal('500') else False
-        super(Debt, self).save(*args, **kwargs)
 
 
 class DebtNote(models.Model):

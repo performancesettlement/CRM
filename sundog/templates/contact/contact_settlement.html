@@ -1,0 +1,167 @@
+{% extends "app-base.html" %}
+{% load staticfiles my_filters admin_urls %}
+{% block extrahead %}
+    <link href="{% static "css/plugins/datapicker/datepicker3.css" %}" rel="stylesheet">
+{% endblock extrahead %}
+{% block content %}
+    <div class="row wrapper border-bottom white-bg page-heading">
+        <div class="col-lg-12 m-t-md">
+            <ol class="breadcrumb">
+                <li>
+                    <a href="{% url "list_contacts" %}">Contacts</a>
+                </li>
+                <li>
+                    <a href="{% url "contact_dashboard" contact_id=contact.contact_id %}">{{ contact.full_name_straight }}</a>
+                </li>
+                <li class="active">
+                    <strong>New Settlement Offer</strong>
+                </li>
+            </ol>
+        </div>
+    </div>
+    <form id="settlement-form" class="col-xs-12 no-padding-sides" action="" method="post">
+        {% csrf_token %}
+        <div class="col-xs-12">
+            <h3 class="col-xs-12 m-t-md no-padding-sides">Settlement Payout Options - {{ contact.full_name_straight }}</h3>
+            <div id="totals" class="col-xs-12 m-t-md no-padding-sides">
+                <div class="inline m-r-md">
+                    <div class="m-b-xs font-bold">Client Balance</div>
+                    <div class="blue font-medium font-bold">{{ contact.client_balance|currency }}</div>
+                </div>
+                <div class="inline m-r-md">
+                    <div class="m-b-xs font-bold">Pending Balance</div>
+                    <div class="blue font-medium font-bold">$0.00</div>
+                </div>
+            </div>
+            <div class="col-xs-12 no-padding-sides m-t-md">
+                <p>Settlement Amount - {{ settlement_offer.offer_amount|currency }} - {{ settlement_offer.debt.owed_to.name }} - on debt amount of {{ settlement_offer.debt_amount|currency }}</p>
+                <p class="green">{{ settlement_offer.get_offer_percentage|percent }}</p>
+            </div>
+            <div class="col-xs-12 m-t-md border">
+                <div class="pull-left m-r-xs"><input id="id_no_payments" name="no_payments" type="checkbox"></div>
+                <label class="debt-title">Process WITHOUT payment. Check this box to mark a debt as settled without payment.</label>
+            </div>
+        </div>
+        <div class="col-xs-4 padding-for-footer">
+            <div class="col-xs-12 no-padding border-top m-t-md">
+                <h3>Settlement Disbursement Fees</h3>
+                <p>Fees will be applied to consumer account upon settlement.</p>
+                <div class="col-xs-12 p-xs border">
+                    <div class="col-xs-6 no-padding m-b-xs">ACH / Check By Phone</div><div class="col-xs-6 no-padding m-b-xs bold">$5.00</div>
+                    <div class="col-xs-6 no-padding m-b-xs">Standard Check</div><div class="col-xs-6 no-padding m-b-xs bold">$5.00</div>
+                    <div class="col-xs-6 no-padding m-b-xs">Second Day Check</div><div class="col-xs-6 no-padding m-b-xs bold">$15.00</div>
+                    <div class="col-xs-6 no-padding m-b-xs">Wires, Overnight Checks</div><div class="col-xs-6 no-padding m-b-xs bold">$15.00</div>
+                    <div class="col-xs-12 no-padding bold">
+                        Please note: Overnight and Second Day Checks cannot be delivered to PO Boxes.
+                    </div>
+                </div>
+            </div>
+            <div id="payment-container" class="col-xs-12 no-padding border-top m-t-md">
+                <div class="col-xs-6 no-padding-sides m-t-xs">
+                    <h3 class="col=xs-6">Payments</h3>
+                </div>
+                <div class="col-xs-6 no-padding-sides m-t-xs">
+                    <button id="generate-payments" class="btn btn-success pull-right" type="button">Generate Payments</button>
+                </div>
+                <div class="col-xs-12 no-padding-sides m-t-xs">
+                    <div class="col-xs-12 no-padding-sides m-b-xs">
+                        <label class="col-xs-6 no-padding-sides" for="id_start_date">Recurring Date</label>
+                        <input class="col-xs-6 no-padding-sides" id="id_start_date" value="{{ payments_start_date }}">
+                    </div>
+                    <div class="col-xs-12 no-padding-sides">
+                        <label class="col-xs-6 no-padding-sides" for="id_payments">Number of Payments</label>
+                        <select class="col-xs-6 no-padding-sides" id="id_payments">
+                            {% for i in payment_amounts %}
+                                <option value="{{ i }}" {% if i == payments_count %}selected="selected"{% endif %}>
+                                    {{ i }} payments
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div id="payments" class="col-xs-12 p-xs border m-t-md">
+                    {% for payment_form in payment_forms %}
+                    <div id="payment-{{ payment_form.prefix }}" class="col-xs-12 no-padding m-b-md">
+                        <div class="col-xs-3">
+                            <label>Payment Type</label>
+                            {{ payment_form.sub_type }}
+                        </div>
+                        <div class="col-xs-3">
+                            <label>Amount</label>
+                            {{ payment_form.amount }}
+                        </div>
+                        <div class="col-xs-3">
+                            <label>Payment Date</label>
+                            {{ payment_form.date }}
+                        </div>
+                        <div class="col-xs-3">
+                            <label>Processed By</label>
+                            {{ payment_form.gateway }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-8 padding-for-footer">
+            <div class="col-xs-12 no-padding border-top m-t-md">
+                <h3>Verify Creditor / Payee Information</h3>
+                <p>
+                    Please make sure the Payable To field contains the payee name EXACTLY how it is to appear on the check.
+                    e.g. (Forster & Garbus) not (CHASE/Forster Garbus). Use the reference field for memo / acct information.
+                </p>
+                <div class="col-xs-12 p-xs border">
+                    <div class="col-xs-12 no-padding-sides">
+                        <label class="col-xs-3 no-padding-sides">Payable To:</label>
+                        {{ form.payable_to }}
+                    </div>
+                    <div class="col-xs-12 no-padding-sides m-t-md">
+                        <label class="col-xs-3 no-padding-sides">Mail To Company:</label>
+                        {{ form.mail_to_company }}
+                    </div>
+                    <div class="col-xs-12 no-padding-sides m-t-md">
+                        <label class="col-xs-3 no-padding-sides">Address:</label>
+                        {{ form.address }}
+                    </div>
+                    <div class="col-xs-12 no-padding-sides m-t-md">
+                        <label class="col-xs-3 no-padding-sides">City:</label>
+                        {{ form.city }}
+                    </div>
+                    <div class="col-xs-12 no-padding-sides m-t-md">
+                        <label class="col-xs-3 no-padding-sides">State:</label>
+                        {{ form.state }}
+                    </div>
+                    <div class="col-xs-12 no-padding-sides m-t-md">
+                        <label class="col-xs-3 no-padding-sides">Zip:</label>
+                        {{ form.zip_code }}
+                    </div>
+                    <div class="col-xs-12 no-padding-sides m-t-md">
+                        <label class="col-xs-3 no-padding-sides">Creditor Reference #:</label>
+                        {{ form.creditor_reference }}
+                    </div>
+                    <div class="col-xs-12 no-padding-sides m-t-md">
+                        <label class="col-xs-3 no-padding-sides">Phone:</label>
+                        {{ form.phone }}
+                    </div>
+                    <div class="col-xs-12 no-padding-sides m-t-md">
+                        <label class="col-xs-3 no-padding-sides">Letter Date:</label>
+                        {{ form.letter_date }}
+                    </div>
+                    <div class="col-xs-12 no-padding-sides m-t-md">
+                        <label class="col-xs-3 no-padding-sides">Special Instructions / Wire Info:</label>
+                        {{ form.extra_info }}
+                    </div>
+                    <p class="col-xs-12 no-padding m-t-md">
+                        Please advise creditors to include the ClientID of <b>{{ contact.contact_id }}</b> with the remittance data of the payments.
+                    </p>
+                    <button class="btn btn-primary" type="submit">Complete Settlement</button>
+                </div>
+            </div>
+        </div>
+    </form>
+    <script src="{% static "js/plugins/datapicker/bootstrap-datepicker.js" %}"></script>
+    <script type="text/javascript">
+        var baseContactSettlementUrl = '{% url "contact_settlement" contact_id=contact.contact_id settlement_offer_id=settlement_offer.settlement_offer_id %}';
+    </script>
+    <script src="{% static "js/contact/contact_settlement.js" %}"></script>
+{% endblock %}
