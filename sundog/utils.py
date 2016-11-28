@@ -1,3 +1,4 @@
+from datatableview.views import XEditableDatatableView
 from datetime import datetime, timedelta
 from decimal import Decimal
 from django.db.models import CharField
@@ -250,3 +251,40 @@ def get_next_work_date(date):
     if week_day in [5, 6]:
         date += timedelta(days=7 - week_day)
     return date
+
+
+class SundogDatatableView(XEditableDatatableView):
+    searchable_columns = []
+
+    def get_datatable(self):
+        datatable = super().get_datatable()
+
+        # Add the data-config-searchable="true" attribute to column headers for
+        # columns listed in self.searchable_columns.  This makes those columns
+        # get a text input box for column-specific filtering.
+        for name, column in datatable.columns.items():
+            if name in self.searchable_columns:
+                # The attributes field of Column objects is implemented with
+                # the @property decorator, so the only way to override it on a
+                # per-instance basis is to change the class of the Column object
+                # dynamically.  See http://stackoverflow.com/a/31591589/1392731
+                attributes_ = column.attributes
+
+                class SearchColumn(type(column)):
+                    attributes = attributes_ + ' data-config-searchable="true"'
+
+                    # Subclassing the original column class without resetting
+                    # these two class fields to empty values would make the
+                    # metaclass for columns override registrations for the types
+                    # handled by the original class with this modified subclass.
+                    # This would introduce the attribute for searchable columns
+                    # anywhere those types are used for columns.  To avoid this,
+                    # set these fields to the original values in the Column
+                    # class which specify no registrations by the metaclass.
+                    # Details in datatableview.columns.ColumnMetaclass.__new__
+                    model_field_class = None
+                    handles_field_classes = []
+
+                column.__class__ = SearchColumn
+
+        return datatable

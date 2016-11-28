@@ -1,19 +1,23 @@
-<a
-  class="fm-delete documents-delete"
-  data-fm-callback="reload"
-  data-fm-head="Delete this document?  {{ document_title }}"
-  href="{% url 'documents.delete.ajax' pk=document_id %}"
-  id="{{ document_id }}-delete-document"
->
-  <span title="Delete document" class="glyphicon glyphicon-remove"></span>
-</a>
+<span class="text-nowrap">
 
-<a
-  class="fm-update documents-edit"
-  data-fm-callback="reload"
-  data-fm-head="Editing document: {{ document_title }}"
-  href="{% url 'documents.edit.ajax' pk=document_id %}"
-  id="{{ document_id }}-edit-document"
->
-  <span title="Edit document" class="glyphicon glyphicon-arrow-right"></span>
-</a>
+  <a
+    class="documents-delete fm-delete"
+    data-fm-callback="reload"
+    data-fm-head="Delete this document?  {{ document_title }}"
+    href="{% url "documents.delete.ajax" pk=document_id %}"
+    id="{{ document_id }}-delete-document"
+  >
+    <span title="Delete document" class="table-action glyphicon glyphicon-remove"></span>
+  </a>
+
+  <a
+    class="documents-edit fm-update"
+    data-fm-callback="reload"
+    data-fm-head="Editing document: {{ document_title }}"
+    href="{% url "documents.edit.ajax" pk=document_id %}"
+    id="{{ document_id }}-edit-document"
+  >
+    <span title="Edit document" class="table-action glyphicon glyphicon-arrow-right"></span>
+  </a>
+
+</span>

@@ -61,6 +61,26 @@ ul.dropdown-menu li a{
   margin: 0;
 }
 
+/* Increase table action glyph icon button size */
+.table-action.glyphicon {
+  font-size: 200%
+}
+
+/* Move datatable footer with search controls to top of table, under header */
+.datatable tfoot {
+    display: table-header-group;
+}
+
+/* Make per-column search inputs adapt to the column width */
+.datatable-search-input {
+    width: 100%;
+}
+
+/* Reduce font size for tables implemented with datatables.js */
+table.datatable {
+    font-size: smaller;
+}
+
 /* Admin custom style */
 .action-checkbox, .action-checkbox-column{
     padding: 5px;
