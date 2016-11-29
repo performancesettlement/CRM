@@ -377,6 +377,7 @@ TINYMCE_DEFAULT_CONFIG = {
         )
         for plugin in TINYMCE_PLUGINS
     },
+    'text': '<div class="page-break"></div>',
     'plugins': ','.join(TINYMCE_PLUGINS),
     'setup': 'tinymce_setup',
     'theme': 'modern',

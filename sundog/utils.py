@@ -10,7 +10,7 @@ from django.utils.html import strip_tags
 from django.views.generic.detail import BaseDetailView
 from django_auth_app.services import get_user_timezone
 from sundog.constants import SHORT_DATE_FORMAT
-from weasyprint import CSS
+from weasyprint import CSS, HTML
 
 import calendar
 import hashlib
@@ -373,9 +373,9 @@ class PDFView(BaseDetailView):
     def render_to_response(self, context):
         return HttpResponse(
             content=(
-                self
-                .object
-                .render(context)
+                HTML(
+                    string=self.object.render(context),
+                )
                 .write_pdf(
                     stylesheets=[
                         CSS(

@@ -1,7 +1,6 @@
 from datetime import date, timedelta
 from datatableview import Datatable
 from datatableview.helpers import make_processor, through_filter
-from datatableview.views import XEditableDatatableView
 from django.contrib.auth.decorators import login_required
 from django.forms.models import ModelForm
 from django.forms.widgets import Select, SelectMultiple
@@ -22,6 +21,7 @@ from sundog.models import (
 from sundog.routing import decorate_view, route
 from sundog.utils import (
     PDFView,
+    SundogDatatableView,
     format_column,
     template_column,
 )
@@ -76,7 +76,7 @@ class DocumentsCRUDViewMixin:
     ]
 )
 @decorate_view(login_required)
-class DocumentsList(DocumentsCRUDViewMixin, XEditableDatatableView):
+class DocumentsList(DocumentsCRUDViewMixin, SundogDatatableView):
     template_name = 'sundog/documents/list.html'
 
     class datatable_class(Datatable):

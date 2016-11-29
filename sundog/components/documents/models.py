@@ -16,6 +16,7 @@ from multiselectfield import MultiSelectField
 from pystache.defaults import TAG_ESCAPE
 from pystache.renderengine import context_get
 from pystache.renderer import Renderer
+from re import match
 from settings import MEDIA_PRIVATE
 from sundog.components.documents.enums import (
     TYPE_CHOICES,
@@ -31,7 +32,6 @@ from sundog.utils import (
     get_enum_name,
 )
 from tinymce.models import HTMLField
-from weasyprint import HTML
 
 
 class Document(Model):
@@ -139,23 +139,26 @@ class RenderRaw:
 
 
 def render(template, context):
-    return HTML(
-        string=(
-            DocumentRenderer(
-                escape=lambda s:
-                    s.text
-                    if isinstance(s, RenderRaw)
-                    else TAG_ESCAPE(s)
-            )
-            .render(
-                template=template,
-                **context,
-            )
-        ),
+    return (
+        DocumentRenderer(
+            escape=lambda s:
+                s.text
+                if isinstance(s, RenderRaw)
+                else TAG_ESCAPE(s)
+        )
+        .render(
+            template=template,
+            **context,
+        )
     )
 
 
 class DocumentRenderer(Renderer):
+
+    # These three method overrides ensure that templates returning a RenderRaw
+    # instance do not turn into HTML-escaped content, but are instead
+    # interpreted literally in the resulting document HTML.  This allows certain
+    # specific tags to generate complex HTML content.
 
     def _escape_to_unicode(self, s):
         return (
@@ -178,16 +181,52 @@ class DocumentRenderer(Renderer):
             else super().str_coerce(s)
         )
 
+    # Unfortunately, pystache provides no in-class or parameter mechanisms to
+    # specify non-default delimiters for rendering.  One workaround could be to
+    # prepend a Set Delimiter tag to the template string prior to the call to
+    # the render function, but that approach is undesirable as changing the
+    # template string may produce incorrect input positions in template syntax
+    # error messages.  Sadly, overriding this method means copying some code
+    # from the pystache source.
+    def _render_string(self, template, *context, **kwargs):
+        template = self._to_unicode_hard(template)
+
+        def render_func(engine, stack):
+            return engine.render(
+                template,
+                stack,
+                delimiters=('{', '}'),
+            )
+
+        return self._render_final(render_func, *context, **kwargs)
+
+    # Some template tags have to be generated from arbitrarily large data sets
+    # in the database, so it's best to override the context resolution function
+    # and generate those tags on demand with simulated lazy evaluation.
     def _make_resolve_context(self):
+        # These variables will be used in the context resolver function as a
+        # cache of the contact pulled from the database and the (rather large)
+        # dictionary of tag rendering functions, which serves in turn as storage
+        # for the cached rendered values of each document tag after its first
+        # usage.  These should improve rendering performance for documents that
+        # use a single tag multiple times.
         contact = None
         tags = None
 
         today = date.today()
 
-        # Thunk for computation returning default value on evaluation exception:
+        # This caches computed values to improve rendering speed on repeated
+        # uses of a template, and yields the specified default value (the empty
+        # string by default) if the computation throws an exception.  It works
+        # somewhat like a thunk for deferred evaluation.
         def d(computation, value=''):
+            # Local variable for cached computation result storage:
             value = None
 
+            # The actual function to be returned.  Note that you need to
+            # evaluate the return value of d(), namely this function, in order
+            # to get the results of the specified computation, as Python has no
+            # practical mechanism for implicit lazy evaluation.
             def thunk():
                 nonlocal value
                 value = value or defaulting(
@@ -198,13 +237,19 @@ class DocumentRenderer(Renderer):
 
             return thunk
 
+        # The actual context resolver used to render pystache templates:
         def contact_context_resolver(context, name):
             nonlocal contact
             nonlocal tags
 
+            # Get the contact once from the database:
             contact = contact or context_get(context, 'contact')
 
-            # Thunk for extraction of a contact attribute:
+            # Thunk for extraction of a contact attribute.  Some template tags
+            # follow a very similar pattern except for using one of several
+            # different prefixes on the attribute name they extract from the
+            # contact, so this function provides an additional parameter for the
+            # attribute prefix to help reduce code duplication in such cases.
             def contact_attr(attribute, attribute_prefix=''):
                 return d(
                     lambda: getattr(
@@ -214,24 +259,42 @@ class DocumentRenderer(Renderer):
                     ),
                 )
 
-            def applicant_information(prefix='', attribute_prefix=''):
+            # This function abstracts away most of the tags specifications for
+            # applicant information.  This is helpful since they have to be
+            # implemented for the main applicant and the co-applicant alike, and
+            # they differ only in the presence of an attribute prefix.  The main
+            # applicant carries an empty prefix on access to the corresponding
+            # attributes in the contact model instance, while the co-applicant
+            # uses the co_applicant_ prefix for all relevant contact fields.
+            # Tag names themselves follow a similar pattern: main applicant
+            # information tags carry no specific prefix, but co-applicant
+            # information tags carry the CO prefix; this tag prefix is passed in
+            # the tag_prefix parameter.
+            def applicant_information(tag_prefix='', attribute_prefix=''):
 
-                # Partially apply contact_attr to the current attribute prefix:
+                # This partially applies the contact_attr function to the
+                # current applicant's attribute prefix.  Within the
+                # applicant_information function, only contact_attr_ should be
+                # used outside this definition.
                 def contact_attr_(attribute):
                     return contact_attr(
                         attribute,
                         attribute_prefix=attribute_prefix,
                     )
 
-                def phone_parts(prefix, number):
+                # Phone number tags follow a repeated pattern, so abstract them
+                # out to reduce some code duplication.  The prefix passed here
+                # will be PHONE, WORK or CELL.
+                def phone_parts(phone_tag_prefix, number):
                     return {
-                        prefix + 'PHONE_AREA': d(lambda: number[0:3]),
-                        prefix + 'PHONE_PRE': d(lambda: number[3:6]),
-                        prefix + 'PHONE_SUFF': d(lambda: number[6:]),
+                        phone_tag_prefix + 'PHONE_AREA': d(lambda: number[0:3]),
+                        phone_tag_prefix + 'PHONE_PRE': d(lambda: number[3:6]),
+                        phone_tag_prefix + 'PHONE_SUFF': d(lambda: number[6:]),
                     }
 
                 return {
-                    prefix + key: value
+                    # Apply the tag prefix to all keys in the tag dictionary:
+                    tag_prefix + key: value
                     for key, value in {
                         'FIRSTNAME': contact_attr_('first_name'),
                         'LASTNAME': contact_attr_('last_name'),
@@ -275,6 +338,17 @@ class DocumentRenderer(Renderer):
                         ),
                         'SSN': contact_attr_('identification'),
                         **{
+                            # This generates all of the individual SSN digit tag
+                            # specifications.  Note the loop variable n is
+                            # passed as a parameter to a lambda instead of just
+                            # used directly as Python loops do not bind a
+                            # separate variable for each loop iteration; as the
+                            # variable is shared and mutated to increment it
+                            # in-place after each iteration, and the computation
+                            # on the variable is deferred, this is necessary to
+                            # prevent all of the SSN digit tags referring to the
+                            # last digit.  A longer explanation is available at
+                            # http://stackoverflow.com/a/19837590/1392731
                             'SSN' + str(n + 1): (
                                 lambda n:
                                     d(
@@ -296,6 +370,14 @@ class DocumentRenderer(Renderer):
                     }.items()
                 }
 
+            # This is the actual dictionary of static document tags.  Each
+            # implemented tag will have an entry here, except for those whose
+            # names include some identifier or variable that cannot be known
+            # statically, such as the TRANSX tags where X stands for a
+            # transaction identifier to be looked up in the database.  The
+            # dictionary of document tags is computed only once on the first use
+            # of the context resolution function, and individual tags defined
+            # within it cache their evaluation results.
             tags = tags or {
                 # General document system tags:
                 'PAGEBREAK': d(
@@ -303,7 +385,6 @@ class DocumentRenderer(Renderer):
                         text='<div class="page-break"></div>',
                     ),
                 ),
-                # TODO: doc:DOC_ID
 
                 # Contact identification:
                 'ID': contact_attr('pk'),
@@ -312,7 +393,7 @@ class DocumentRenderer(Renderer):
                 # Applicant and co-applicant information:
                 **applicant_information(),
                 **applicant_information(
-                    prefix='CO',
+                    tag_prefix='CO',
                     attribute_prefix='co_applicant_',
                 ),
 
@@ -364,8 +445,6 @@ class DocumentRenderer(Renderer):
                 # Transaction information:
                 # Payment: incoming draft from a client
                 # Transaction: draft or anything outgoing, like payments disbursed to creditor or fees transferred to PerfSett  # noqa
-                # 'TRANSX': d(lambda: contact.),  # TODO: Transaction Amount (Replace 'X' with transaction number. Ex. {TRANS1}, {TRANS2}...)  # noqa
-                # 'TRANSX_DATE': d(lambda: contact.),  # TODO: Transaction Date (Replace 'X' with transaction number. Ex. {TRANS1}, {TRANS2}...)  # noqa
                 # 'LASTTRANS_TRANSID': d(lambda: contact.),  # TODO: Last Transaction ID  # noqa
                 # 'LASTTRANS_ADDITIONAL': d(lambda: contact.),  # TODO: Last Transaction Additional Information  # noqa
                 # 'LASTTRANS_AMOUNT': d(lambda: contact.),  # TODO: Last Transaction Amount  # noqa
@@ -418,7 +497,6 @@ class DocumentRenderer(Renderer):
                 # 'DATE:m/d/Y||{DEBIT_DATE}': ,
                 # 'DraftSchedule': ,
                 # 'DebtPayGateway': ,
-                # 'doc:1676': ,
                 # {if '{CF:Hardships}' == 'Death In Family'}■{else}◻{endif}
                 # CF:Hardship Description
                 # CF:Creditor Name
@@ -454,10 +532,57 @@ class DocumentRenderer(Renderer):
                 # 'MISCOTHER': ,  # TODO: Other  # noqa
             }
 
-            return (
-                tags[name]()
-                if name in tags
-                else ''
+            # Return immediately if the requested tag is present in the cached
+            # tag dictionary.  This will always be the case for static tags.
+            # Dynamic tags will also return through this code path if they have
+            # been rendered previously, as their result is cached in the tag
+            # dictionary.
+            if name in tags:
+                return tags[name]()
+
+            # Check whether the tag name to resolve matches the pattern for
+            # document inclusion tags.  If so, render the referred document and
+            # store the result in the cached tag dictionary before returning it.
+            document_tag = match(
+                pattern=r'^\s*doc:(?P<document_id>\d+)\s*$',
+                string=name,
             )
+            if document_tag:
+                # Yield the empty string if the document does not exist.
+                result = ''
+                try:
+                    result = RenderRaw(
+                        text=(
+                            Document
+                            .objects
+                            .get(
+                                pk=document_tag.group('document_id'),
+                            )
+                            .render(
+                                # The context passed to this function is an
+                                # instance of the pystache.context.ContextStack
+                                # class, and the Document model render method
+                                # expects a simple dictionary.  This flattens
+                                # the ContextStack into a simple dictionary
+                                # following the resolution order used by the
+                                # ContextStack itself when resolving keys, so it
+                                # should not alter rendering behavior.
+                                {
+                                    key: value
+                                    for item in reversed(context._stack)
+                                    for key, value in item.items()
+                                },
+                            )
+                        ),
+                    )
+                except Document.DoesNotExist:
+                    pass
+                tags[name] = lambda: result
+                return result
+
+            # 'TRANSX': d(lambda: contact.),  # TODO: Transaction Amount (Replace 'X' with transaction number. Ex. {TRANS1}, {TRANS2}...)  # noqa
+            # 'TRANSX_DATE': d(lambda: contact.),  # TODO: Transaction Date (Replace 'X' with transaction number. Ex. {TRANS1}, {TRANS2}...)  # noqa
+
+            return ''
 
         return contact_context_resolver

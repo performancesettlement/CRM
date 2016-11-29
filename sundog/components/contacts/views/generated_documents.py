@@ -1,6 +1,5 @@
 from datatableview import Datatable
 from datatableview.helpers import through_filter
-from datatableview.views import XEditableDatatableView
 from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
 from django.forms.models import ModelForm
@@ -13,7 +12,7 @@ from settings import SHORT_DATETIME_FORMAT
 from sundog.components.documents.models import GeneratedDocument
 from sundog.models import Contact
 from sundog.routing import decorate_view, route
-from sundog.utils import format_column, template_column
+from sundog.utils import SundogDatatableView, format_column, template_column
 
 
 class GeneratedDocumentsCRUDViewMixin:
@@ -65,7 +64,7 @@ class GeneratedDocumentsCRUDViewMixin:
 @decorate_view(login_required)
 class GeneratedDocumentsList(
     GeneratedDocumentsCRUDViewMixin,
-    XEditableDatatableView,
+    SundogDatatableView,
 ):
     template_name = 'sundog/contacts/generated_documents/list.html'
 
