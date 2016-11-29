@@ -153,8 +153,6 @@ class ContactsList(SundogDatatableView):
                 'actions',
             ]
 
-            footer = True
-
             ordering = [
                 '-created_at',
             ]

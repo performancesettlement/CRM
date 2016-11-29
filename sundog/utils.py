@@ -389,7 +389,14 @@ class PDFView(BaseDetailView):
 
 
 class SundogDatatableView(XEditableDatatableView):
+    # Override this attribute with the list of column names (not labels, just
+    # the internal names used in code) for which a per-column search input
+    # should be provided.
     searchable_columns = []
+
+    # This enables the table footer, which is actually displayed just below the
+    # table header and includes all of the per-column search input fields.
+    footer = True
 
     def get_datatable(self):
         datatable = super().get_datatable()

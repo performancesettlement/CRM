@@ -111,8 +111,6 @@ class FilesList(FilesCRUDViewMixin, SundogDatatableView):
                 'filename',
             ]
 
-            footer = True
-
             ordering = [
                 '-created_at',
             ]
