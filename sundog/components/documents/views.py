@@ -1,6 +1,8 @@
+from argparse import Namespace
 from datetime import date, timedelta
 from datatableview import Datatable
 from datatableview.helpers import make_processor, through_filter
+from django.apps.registry import Apps
 from django.contrib.auth.decorators import login_required
 from django.forms.models import ModelForm
 from django.forms.widgets import Select, SelectMultiple
@@ -10,11 +12,13 @@ from fm.views import AjaxCreateView, AjaxDeleteView, AjaxUpdateView
 from settings import SHORT_DATETIME_FORMAT
 from sundog.components.documents.models import Document
 from sundog.models import (
+    Activity,
     BankAccount,
     Company,
     Contact,
     DEBT_SETTLEMENT,
     LeadSource,
+    Note,
     Stage,
     Status,
 )
@@ -174,6 +178,10 @@ class DocumentsPreviewPDF(DocumentsCRUDViewMixin, PDFView):
             fake_id -= 1
             return fake_id
 
+        today = date.today()
+
+        contact_id = get_fake_id()
+
         bank_account = BankAccount(
             routing_number='011103093',
             account_number='123456789012345678901234567890',
@@ -185,8 +193,8 @@ class DocumentsPreviewPDF(DocumentsCRUDViewMixin, PDFView):
             state='CT',
             zip_code='06001',
             phone='9165550108',
-            created_at=date.today() - timedelta(days=4),
-            updated_at=date.today() - timedelta(days=3),
+            created_at=today - timedelta(days=4),
+            updated_at=today - timedelta(days=3),
         )
 
         company = Company(
@@ -237,12 +245,83 @@ class DocumentsPreviewPDF(DocumentsCRUDViewMixin, PDFView):
             stage=stage,
         )
 
-        contact = Contact(
-            contact_id=get_fake_id(),
+        # The activities and notes fields of a Contact object are RelatedManager
+        # objects, and it's apparently not practical to create a RelatedManager
+        # for a fake collection of model instances.  This mocks the parts of the
+        # API relevant for the document generation process.  Note the object
+        # returned from the mocked all() method of each mocked RelatedManager is
+        # not a QuerySet, as it would be when using a proper Contact instance,
+        # but is instead just a regular Python list.  No document tag uses any
+        # other part of the QuerySet API than simple iteration, so this should
+        # not cause any issues for now.
+        class FakeContact(Contact):
+
+            activities = Namespace(
+                all=lambda: [
+                    Activity(
+                        activity_id=get_fake_id(),
+                        contact_id=contact_id,
+                        created_at=today - timedelta(days=1),
+                        created_by=self.request.user,
+                        type='enrollment',
+                        description='Enrollment Plan Saved',
+                    ),
+                    Activity(
+                        activity_id=get_fake_id(),
+                        contact_id=contact_id,
+                        created_at=today - timedelta(days=2),
+                        created_by=self.request.user,
+                        type='general',
+                        description='Contact Record Created',
+                    ),
+                ],
+            )
+
+            notes = Namespace(
+                all=lambda: [
+                    Note(
+                        note_id=get_fake_id(),
+                        contact_id=contact_id,
+                        created_at=today - timedelta(days=1),
+                        created_by=self.request.user,
+                        type='file_note',
+                        description='draft was returned for insufficient funds',
+                    ),
+                    Note(
+                        note_id=get_fake_id(),
+                        contact_id=contact_id,
+                        created_at=today - timedelta(days=2),
+                        created_by=self.request.user,
+                        type='welcome_call_attempt',
+                        description='Welcome call transferred to Lisa',
+                    ),
+                ],
+            )
+
+            # The metaclass for Django models automatically registers all
+            # defined model classes into the current Django application.  This
+            # is not a regular model that should be registered and accessible to
+            # any other part of the application, though.  One way to avoid that
+            # is to provide an empty Django application here so that the
+            # metaclass registers the model in isolation from the rest of the
+            # system.  There is unfortunately no way to entirely prevent
+            # registration, as the metaclass registers model classes
+            # unconditionally and the Python metaobject protocol does not allow
+            # for the FakeContact class to inherit from Contact yet not share
+            # its metaclass.  Furthermore, there seems to be no way to use an
+            # instance of the Contact class and override the activities
+            # attribute other than subclassing; the attribute cannot be assigned
+            # directly.
+            class Meta:
+                apps = Apps()
+
+        contact = FakeContact(
+            pk=contact_id,
+            contact_id=contact_id,
             first_name='Test',
             middle_name='Ing',
             last_name='User',
-            previous_name='',
+            previous_name='',  # TODO
             phone_number='9165550100',
             mobile_number='9165550101',
             email='test.user@example.com',
@@ -298,9 +377,9 @@ class DocumentsPreviewPDF(DocumentsCRUDViewMixin, PDFView):
             active=True,
             assigned_to=self.request.user,
             call_center_representative=self.request.user,
-            last_status_change=date.today(),
-            created_at=date.today() - timedelta(days=2),
-            updated_at=date.today() - timedelta(days=1),
+            last_status_change=today,
+            created_at=today - timedelta(days=2),
+            updated_at=today - timedelta(days=1),
 
             bank_account=bank_account,
             company=company,

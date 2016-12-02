@@ -25,7 +25,17 @@ from sundog.components.documents.enums import (
     STATE_CHOICES_DICT,
 )
 from sundog.media import S3PrivateFileField
-from sundog.models import ACCOUNT_TYPE_CHOICES, Contact
+from sundog.models import (
+    ACCOUNT_TYPE_CHOICES,
+    ACTIVITY_TYPE_CHOICES,
+    Contact,
+    DEPENDANTS_CHOICES,
+    EMPLOYMENT_STATUS_CHOICES,
+    HARDSHIPS_CHOICES,
+    MARITAL_STATUS_CHOICES,
+    NOTE_TYPE_CHOICES,
+    RESIDENTIAL_STATUS_CHOICES,
+)
 from sundog.utils import LongCharField
 from sundog.utils import (
     defaulting,
@@ -213,6 +223,9 @@ class DocumentRenderer(Renderer):
         contact = None
         tags = None
 
+        # To get consistent dates in the generated document, this queries the
+        # system date only once and uses it throughout the document in all tags
+        # involving the current time.
         today = date.today()
 
         # This caches computed values to improve rendering speed on repeated
@@ -259,115 +272,152 @@ class DocumentRenderer(Renderer):
                     ),
                 )
 
+            applicant_attr = contact_attr
+
+            # This partially applies the contact_attr function to the
+            # co-applicant's attribute prefix.
+            def co_applicant_attr(attribute):
+                return contact_attr(
+                    attribute=attribute,
+                    attribute_prefix='co_applicant_',
+                )
+
+            # Phone number tags follow a common pattern, so abstract them out to
+            # reduce some code repetition.
+            def phone_parts(phone_tag_prefix, number):
+                return {
+                    phone_tag_prefix + 'PHONE_AREA': d(lambda: number[0:3]),
+                    phone_tag_prefix + 'PHONE_PRE': d(lambda: number[3:6]),
+                    phone_tag_prefix + 'PHONE_SUFF': d(lambda: number[6:]),
+                }
+
+            # Some groups of tags follow a common pattern and differ only in a
+            # prefix applied to the tag names.  This simplifies application of
+            # that tag name prefix.
+            def prefix_tags(tag_prefix, tags):
+                return {
+                    tag_prefix + key: value
+                    for key, value in tags.items()
+                }
+
             # This function abstracts away most of the tags specifications for
             # applicant information.  This is helpful since they have to be
             # implemented for the main applicant and the co-applicant alike, and
-            # they differ only in the presence of an attribute prefix.  The main
+            # they differ only in the presence of an attribute prefix and a tag
+            # prefix, which is handled with the prefix_tags function.  The main
             # applicant carries an empty prefix on access to the corresponding
             # attributes in the contact model instance, while the co-applicant
             # uses the co_applicant_ prefix for all relevant contact fields.
-            # Tag names themselves follow a similar pattern: main applicant
-            # information tags carry no specific prefix, but co-applicant
-            # information tags carry the CO prefix; this tag prefix is passed in
-            # the tag_prefix parameter.
-            def applicant_information(tag_prefix='', attribute_prefix=''):
-
-                # This partially applies the contact_attr function to the
-                # current applicant's attribute prefix.  Within the
-                # applicant_information function, only contact_attr_ should be
-                # used outside this definition.
-                def contact_attr_(attribute):
-                    return contact_attr(
-                        attribute,
-                        attribute_prefix=attribute_prefix,
-                    )
-
-                # Phone number tags follow a repeated pattern, so abstract them
-                # out to reduce some code duplication.  The prefix passed here
-                # will be PHONE, WORK or CELL.
-                def phone_parts(phone_tag_prefix, number):
-                    return {
-                        phone_tag_prefix + 'PHONE_AREA': d(lambda: number[0:3]),
-                        phone_tag_prefix + 'PHONE_PRE': d(lambda: number[3:6]),
-                        phone_tag_prefix + 'PHONE_SUFF': d(lambda: number[6:]),
-                    }
-
+            # This is handled by accessing attributes using the passed get_attr
+            # function, which would be applicant_attr or co_applicant_attr as
+            # defined above.  Tag names themselves follow a similar pattern:
+            # main applicant information tags carry no specific prefix, but
+            # co-applicant information tags carry the CO prefix; this tag prefix
+            # must be applied to the return value of this function using the
+            # prefix_tags helper function.
+            def basic_applicant_tags(get_attr):
                 return {
-                    # Apply the tag prefix to all keys in the tag dictionary:
-                    tag_prefix + key: value
-                    for key, value in {
-                        'FIRSTNAME': contact_attr_('first_name'),
-                        'LASTNAME': contact_attr_('last_name'),
-                        'MIDDLENAME': contact_attr_('middle_name'),
-                        'FULLNAME': d(
-                            lambda: '{first_name} {last_name}'.format(
-                                first_name=contact_attr_('first_name')(),
-                                last_name=contact_attr_('last_name')(),
-                            ),
+                    'FIRSTNAME': get_attr('first_name'),
+                    'LASTNAME': get_attr('last_name'),
+                    'MIDDLENAME': get_attr('middle_name'),
+                    'FULLNAME': d(
+                        lambda: (
+                            '{first_name} {last_name}'.format(
+                                first_name=get_attr('first_name')(),
+                                last_name=get_attr('last_name')(),
+                            )
                         ),
-                        'PHONE': contact_attr_('phone_number'),
-                        'PHONE2': contact_attr_('work_phone'),
-                        'PHONE3': contact_attr_('mobile_number'),
-                        **phone_parts('HOME', contact_attr_('phone_number')()),
-                        **phone_parts('WORK', contact_attr_('work_phone')()),
-                        **phone_parts('CELL', contact_attr_('mobile_number')()),
-                        'EMAIL': contact_attr_('email'),
-                        'ADDRESS': contact_attr_('address_1'),
-                        'ADDRESS2': contact_attr_('address_2'),
-                        'CITY': contact_attr_('city'),
-                        'STATE': contact_attr_('state'),
-                        'STATEFULL': d(
-                            lambda: get_enum_name(
-                                code=contact_attr_('state')(),
-                                names=US_STATES,
-                            ),
+                    ),
+                    'PHONE': get_attr('phone_number'),
+                    'PHONE2': get_attr('work_phone'),
+                    'PHONE3': get_attr('mobile_number'),
+                    **phone_parts('HOME', get_attr('phone_number')()),
+                    **phone_parts('WORK', get_attr('work_phone')()),
+                    **phone_parts('CELL', get_attr('mobile_number')()),
+                    'EMAIL': get_attr('email'),
+                    'ADDRESS': get_attr('address_1'),
+                    'ADDRESS2': get_attr('address_2'),
+                    'CITY': get_attr('city'),
+                    'STATE': get_attr('state'),
+                    'STATEFULL': d(
+                        lambda: get_enum_name(
+                            code=get_attr('state')(),
+                            names=US_STATES,
                         ),
-                        'ZIP': contact_attr_('zip_code'),
-                        'FULLADDRESS': d(
-                            lambda: (
-                                '{address_1}, {address_2}, {city} {state}'
-                                ' {zip_code}'
-                                .format(
-                                    address_1=contact_attr_('address_1')(),
-                                    address_2=contact_attr_('address_2')(),
-                                    city=contact_attr_('city')(),
-                                    state=contact_attr_('state')(),
-                                    zip_code=contact_attr_('zip_code')(),
-                                )
-                            ),
+                    ),
+                    'ZIP': get_attr('zip_code'),
+                    'FULLADDRESS': d(
+                        lambda: (
+                            '{address_1}, {address_2}, {city} {state}'
+                            ' {zip_code}'
+                            .format(
+                                address_1=get_attr('address_1')(),
+                                address_2=get_attr('address_2')(),
+                                city=get_attr('city')(),
+                                state=get_attr('state')(),
+                                zip_code=get_attr('zip_code')(),
+                            )
                         ),
-                        'SSN': contact_attr_('identification'),
-                        **{
-                            # This generates all of the individual SSN digit tag
-                            # specifications.  Note the loop variable n is
-                            # passed as a parameter to a lambda instead of just
-                            # used directly as Python loops do not bind a
-                            # separate variable for each loop iteration; as the
-                            # variable is shared and mutated to increment it
-                            # in-place after each iteration, and the computation
-                            # on the variable is deferred, this is necessary to
-                            # prevent all of the SSN digit tags referring to the
-                            # last digit.  A longer explanation is available at
-                            # http://stackoverflow.com/a/19837590/1392731
-                            'SSN' + str(n + 1): (
-                                lambda n:
-                                    d(
-                                        lambda: (
-                                            contact_attr_('identification')()
-                                            .replace('-', '')
-                                            [n]
-                                        ),
-                                    )
-                            )(n)
-                            for n in range(0, 9)
-                        },
-                        'DOB': d(
-                            lambda: format(
-                                contact_attr_('birth_date')(),
-                                'm/d/Y',
-                            ),
+                    ),
+                    'SSN': get_attr('identification'),
+                    **{
+                        # This generates all of the individual SSN digit tag
+                        # specifications.  Note the loop variable n is passed as
+                        # a parameter to a lambda instead of just used directly
+                        # as Python loops do not bind a separate variable for
+                        # each loop iteration; as the variable is shared and
+                        # mutated to increment it in-place after each iteration,
+                        # and the computation on the variable is deferred, this
+                        # is necessary to prevent all of the SSN digit tags
+                        # referring to the last digit.  See a longer example in
+                        # http://stackoverflow.com/a/19837590/1392731
+                        'SSN' + str(n + 1): (
+                            lambda n: d(
+                                lambda: (
+                                    get_attr('identification')()
+                                    .replace('-', '')
+                                    [n]
+                                ),
+                            )
+                        )(n)
+                        for n in range(0, 9)
+                    },
+                    'DOB': d(
+                        lambda: format(
+                            get_attr('birth_date')(),
+                            'm/d/Y',
                         ),
-                    }.items()
+                    ),
+                }
+
+            # Some main applicant and co-applicant information tags use a different
+            # prefix, so they have to be generated separately.
+            def extra_applicant_tags(get_attr):
+                return {
+                    'Marital Status': d(
+                        lambda: get_enum_name(
+                            code=get_attr('marital_status')(),
+                            names=US_STATES,
+                        ),
+                    ),
+
+                    'Employment Status': d(
+                        lambda: get_enum_name(
+                            code=get_attr('employment_status')(),
+                            names=EMPLOYMENT_STATUS_CHOICES,
+                        ),
+                    ),
+
+                    # 'CF:Employer': ,  # TODO: Name of Employer  # noqa
+                    # 'CCF:Employer': ,  # TODO: Name of Employer  # noqa
+                    # 'CF:Position': ,  # TODO: Occupation  # noqa
+                    # 'CCF:Position': ,  # TODO: Occupation  # noqa
+                    # 'CF:Length of Employment': ,  # TODO: Length of Employment  # noqa
+                    # 'CCF:Length of Employment': ,  # TODO: Length of Employment  # noqa
+
+                    # 'CF:Length of Employment': ,  # TODO: Length of Employment  # noqa
+                    # 'CCF:Length of Employment': ,  # TODO: Length of Employment  # noqa
+
                 }
 
             # This is the actual dictionary of static document tags.  Each
@@ -379,6 +429,7 @@ class DocumentRenderer(Renderer):
             # of the context resolution function, and individual tags defined
             # within it cache their evaluation results.
             tags = tags or {
+
                 # General document system tags:
                 'PAGEBREAK': d(
                     lambda: RenderRaw(
@@ -388,14 +439,21 @@ class DocumentRenderer(Renderer):
 
                 # Contact identification:
                 'ID': contact_attr('pk'),
-                'CUSTOMERID': contact_attr('pk'),
-
-                # Applicant and co-applicant information:
-                **applicant_information(),
-                **applicant_information(
-                    tag_prefix='CO',
-                    attribute_prefix='co_applicant_',
+                'CUSTOMERID': d(
+                    lambda: (
+                        'PER-{pk}'.format(
+                            pk=contact_attr('pk')(),
+                        )
+                    ),
                 ),
+
+                # Applicant information:
+                **basic_applicant_tags(get_attr=applicant_attr),
+                **extra_applicant_tags(get_attr=applicant_attr),
+
+                # Co-applicant information:
+                **prefix_tags('CO', basic_applicant_tags(co_applicant_attr)),
+                **prefix_tags('C', extra_applicant_tags(co_applicant_attr)),
 
                 # Bank account information:
                 'NAMEONACCT': d(lambda: contact.bank_account.name_on_account),
@@ -423,11 +481,22 @@ class DocumentRenderer(Renderer):
                             template_name='sundog/documents/tags/allnotes.html',
                             context={
                                 'notes': contact.notes.all(),
+                                'types': dict(NOTE_TYPE_CHOICES),
                             },
                         ),
                     ),
                 ),
-                # 'ALLHISTORY': lambda: contact.,  # TODO: Populates a table with the History Notes from the Client Dashboard  # noqa
+                'ALLHISTORY': d(
+                    lambda: RenderRaw(
+                        text=render_to_string(
+                            template_name='sundog/documents/tags/allnotes.html',
+                            context={
+                                'notes': contact.activities.all(),
+                                'types': dict(ACTIVITY_TYPE_CHOICES),
+                            },
+                        ),
+                    ),
+                ),
                 'DATE': d(lambda: format(today, 'M m, Y')),
                 'MONTH': d(lambda: format(today, 'F')),
                 'DAY': d(lambda: format(today, 'jS')),
@@ -453,6 +522,7 @@ class DocumentRenderer(Renderer):
                 # 'NEXTPAYMENT_AMOUNT': d(lambda: contact.),  # TODO: Next Transaction Amount  # noqa
                 # 'NEXTPAYMENT_DATE': d(lambda: contact.),  # TODO: Next Transaction Date  # noqa
                 # 'NEXTPAYMENT_TYPE': d(lambda: contact.),  # TODO: Next Transaction Type (ACH or CC)  # noqa
+
                 'NUM_PAYMENTS_MADE': d(
                     lambda: sum(
                         enrollment
@@ -461,6 +531,7 @@ class DocumentRenderer(Renderer):
                         for enrollment in contact.enrollments.all()
                     ),
                 ),
+
                 'NUM_PAYMENTS_LEFT': d(
                     lambda: sum(
                         enrollment
@@ -470,6 +541,7 @@ class DocumentRenderer(Renderer):
                         for enrollment in contact.enrollments.all()
                     ),
                 ),
+
                 'SUM_PAYMENTS_CLEARED': d(
                     lambda: sum(
                         enrollment
@@ -479,7 +551,9 @@ class DocumentRenderer(Renderer):
                         for enrollment in contact.enrollments.all()
                     ),
                 ),
+
                 # 'SUM_FEES_CLEARED': ,  # TODO: Sum Total of ACH / Fee Credits Cleared  # noqa
+
                 'SUM_PAYMENTS': d(
                     lambda: sum(
                         enrollment
@@ -490,46 +564,65 @@ class DocumentRenderer(Renderer):
                 ),
 
                 # TODO:
-                # 'PM1_DATE': ,  # Date of First Debit
                 # 'ANDCOFULLNAME': ,
-                # 'CF:3RD PARTY SPEAKER FULL NAME': ,
-                # 'CF:3RD PARTY SPEAKER LAST 4 OF SSN': ,
                 # 'DATE:m/d/Y||{DEBIT_DATE}': ,
                 # 'DraftSchedule': ,
                 # 'DebtPayGateway': ,
-                # {if '{CF:Hardships}' == 'Death In Family'}■{else}◻{endif}
-                # CF:Hardship Description
                 # CF:Creditor Name
 
-                # 'CF:Marital Status': ,  # TODO: Marital Status (Married, Separated etc.)  # noqa
-                # 'CCF:Marital Status': ,  # TODO: Marital Status (Married, Separated etc.)  # noqa
-                # 'CF:Residential Status': ,  # TODO: Homeowner or Renter  # noqa
-                # 'CF:Dependents (total for both applicants)': ,  # TODO: Number of Dependents  # noqa
-                # 'CF:Employment Status': ,  # TODO: Employment Status (Unemployed, Retired etc.)  # noqa
-                # 'CCF:Employment Status': ,  # TODO: Employment Status (Unemployed, Retired etc.)  # noqa
-                # 'CF:Position': ,  # TODO: Occupation  # noqa
-                # 'CCF:Position': ,  # TODO: Occupation  # noqa
-                # 'CF:Employer': ,  # TODO: Name of Employer  # noqa
-                # 'CCF:Employer': ,  # TODO: Name of Employer  # noqa
-                # 'CF:Length of Employment': ,  # TODO: Length of Employment  # noqa
-                # 'CCF:Length of Employment': ,  # TODO: Length of Employment  # noqa
+                'CF:Residential Status': d(
+                    lambda: get_enum_name(
+                        code=contact_attr('residential_status')(),
+                        names=US_STATES,
+                    ),
+                ),
 
-                # 'NETINCOME': ,  # TODO: Take Home Pay  # noqa
-                # 'OTHERINCOME': ,  # TODO: Other (rental income, alimony/support, government assistance etc.)  # noqa
-                # 'TOTALINCOME': ,  # TODO: TOTAL COMBINED INCOME  # noqa
+                'CF:Dependents (total for both applicants)': (
+                    contact_attr('dependants')
+                ),
 
-                # 'MORTGAGE': ,  # TODO: Rent or Mortgage (include 2ND mortgage or lot rent for mobile homes)  # noqa
-                # 'UTILITIES': ,  # TODO: Utilities (electricity, gas, water, sewer)  # noqa
-                # 'TRANSPORTATION': ,  # TODO: Transportation (including car payments, tolls, gas, repairs, bus, etc.)  # noqa
-                # 'INSURANCE': ,  # TODO: Insurance premiums (auto, life, health, etc.)  # noqa
-                # 'FOOD': ,  # TODO: Groceries  # noqa
-                # 'TELEPHONE': ,  # TODO: Telephone (home, mobile, etc.)  # noqa
-                # 'MEDICALBILLS': ,  # TODO: Medical expenses (out of pocket)  # noqa
-                # 'BACKTAXES': ,  # TODO: Taxes (not deducted from your wages or included in home mortgage payments)  # noqa
-                # 'STUDENTLOANS': ,  # TODO: Student Loans  # noqa
-                # 'ALIMONYSUPPORT': ,  # TODO: Alimony & child support  # noqa
-                # 'CHILDCARE': ,  # TODO: Childcare  # noqa
-                # 'MISCOTHER': ,  # TODO: Other  # noqa
+                'CF:3RD PARTY SPEAKER FULL NAME': (
+                    contact_attr('third_party_speaker_full_name')
+                ),
+
+                'CF:3RD PARTY SPEAKER LAST 4 OF SSN': (
+                    contact_attr('third_party_speaker_last_4_of_ssn')
+                ),
+
+                'CF:Hardships': d(
+                    lambda: get_enum_name(
+                        code=contact_attr('hardships')(),
+                        names=HARDSHIPS_CHOICES,
+                    ),
+                ),
+
+                'CF:Hardship Description': contact_attr('hardship_description'),
+
+                # TODO: {if '{CF:Hardships}' == 'Death In Family'}■{else}◻{endif}  # noqa
+
+                'NETINCOME': d(lambda: contact.incomes.take_home_pay),
+                'TOTALINCOME': d(lambda: contact.incomes.total()),
+
+                'OTHERINCOME': d(
+                    lambda: (
+                        contact.incomes.total() -
+                        contact.incomes.take_home_pay
+                    )
+                ),
+
+                'MORTGAGE': d(lambda: contact.expenses.rent),
+                'UTILITIES': d(lambda: contact.expenses.utilities),
+                'TRANSPORTATION': d(lambda: contact.expenses.transportation),
+                'INSURANCE': d(lambda: contact.expenses.insurance_premiums),
+                'FOOD': d(lambda: contact.expenses.food),
+                'TELEPHONE': d(lambda: contact.expenses.telephone),
+                'MEDICALBILLS': d(lambda: contact.expenses.medical_bills),
+                'BACKTAXES': d(lambda: contact.expenses.back_taxes),
+                'STUDENTLOANS': d(lambda: contact.expenses.student_loans),
+                'ALIMONYSUPPORT': d(lambda: contact.expenses.child_support),
+                'CHILDCARE': d(lambda: contact.expenses.child_care),
+                'MISCOTHER': d(lambda: contact.expenses.other_expenses),
+
             }
 
             # Return immediately if the requested tag is present in the cached
@@ -582,6 +675,7 @@ class DocumentRenderer(Renderer):
 
             # 'TRANSX': d(lambda: contact.),  # TODO: Transaction Amount (Replace 'X' with transaction number. Ex. {TRANS1}, {TRANS2}...)  # noqa
             # 'TRANSX_DATE': d(lambda: contact.),  # TODO: Transaction Date (Replace 'X' with transaction number. Ex. {TRANS1}, {TRANS2}...)  # noqa
+            # 'PM1_DATE': ,  # Date of First Debit
 
             return ''
 
