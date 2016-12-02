@@ -316,7 +316,7 @@ class DocumentsPreviewPDF(DocumentsCRUDViewMixin, PDFView):
                 apps = Apps()
 
         contact = FakeContact(
-            pk=contact_id,
+            pk=contact_id,  # contact_id won't define pk in subclass model; why?
             contact_id=contact_id,
             first_name='Test',
             middle_name='Ing',
