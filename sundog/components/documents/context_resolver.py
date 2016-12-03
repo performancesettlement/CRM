@@ -43,6 +43,17 @@ def render(template, context):
     )
 
 
+# Tag name matching should be case-insensitive, so this function
+# will make all tag keys lowercase.  For this to work, tag names
+# specified in document templates should also be lowercased before
+# attempting lookup in the tag dictionary.
+def casefold_keys(dictionary):
+    return {
+        key.lower(): value
+        for key, value in dictionary.items()
+    }
+
+
 # This caches computed values to improve rendering speed on repeated uses of a
 # template, and yields the specified default value (the empty string by default)
 # if the computation throws an exception.  It works somewhat like a thunk for
@@ -178,6 +189,7 @@ def basic_applicant_tags(get_attr):
 # co-applicant custom field information.
 def extra_applicant_tags(get_attr):
     return {
+
         'Marital Status': d(
             lambda: get_enum_name(
                 code=get_attr('marital_status')(),
@@ -192,15 +204,175 @@ def extra_applicant_tags(get_attr):
             ),
         ),
 
-        # 'CF:Employer': ,  # TODO: Name of Employer  # noqa
-        # 'CCF:Employer': ,  # TODO: Name of Employer  # noqa
-        # 'CF:Position': ,  # TODO: Occupation  # noqa
-        # 'CCF:Position': ,  # TODO: Occupation  # noqa
-        # 'CF:Length of Employment': ,  # TODO: Length of Employment  # noqa
-        # 'CCF:Length of Employment': ,  # TODO: Length of Employment  # noqa
-        # TODO: the rest of the CF tags
+        'Employer': get_attr('employer'),
+        'Position': get_attr('position'),
+        'Length of Employment': get_attr('length_of_employment'),
 
     }
+
+# {CF:CFLN Settlement 6 Creditor & Last 4 of Acct#:}
+# {CF:*Eppsbal}
+# {CF:*Eppsbal Last Updated}
+# {CF:*First Payment Cleared}
+# {CF:*Last Payment Cleared}
+# {CF:*Lead Source* }
+# {CF:*Trust Account Provider}
+# {CF:3rd Party Speaker Full Name}
+# {CF:3rd Party Speaker Last 4 of SSN}
+# {CF:Adjusted Gross Income}
+# {CF:Adjusted Gross Income (Spouse)}
+# {CF:Alias}
+# {CF:Appointment Date}
+# {CF:Appointment Time}
+# {CF:ATC}
+# {CF:ATC Sent To All Creditors}
+# {CF:Authorization Form On File}
+# {CF:Best Time to Contact (PST - 2 hour block)}
+# {CF:Call}
+# {CF:Call Center Representative}
+# {CF:Cancellation Letter Sent}
+# {CF:CC Debt Amount}
+# {CF:CFLN Settlement 1 Creditor &amp; Last 4 of Acct#:}
+# {CF:CFLN Settlement 1 Date}
+# {CF:CFLN Settlement 2 Creditor &amp; Last 4 of Acct#:}
+# {CF:CFLN Settlement 2 Date}
+# {CF:CFLN Settlement 3 Creditor &amp; Last 4 of Acct#:}
+# {CF:CFLN Settlement 3 Date}
+# {CF:CFLN Settlement 4 Creditor &amp; Last 4 of Acct#:}
+# {CF:CFLN Settlement 4 Date}
+# {CF:CFLN Settlement 5 Creditor &amp; Last 4 of Acct#:}
+# {CF:CFLN Settlement 5 Date}
+# {CF:CFLN Settlement 6 Date}
+# {CF:CFLN Settlement 7 Creditor &amp; Last 4 of Acct#:}
+# {CF:CFLN Settlement 7 Date}
+# {CF:Change Contact Info Requested}
+# {CF:Client had delinquent accounts in program when enrolled?}
+# {CF:Co-Applicant}
+# {CF:Consolidations}
+# {CF:Consolidations Prior}
+# {CF:Contact Info Updated}
+# {CF:Creditor Account Num}
+# {CF:Creditor Name}
+# {CF:Current Status of Loans}
+# {CF:De-Enrolled Date}
+# {CF:Dependents (total for both applicants)}
+# {CF:DL Number}
+# {CF:DL State}
+# #{CF:Employer}
+# {CF:Employer Address}
+# {CF:Employer Address2}
+# {CF:Employer City}
+# {CF:Employer State}
+# {CF:Employer Zip}
+# {CF:Employment Status}
+# {CF:Family Size}
+# {CF:File Taxes}
+# {CF:Filing Status}
+# {CF:Fremont Group POA On File?}
+# {CF:Goal Once Debt Free}
+# {CF:Graduation Letter Sent}
+# {CF:Hardship Description}
+# {CF:Hardship Notification Letters Sent}
+# {CF:Hardships}
+# {CF:HNL}
+# {CF:HS}
+# {CF:I&amp;E}
+# {CF:Income Year}
+# {CF:Kill Date}
+# {CF:Kill Reason}
+# {CF:Last Congratulatons Letter Sent}
+# {CF:Last MAR Completed}
+# {CF:Last NSF Letter Sent}
+# {CF:Last NSF Letter Sent Type}
+# {CF:Last Paused Letter Sent}
+# {CF:Last Retention Letter Sent}
+# {CF:Last Settlement Authorization Needed Letter Sent}
+# {CF:Last Settlement Authorization Needed Letter Sent Type}
+# {CF:Last Settlement Completed}
+# {CF:Last Settlement Review}
+# {CF:Last UC Correspondence Sent To Client}
+# {CF:Lead Debt Amount}
+# #{CF:Lead Source}
+# {CF:Lead Type}
+# #{CF:Length of Employment}
+# {CF:Loan Type}
+# {CF:Maiden Name}
+# {CF:MAR Due}
+# {CF:MAR Time}
+# {CF:MAR Type}
+# {CF:Marital Status}
+# {CF:Notarized ATC On File?}
+# {CF:Number of Accounts Reviewed}
+# {CF:Other Debt}
+# {CF:Pay Frequency}
+# {CF:PIN Number}
+# {CF:PIN Requested}
+# #{CF:Position}
+# {CF:Previous Name}
+# {CF:REF1 Address}
+# {CF:REF1 City}
+# {CF:REF1 Name}
+# {CF:REF1 Phone}
+# {CF:REF1 Relationship}
+# {CF:REF1 State}
+# {CF:REF1 Zip}
+# {CF:REF2 Address}
+# {CF:REF2 City}
+# {CF:REF2 Name}
+# {CF:REF2 Phone}
+# {CF:REF2 Relationship}
+# {CF:REF2 State}
+# {CF:REF2 Zip}
+# {CF:Referred By}
+# {CF:Represen}
+# {CF:Residential Status}
+# {CF:S1 Date}
+# {CF:Salesman Email Address}
+# {CF:Salesman Name}
+# {CF:Salesman Phone Number}
+# {CF:Sett 1 Date Revenue Earned This Month}
+# {CF:Sett 1 Original Creditor and Last 4}
+# {CF:Sett 1 Revenue Earned This Month}
+# {CF:Sett 2 Date Revenue Earned This Month}
+# {CF:Sett 2 Original Creditor and Last 4}
+# {CF:Sett 2 Revenue Earned This Month}
+# {CF:Sett 3 Date Revenue Earned This Month}
+# {CF:Sett 3 Original Creditor and Last 4}
+# {CF:Sett 3 Revenue Earned This Month}
+# {CF:Sett 4 Date Revenue Earned This Month}
+# {CF:Sett 4 Original Creditor and Last 4}
+# {CF:Sett 4 Revenue Earned This Month}
+# {CF:Sett 5 Date Revenue Earned This Month}
+# {CF:Sett 5 Original Creditor and Last 4}
+# {CF:Sett 5 Revenue Earned This Month}
+# {CF:Special Note 1}
+# {CF:Special Note 2}
+# {CF:Special Note 3}
+# {CF:Special Note 4}
+# {CF:Spouse Indebtedness Amount}
+# {CF:Spouse Pay Frequency}
+# {CF:SSN1}
+# {CF:SSN2}
+# {CF:Student Debt}
+# {CF:STUDENT LOANS CONSOLIDATED?}
+# {CF:STUDENT LOANS?}
+# {CF:Suffix}
+# {CF:TAX ISSUES?}
+# {CF:Taxable Income}
+# {CF:Total Debt Amount}
+# {CF:Transferred?}
+# {CF:Unit(s)}
+# {CF:Unknown Creditor 1}
+# {CF:Unknown Creditor 2}
+# {CF:Unknown Creditor 3}
+# {CF:Unknown Creditor 4}
+# {CF:Unknown Creditor 5}
+# {CF:Using AGI Form}
+# {CF:Wages Garnished}
+# {CF:WC Completed}
+# {CF:WC Due}
+# {CF:WC Time}
+# {CF:Welcome Call Date}
 
 
 class DocumentRenderer(Renderer):
@@ -269,9 +441,15 @@ class DocumentRenderer(Renderer):
         today = date.today()
 
         # The actual context resolver used to render pystache templates:
-        def contact_context_resolver(context, name):
+        def contact_context_resolver(context, original_name):
             nonlocal contact
             nonlocal tags
+
+            # Tag name matching should be case insensitive, so we immediately
+            # lowercase the requested tag name.  All tag lookup operations
+            # should either be case-insensitive or casefold to lowercase.  This
+            # also removes extra whitespace around the tag.
+            name = original_name.strip().lower()
 
             # Get the contact once from the database:
             contact = contact or context_get(context, 'contact')
@@ -308,7 +486,7 @@ class DocumentRenderer(Renderer):
             # dictionary of document tags is computed only once on the first use
             # of the context resolution function, and individual tags defined
             # within it cache their evaluation results.
-            tags = tags or {
+            tags = tags or casefold_keys({
 
                 # General document system tags:
                 'PAGEBREAK': d(
@@ -503,7 +681,7 @@ class DocumentRenderer(Renderer):
                 'CHILDCARE': d(lambda: contact.expenses.child_care),
                 'MISCOTHER': d(lambda: contact.expenses.other_expenses),
 
-            }
+            })
 
             # Return immediately if the requested tag is present in the cached
             # tag dictionary.  This will always be the case for static tags.
@@ -517,7 +695,7 @@ class DocumentRenderer(Renderer):
             # document inclusion tags.  If so, render the referred document and
             # store the result in the cached tag dictionary before returning it.
             document_tag = match(
-                pattern=r'^\s*doc:(?P<document_id>\d+)\s*$',
+                pattern=r'^doc:(?P<document_id>\d+)$',
                 string=name,
             )
             if document_tag:
