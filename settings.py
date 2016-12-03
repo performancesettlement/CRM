@@ -369,6 +369,7 @@ TINYMCE_PLUGINS = {
 
 TINYMCE_DEFAULT_CONFIG = {
     'cleanup_on_startup': True,
+    'convert_urls': False,
     'custom_undo_redo_levels': 10,
     'external_plugins': {
         plugin: '{base}/plugins/{plugin}/plugin.min.js'.format(
