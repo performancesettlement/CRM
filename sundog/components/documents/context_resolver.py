@@ -20,6 +20,11 @@ from sundog.utils import (
 )
 
 
+class Alias:
+    def __init__(self, tag):
+        self.tag = tag
+
+
 class RenderRaw:
     def __init__(self, text):
         self.text = text
@@ -199,170 +204,6 @@ def extra_applicant_tags(get_attr):
 
     }
 
-# {CF:CFLN Settlement 6 Creditor & Last 4 of Acct#:}
-# {CF:*Eppsbal}
-# {CF:*Eppsbal Last Updated}
-# {CF:*First Payment Cleared}
-# {CF:*Last Payment Cleared}
-# {CF:*Lead Source* }
-# {CF:*Trust Account Provider}
-# {CF:3rd Party Speaker Full Name}
-# {CF:3rd Party Speaker Last 4 of SSN}
-# {CF:Adjusted Gross Income}
-# {CF:Adjusted Gross Income (Spouse)}
-# {CF:Alias}
-# {CF:Appointment Date}
-# {CF:Appointment Time}
-# {CF:ATC}
-# {CF:ATC Sent To All Creditors}
-# {CF:Authorization Form On File}
-# {CF:Best Time to Contact (PST - 2 hour block)}
-# {CF:Call}
-# {CF:Call Center Representative}
-# {CF:Cancellation Letter Sent}
-# {CF:CC Debt Amount}
-# {CF:CFLN Settlement 1 Creditor &amp; Last 4 of Acct#:}
-# {CF:CFLN Settlement 1 Date}
-# {CF:CFLN Settlement 2 Creditor &amp; Last 4 of Acct#:}
-# {CF:CFLN Settlement 2 Date}
-# {CF:CFLN Settlement 3 Creditor &amp; Last 4 of Acct#:}
-# {CF:CFLN Settlement 3 Date}
-# {CF:CFLN Settlement 4 Creditor &amp; Last 4 of Acct#:}
-# {CF:CFLN Settlement 4 Date}
-# {CF:CFLN Settlement 5 Creditor &amp; Last 4 of Acct#:}
-# {CF:CFLN Settlement 5 Date}
-# {CF:CFLN Settlement 6 Date}
-# {CF:CFLN Settlement 7 Creditor &amp; Last 4 of Acct#:}
-# {CF:CFLN Settlement 7 Date}
-# {CF:Change Contact Info Requested}
-# {CF:Client had delinquent accounts in program when enrolled?}
-# {CF:Co-Applicant}
-# {CF:Consolidations}
-# {CF:Consolidations Prior}
-# {CF:Contact Info Updated}
-# {CF:Creditor Account Num}
-# {CF:Creditor Name}
-# {CF:Current Status of Loans}
-# {CF:De-Enrolled Date}
-# {CF:Dependents (total for both applicants)}
-# {CF:DL Number}
-# {CF:DL State}
-# #{CF:Employer}
-# {CF:Employer Address}
-# {CF:Employer Address2}
-# {CF:Employer City}
-# {CF:Employer State}
-# {CF:Employer Zip}
-# {CF:Employment Status}
-# {CF:Family Size}
-# {CF:File Taxes}
-# {CF:Filing Status}
-# {CF:Fremont Group POA On File?}
-# {CF:Goal Once Debt Free}
-# {CF:Graduation Letter Sent}
-# {CF:Hardship Description}
-# {CF:Hardship Notification Letters Sent}
-# {CF:Hardships}
-# {CF:HNL}
-# {CF:HS}
-# {CF:I&amp;E}
-# {CF:Income Year}
-# {CF:Kill Date}
-# {CF:Kill Reason}
-# {CF:Last Congratulatons Letter Sent}
-# {CF:Last MAR Completed}
-# {CF:Last NSF Letter Sent}
-# {CF:Last NSF Letter Sent Type}
-# {CF:Last Paused Letter Sent}
-# {CF:Last Retention Letter Sent}
-# {CF:Last Settlement Authorization Needed Letter Sent}
-# {CF:Last Settlement Authorization Needed Letter Sent Type}
-# {CF:Last Settlement Completed}
-# {CF:Last Settlement Review}
-# {CF:Last UC Correspondence Sent To Client}
-# {CF:Lead Debt Amount}
-# #{CF:Lead Source}
-# {CF:Lead Type}
-# #{CF:Length of Employment}
-# {CF:Loan Type}
-# {CF:Maiden Name}
-# {CF:MAR Due}
-# {CF:MAR Time}
-# {CF:MAR Type}
-# {CF:Marital Status}
-# {CF:Notarized ATC On File?}
-# {CF:Number of Accounts Reviewed}
-# {CF:Other Debt}
-# {CF:Pay Frequency}
-# {CF:PIN Number}
-# {CF:PIN Requested}
-# #{CF:Position}
-# {CF:Previous Name}
-# {CF:REF1 Address}
-# {CF:REF1 City}
-# {CF:REF1 Name}
-# {CF:REF1 Phone}
-# {CF:REF1 Relationship}
-# {CF:REF1 State}
-# {CF:REF1 Zip}
-# {CF:REF2 Address}
-# {CF:REF2 City}
-# {CF:REF2 Name}
-# {CF:REF2 Phone}
-# {CF:REF2 Relationship}
-# {CF:REF2 State}
-# {CF:REF2 Zip}
-# {CF:Referred By}
-# {CF:Represen}
-# {CF:Residential Status}
-# {CF:S1 Date}
-# {CF:Salesman Email Address}
-# {CF:Salesman Name}
-# {CF:Salesman Phone Number}
-# {CF:Sett 1 Date Revenue Earned This Month}
-# {CF:Sett 1 Original Creditor and Last 4}
-# {CF:Sett 1 Revenue Earned This Month}
-# {CF:Sett 2 Date Revenue Earned This Month}
-# {CF:Sett 2 Original Creditor and Last 4}
-# {CF:Sett 2 Revenue Earned This Month}
-# {CF:Sett 3 Date Revenue Earned This Month}
-# {CF:Sett 3 Original Creditor and Last 4}
-# {CF:Sett 3 Revenue Earned This Month}
-# {CF:Sett 4 Date Revenue Earned This Month}
-# {CF:Sett 4 Original Creditor and Last 4}
-# {CF:Sett 4 Revenue Earned This Month}
-# {CF:Sett 5 Date Revenue Earned This Month}
-# {CF:Sett 5 Original Creditor and Last 4}
-# {CF:Sett 5 Revenue Earned This Month}
-# {CF:Special Note 1}
-# {CF:Special Note 2}
-# {CF:Special Note 3}
-# {CF:Special Note 4}
-# {CF:Spouse Indebtedness Amount}
-# {CF:Spouse Pay Frequency}
-# {CF:SSN1}
-# {CF:SSN2}
-# {CF:Student Debt}
-# {CF:STUDENT LOANS CONSOLIDATED?}
-# {CF:STUDENT LOANS?}
-# {CF:Suffix}
-# {CF:TAX ISSUES?}
-# {CF:Taxable Income}
-# {CF:Total Debt Amount}
-# {CF:Transferred?}
-# {CF:Unit(s)}
-# {CF:Unknown Creditor 1}
-# {CF:Unknown Creditor 2}
-# {CF:Unknown Creditor 3}
-# {CF:Unknown Creditor 4}
-# {CF:Unknown Creditor 5}
-# {CF:Using AGI Form}
-# {CF:Wages Garnished}
-# {CF:WC Completed}
-# {CF:WC Due}
-# {CF:WC Time}
-# {CF:Welcome Call Date}
-
 
 # Build the actual dictionary of static document tags.  Each implemented tag
 # will have an entry here, except for those whose names include some identifier
@@ -519,7 +360,9 @@ def static_tags(
         # 'DATE:m/d/Y||{DEBIT_DATE}': ,
         # 'DraftSchedule': ,
         # 'DebtPayGateway': ,
-        # CF:Creditor Name
+
+        'CF:SSN1': lambda: Alias('SSN'),
+        'CF:SSN2': lambda: Alias('COSSN'),
 
         'CF:Residential Status': d(
             lambda: get_enum_name(
@@ -748,8 +591,202 @@ class DocumentRenderer(Renderer):
 
             return ''
 
-        return contact_context_resolver
+        # Some tags are actually aliases for other tags.  This function computes
+        # the tag and checks whether its value indicates the requested tag is an
+        # alias, and if it is, it calls the context resolution function again
+        # with the tag name specified by the alias.
+        # FIXME: Aliases should get cached.
+        def follow_alias(context, name, path=[]):
+            if name in path:
+                raise Exception(  # FIXME: write custom exception class
+                    'Alias loop in document tag {name}; path is {path}'
+                    .format(
+                        name=name,
+                        path=path,
+                    )
+                )
+
+            value = contact_context_resolver(context, name)
+
+            return (
+                follow_alias(
+                    context=context,
+                    name=value.tag,
+                    path=path + [name],
+                )
+                if isinstance(value, Alias)
+                else value
+            )
+
+        # The actual context resolver is the alias-following function:
+        return follow_alias
 
 
 # Import this at the end to avoid import loop issues:
 from sundog.components.documents.models import Document  # noqa
+
+
+# TODO:
+# {CF:CFLN Settlement 6 Creditor & Last 4 of Acct#:}
+# {CF:*Eppsbal}
+# {CF:*Eppsbal Last Updated}
+# {CF:*First Payment Cleared}
+# {CF:*Last Payment Cleared}
+# {CF:*Lead Source* }
+# {CF:*Trust Account Provider}
+# {CF:3rd Party Speaker Full Name}
+# {CF:3rd Party Speaker Last 4 of SSN}
+# {CF:Adjusted Gross Income}
+# {CF:Adjusted Gross Income (Spouse)}
+# {CF:Alias}
+# {CF:Appointment Date}
+# {CF:Appointment Time}
+# {CF:ATC}
+# {CF:ATC Sent To All Creditors}
+# {CF:Authorization Form On File}
+# {CF:Best Time to Contact (PST - 2 hour block)}
+# {CF:Call}
+# {CF:Call Center Representative}
+# {CF:Cancellation Letter Sent}
+# {CF:CC Debt Amount}
+# {CF:CFLN Settlement 1 Creditor &amp; Last 4 of Acct#:}
+# {CF:CFLN Settlement 1 Date}
+# {CF:CFLN Settlement 2 Creditor &amp; Last 4 of Acct#:}
+# {CF:CFLN Settlement 2 Date}
+# {CF:CFLN Settlement 3 Creditor &amp; Last 4 of Acct#:}
+# {CF:CFLN Settlement 3 Date}
+# {CF:CFLN Settlement 4 Creditor &amp; Last 4 of Acct#:}
+# {CF:CFLN Settlement 4 Date}
+# {CF:CFLN Settlement 5 Creditor &amp; Last 4 of Acct#:}
+# {CF:CFLN Settlement 5 Date}
+# {CF:CFLN Settlement 6 Date}
+# {CF:CFLN Settlement 7 Creditor &amp; Last 4 of Acct#:}
+# {CF:CFLN Settlement 7 Date}
+# {CF:Change Contact Info Requested}
+# {CF:Client had delinquent accounts in program when enrolled?}
+# {CF:Co-Applicant}
+# {CF:Consolidations}
+# {CF:Consolidations Prior}
+# {CF:Contact Info Updated}
+# {CF:Creditor Account Num}
+# {CF:Creditor Name}
+# {CF:Current Status of Loans}
+# {CF:De-Enrolled Date}
+# {CF:Dependents (total for both applicants)}
+# {CF:DL Number}
+# {CF:DL State}
+# #{CF:Employer}
+# {CF:Employer Address}
+# {CF:Employer Address2}
+# {CF:Employer City}
+# {CF:Employer State}
+# {CF:Employer Zip}
+# #{CF:Employment Status}
+# {CF:Family Size}
+# {CF:File Taxes}
+# {CF:Filing Status}
+# {CF:Fremont Group POA On File?}
+# {CF:Goal Once Debt Free}
+# {CF:Graduation Letter Sent}
+# {CF:Hardship Description}
+# {CF:Hardship Notification Letters Sent}
+# {CF:Hardships}
+# {CF:HNL}
+# {CF:HS}
+# {CF:I&amp;E}
+# {CF:Income Year}
+# {CF:Kill Date}
+# {CF:Kill Reason}
+# {CF:Last Congratulatons Letter Sent}
+# {CF:Last MAR Completed}
+# {CF:Last NSF Letter Sent}
+# {CF:Last NSF Letter Sent Type}
+# {CF:Last Paused Letter Sent}
+# {CF:Last Retention Letter Sent}
+# {CF:Last Settlement Authorization Needed Letter Sent}
+# {CF:Last Settlement Authorization Needed Letter Sent Type}
+# {CF:Last Settlement Completed}
+# {CF:Last Settlement Review}
+# {CF:Last UC Correspondence Sent To Client}
+# {CF:Lead Debt Amount}
+# #{CF:Lead Source}
+# {CF:Lead Type}
+# #{CF:Length of Employment}
+# {CF:Loan Type}
+# {CF:Maiden Name}
+# {CF:MAR Due}
+# {CF:MAR Time}
+# {CF:MAR Type}
+# {CF:Marital Status}
+# {CF:Notarized ATC On File?}
+# {CF:Number of Accounts Reviewed}
+# {CF:Other Debt}
+# {CF:Pay Frequency}
+# {CF:PIN Number}
+# {CF:PIN Requested}
+# #{CF:Position}
+# {CF:Previous Name}
+# {CF:REF1 Address}
+# {CF:REF1 City}
+# {CF:REF1 Name}
+# {CF:REF1 Phone}
+# {CF:REF1 Relationship}
+# {CF:REF1 State}
+# {CF:REF1 Zip}
+# {CF:REF2 Address}
+# {CF:REF2 City}
+# {CF:REF2 Name}
+# {CF:REF2 Phone}
+# {CF:REF2 Relationship}
+# {CF:REF2 State}
+# {CF:REF2 Zip}
+# {CF:Referred By}
+# {CF:Represen}
+# #{CF:Residential Status}
+# {CF:S1 Date}
+# {CF:Salesman Email Address}
+# {CF:Salesman Name}
+# {CF:Salesman Phone Number}
+# {CF:Sett 1 Date Revenue Earned This Month}
+# {CF:Sett 1 Original Creditor and Last 4}
+# {CF:Sett 1 Revenue Earned This Month}
+# {CF:Sett 2 Date Revenue Earned This Month}
+# {CF:Sett 2 Original Creditor and Last 4}
+# {CF:Sett 2 Revenue Earned This Month}
+# {CF:Sett 3 Date Revenue Earned This Month}
+# {CF:Sett 3 Original Creditor and Last 4}
+# {CF:Sett 3 Revenue Earned This Month}
+# {CF:Sett 4 Date Revenue Earned This Month}
+# {CF:Sett 4 Original Creditor and Last 4}
+# {CF:Sett 4 Revenue Earned This Month}
+# {CF:Sett 5 Date Revenue Earned This Month}
+# {CF:Sett 5 Original Creditor and Last 4}
+# {CF:Sett 5 Revenue Earned This Month}
+# {CF:Special Note 1}
+# {CF:Special Note 2}
+# {CF:Special Note 3}
+# {CF:Special Note 4}
+# {CF:Spouse Indebtedness Amount}
+# {CF:Spouse Pay Frequency}
+# #{CF:SSN1}
+# #{CF:SSN2}
+# {CF:Student Debt}
+# {CF:STUDENT LOANS CONSOLIDATED?}
+# {CF:STUDENT LOANS?}
+# {CF:Suffix}
+# {CF:TAX ISSUES?}
+# {CF:Taxable Income}
+# {CF:Total Debt Amount}
+# {CF:Transferred?}
+# {CF:Unit(s)}
+# {CF:Unknown Creditor 1}
+# {CF:Unknown Creditor 2}
+# {CF:Unknown Creditor 3}
+# {CF:Unknown Creditor 4}
+# {CF:Unknown Creditor 5}
+# {CF:Using AGI Form}
+# {CF:Wages Garnished}
+# {CF:WC Completed}
+# {CF:WC Due}
+# {CF:WC Time}
+# {CF:Welcome Call Date}
