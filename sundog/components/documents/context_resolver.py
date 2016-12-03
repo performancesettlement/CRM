@@ -43,17 +43,6 @@ def render(template, context):
     )
 
 
-# Tag name matching should be case-insensitive, so this function
-# will make all tag keys lowercase.  For this to work, tag names
-# specified in document templates should also be lowercased before
-# attempting lookup in the tag dictionary.
-def casefold_keys(dictionary):
-    return {
-        key.lower(): value
-        for key, value in dictionary.items()
-    }
-
-
 # This caches computed values to improve rendering speed on repeated uses of a
 # template, and yields the specified default value (the empty string by default)
 # if the computation throws an exception.  It works somewhat like a thunk for
@@ -375,6 +364,219 @@ def extra_applicant_tags(get_attr):
 # {CF:Welcome Call Date}
 
 
+# Build the actual dictionary of static document tags.  Each implemented tag
+# will have an entry here, except for those whose names include some identifier
+# or variable that cannot be known statically, such as the TRANSX tags where X
+# stands for a transaction identifier to be looked up in the database.
+def static_tags(
+    today,
+    contact,
+    contact_attr,
+    applicant_attr,
+    co_applicant_attr,
+
+    # Ignore extra local variables passed from the context lookup function:
+    *args,
+    **kwargs
+):
+    return {
+
+        # General document system tags:
+        'PAGEBREAK': d(
+            lambda: RenderRaw(
+                text='<div class="page-break"></div>',
+            ),
+        ),
+
+        # Contact identification:
+        'ID': contact_attr('pk'),
+        'CUSTOMERID': d(
+            lambda: (
+                'PER-{pk}'.format(
+                    pk=contact_attr('pk')(),
+                )
+            ),
+        ),
+
+        # Applicant information:
+        **basic_applicant_tags(get_attr=applicant_attr),
+        **extra_applicant_tags(get_attr=applicant_attr),
+
+        # Co-applicant information:
+        **prefix_tags('CO', basic_applicant_tags(co_applicant_attr)),
+        **prefix_tags('C', extra_applicant_tags(co_applicant_attr)),
+
+        # Bank account information:
+        'NAMEONACCT': d(lambda: contact.bank_account.name_on_account),
+        'BANKNAME': d(lambda: contact.bank_account.bank_name),
+        'BANKADDRESS': d(lambda: contact.bank_account.address),
+        'BANKCITY': d(lambda: contact.bank_account.city),
+        'BANKSTATE': d(lambda: contact.bank_account.state),
+        'BANKZIP': d(lambda: contact.bank_account.zip_code),
+        'BANKPHONE': d(lambda: contact.bank_account.phone),
+        'ACCTTYPE': d(
+            lambda: get_enum_name(
+                code=contact.bank_account.account_type,
+                names=ACCOUNT_TYPE_CHOICES,
+            ),
+        ),
+        'ACCOUNTNUM': d(lambda: contact.bank_account.account_number),
+        'ROUTINGNUM': d(lambda: contact.bank_account.routing_number),
+
+        # General purpose tags:
+        'FILETYPE': d(lambda: 'Debt Settlement'),  # Not per-enrollment?
+        'LASTNOTE': d(lambda: contact.notes.latest()),
+        'ALLNOTES': d(
+            lambda: RenderRaw(
+                text=render_to_string(
+                    template_name='sundog/documents/tags/allnotes.html',
+                    context={
+                        'notes': contact.notes.all(),
+                        'types': dict(NOTE_TYPE_CHOICES),
+                    },
+                ),
+            ),
+        ),
+        'ALLHISTORY': d(
+            lambda: RenderRaw(
+                text=render_to_string(
+                    template_name='sundog/documents/tags/allnotes.html',
+                    context={
+                        'notes': contact.activities.all(),
+                        'types': dict(ACTIVITY_TYPE_CHOICES),
+                    },
+                ),
+            ),
+        ),
+        'DATE': d(lambda: format(today, 'M m, Y')),
+        'MONTH': d(lambda: format(today, 'F')),
+        'DAY': d(lambda: format(today, 'jS')),
+        'YEAR': d(lambda: format(today, 'Y')),
+        'CONTACT_STATUS': d(lambda: contact.status.name),
+        'CONTACT_STAGE': d(lambda: contact.stage.name),
+        # 'ENROLLED_DATE': d(lambda: contact.),  # TODO: Date the client was Enrolled  # noqa
+        # 'GRADUATED_DATE': d(lambda: contact.),  # TODO: Date Client was Graduated  # noqa
+        'CREATED_DATE': d(lambda: format(contact.created_at, 'M m, Y')),
+        # 'CAMPAIGN': d(lambda: contact.),  # TODO: Campaign Contact is Assigned To  # noqa
+        'DATASOURCE': d(lambda: contact.lead_source.name),
+        # 'GATEWAY_ID': d(lambda: contact.),  # TODO: Payment Gateway ID Number from Enrollment Details  # noqa
+        # 'COMPANYLOGO': d(lambda: contact.),  # TODO: Populates the logo for the company  # noqa
+
+        # Transaction information:
+        # Payment: incoming draft from a client
+        # Transaction: draft or anything outgoing, like payments disbursed to creditor or fees transferred to PerfSett  # noqa
+        # 'LASTTRANS_TRANSID': d(lambda: contact.),  # TODO: Last Transaction ID  # noqa
+        # 'LASTTRANS_ADDITIONAL': d(lambda: contact.),  # TODO: Last Transaction Additional Information  # noqa
+        # 'LASTTRANS_AMOUNT': d(lambda: contact.),  # TODO: Last Transaction Amount  # noqa
+        # 'LASTTRANS_DATE': d(lambda: contact.),  # TODO: Last Transaction Date  # noqa
+        # 'LASTTRANS_MEMO': d(lambda: contact.),  # TODO: Last Transaction Memo  # noqa
+        # 'NEXTPAYMENT_AMOUNT': d(lambda: contact.),  # TODO: Next Transaction Amount  # noqa
+        # 'NEXTPAYMENT_DATE': d(lambda: contact.),  # TODO: Next Transaction Date  # noqa
+        # 'NEXTPAYMENT_TYPE': d(lambda: contact.),  # TODO: Next Transaction Type (ACH or CC)  # noqa
+
+        'NUM_PAYMENTS_MADE': d(
+            lambda: sum(
+                enrollment
+                .payments
+                .count()
+                for enrollment in contact.enrollments.all()
+            ),
+        ),
+
+        'NUM_PAYMENTS_LEFT': d(
+            lambda: sum(
+                enrollment
+                .payments
+                .filter(cleared_date__isnull=True)
+                .count()
+                for enrollment in contact.enrollments.all()
+            ),
+        ),
+
+        'SUM_PAYMENTS_CLEARED': d(
+            lambda: sum(
+                enrollment
+                .payments
+                .filter(cleared_date__isnull=True)
+                .aggregate(Sum('amount'))
+                for enrollment in contact.enrollments.all()
+            ),
+        ),
+
+        # 'SUM_FEES_CLEARED': ,  # TODO: Sum Total of ACH / Fee Credits Cleared  # noqa
+
+        'SUM_PAYMENTS': d(
+            lambda: sum(
+                enrollment
+                .payments
+                .aggregate(Sum('amount'))
+                for enrollment in contact.enrollments.all()
+            ),
+        ),
+
+        # TODO:
+        # 'ANDCOFULLNAME': ,
+        # 'DATE:m/d/Y||{DEBIT_DATE}': ,
+        # 'DraftSchedule': ,
+        # 'DebtPayGateway': ,
+        # CF:Creditor Name
+
+        'CF:Residential Status': d(
+            lambda: get_enum_name(
+                code=contact_attr('residential_status')(),
+                names=US_STATES,
+            ),
+        ),
+
+        'CF:Dependents (total for both applicants)': (
+            contact_attr('dependants')
+        ),
+
+        'CF:3RD PARTY SPEAKER FULL NAME': (
+            contact_attr('third_party_speaker_full_name')
+        ),
+
+        'CF:3RD PARTY SPEAKER LAST 4 OF SSN': (
+            contact_attr('third_party_speaker_last_4_of_ssn')
+        ),
+
+        'CF:Hardships': d(
+            lambda: get_enum_name(
+                code=contact_attr('hardships')(),
+                names=HARDSHIPS_CHOICES,
+            ),
+        ),
+
+        'CF:Hardship Description': contact_attr('hardship_description'),
+
+        # TODO: {if '{CF:Hardships}' == 'Death In Family'}■{else}◻{endif}  # noqa
+
+        'NETINCOME': d(lambda: contact.incomes.take_home_pay),
+        'TOTALINCOME': d(lambda: contact.incomes.total()),
+
+        'OTHERINCOME': d(
+            lambda: (
+                contact.incomes.total() -
+                contact.incomes.take_home_pay
+            )
+        ),
+
+        'MORTGAGE': d(lambda: contact.expenses.rent),
+        'UTILITIES': d(lambda: contact.expenses.utilities),
+        'TRANSPORTATION': d(lambda: contact.expenses.transportation),
+        'INSURANCE': d(lambda: contact.expenses.insurance_premiums),
+        'FOOD': d(lambda: contact.expenses.food),
+        'TELEPHONE': d(lambda: contact.expenses.telephone),
+        'MEDICALBILLS': d(lambda: contact.expenses.medical_bills),
+        'BACKTAXES': d(lambda: contact.expenses.back_taxes),
+        'STUDENTLOANS': d(lambda: contact.expenses.student_loans),
+        'ALIMONYSUPPORT': d(lambda: contact.expenses.child_support),
+        'CHILDCARE': d(lambda: contact.expenses.child_care),
+        'MISCOTHER': d(lambda: contact.expenses.other_expenses),
+
+    }
+
+
 class DocumentRenderer(Renderer):
 
     # These three method overrides ensure that templates returning a RenderRaw
@@ -438,12 +640,13 @@ class DocumentRenderer(Renderer):
         # To get consistent dates in the generated document, this queries the
         # system date only once and uses it throughout the document in all tags
         # involving the current time.
-        today = date.today()
+        today = date.today()  # Used through locals()  # noqa
 
         # The actual context resolver used to render pystache templates:
         def contact_context_resolver(context, original_name):
             nonlocal contact
             nonlocal tags
+            nonlocal today
 
             # Tag name matching should be case insensitive, so we immediately
             # lowercase the requested tag name.  All tag lookup operations
@@ -468,7 +671,7 @@ class DocumentRenderer(Renderer):
                     ),
                 )
 
-            applicant_attr = contact_attr
+            applicant_attr = contact_attr  # Used through locals()  # noqa
 
             # This partially applies the contact_attr function to the
             # co-applicant's attribute prefix.
@@ -478,210 +681,18 @@ class DocumentRenderer(Renderer):
                     attribute_prefix='co_applicant_',
                 )
 
-            # This is the actual dictionary of static document tags.  Each
-            # implemented tag will have an entry here, except for those whose
-            # names include some identifier or variable that cannot be known
-            # statically, such as the TRANSX tags where X stands for a
-            # transaction identifier to be looked up in the database.  The
-            # dictionary of document tags is computed only once on the first use
-            # of the context resolution function, and individual tags defined
-            # within it cache their evaluation results.
-            tags = tags or casefold_keys({
-
-                # General document system tags:
-                'PAGEBREAK': d(
-                    lambda: RenderRaw(
-                        text='<div class="page-break"></div>',
-                    ),
-                ),
-
-                # Contact identification:
-                'ID': contact_attr('pk'),
-                'CUSTOMERID': d(
-                    lambda: (
-                        'PER-{pk}'.format(
-                            pk=contact_attr('pk')(),
-                        )
-                    ),
-                ),
-
-                # Applicant information:
-                **basic_applicant_tags(get_attr=applicant_attr),
-                **extra_applicant_tags(get_attr=applicant_attr),
-
-                # Co-applicant information:
-                **prefix_tags('CO', basic_applicant_tags(co_applicant_attr)),
-                **prefix_tags('C', extra_applicant_tags(co_applicant_attr)),
-
-                # Bank account information:
-                'NAMEONACCT': d(lambda: contact.bank_account.name_on_account),
-                'BANKNAME': d(lambda: contact.bank_account.bank_name),
-                'BANKADDRESS': d(lambda: contact.bank_account.address),
-                'BANKCITY': d(lambda: contact.bank_account.city),
-                'BANKSTATE': d(lambda: contact.bank_account.state),
-                'BANKZIP': d(lambda: contact.bank_account.zip_code),
-                'BANKPHONE': d(lambda: contact.bank_account.phone),
-                'ACCTTYPE': d(
-                    lambda: get_enum_name(
-                        code=contact.bank_account.account_type,
-                        names=ACCOUNT_TYPE_CHOICES,
-                    ),
-                ),
-                'ACCOUNTNUM': d(lambda: contact.bank_account.account_number),
-                'ROUTINGNUM': d(lambda: contact.bank_account.routing_number),
-
-                # General purpose tags:
-                'FILETYPE': d(lambda: 'Debt Settlement'),  # Not per-enrollment?
-                'LASTNOTE': d(lambda: contact.notes.latest()),
-                'ALLNOTES': d(
-                    lambda: RenderRaw(
-                        text=render_to_string(
-                            template_name='sundog/documents/tags/allnotes.html',
-                            context={
-                                'notes': contact.notes.all(),
-                                'types': dict(NOTE_TYPE_CHOICES),
-                            },
-                        ),
-                    ),
-                ),
-                'ALLHISTORY': d(
-                    lambda: RenderRaw(
-                        text=render_to_string(
-                            template_name='sundog/documents/tags/allnotes.html',
-                            context={
-                                'notes': contact.activities.all(),
-                                'types': dict(ACTIVITY_TYPE_CHOICES),
-                            },
-                        ),
-                    ),
-                ),
-                'DATE': d(lambda: format(today, 'M m, Y')),
-                'MONTH': d(lambda: format(today, 'F')),
-                'DAY': d(lambda: format(today, 'jS')),
-                'YEAR': d(lambda: format(today, 'Y')),
-                'CONTACT_STATUS': d(lambda: contact.status.name),
-                'CONTACT_STAGE': d(lambda: contact.stage.name),
-                # 'ENROLLED_DATE': d(lambda: contact.),  # TODO: Date the client was Enrolled  # noqa
-                # 'GRADUATED_DATE': d(lambda: contact.),  # TODO: Date Client was Graduated  # noqa
-                'CREATED_DATE': d(lambda: format(contact.created_at, 'M m, Y')),
-                # 'CAMPAIGN': d(lambda: contact.),  # TODO: Campaign Contact is Assigned To  # noqa
-                'DATASOURCE': d(lambda: contact.lead_source.name),
-                # 'GATEWAY_ID': d(lambda: contact.),  # TODO: Payment Gateway ID Number from Enrollment Details  # noqa
-                # 'COMPANYLOGO': d(lambda: contact.),  # TODO: Populates the logo for the company  # noqa
-
-                # Transaction information:
-                # Payment: incoming draft from a client
-                # Transaction: draft or anything outgoing, like payments disbursed to creditor or fees transferred to PerfSett  # noqa
-                # 'LASTTRANS_TRANSID': d(lambda: contact.),  # TODO: Last Transaction ID  # noqa
-                # 'LASTTRANS_ADDITIONAL': d(lambda: contact.),  # TODO: Last Transaction Additional Information  # noqa
-                # 'LASTTRANS_AMOUNT': d(lambda: contact.),  # TODO: Last Transaction Amount  # noqa
-                # 'LASTTRANS_DATE': d(lambda: contact.),  # TODO: Last Transaction Date  # noqa
-                # 'LASTTRANS_MEMO': d(lambda: contact.),  # TODO: Last Transaction Memo  # noqa
-                # 'NEXTPAYMENT_AMOUNT': d(lambda: contact.),  # TODO: Next Transaction Amount  # noqa
-                # 'NEXTPAYMENT_DATE': d(lambda: contact.),  # TODO: Next Transaction Date  # noqa
-                # 'NEXTPAYMENT_TYPE': d(lambda: contact.),  # TODO: Next Transaction Type (ACH or CC)  # noqa
-
-                'NUM_PAYMENTS_MADE': d(
-                    lambda: sum(
-                        enrollment
-                        .payments
-                        .count()
-                        for enrollment in contact.enrollments.all()
-                    ),
-                ),
-
-                'NUM_PAYMENTS_LEFT': d(
-                    lambda: sum(
-                        enrollment
-                        .payments
-                        .filter(cleared_date__isnull=True)
-                        .count()
-                        for enrollment in contact.enrollments.all()
-                    ),
-                ),
-
-                'SUM_PAYMENTS_CLEARED': d(
-                    lambda: sum(
-                        enrollment
-                        .payments
-                        .filter(cleared_date__isnull=True)
-                        .aggregate(Sum('amount'))
-                        for enrollment in contact.enrollments.all()
-                    ),
-                ),
-
-                # 'SUM_FEES_CLEARED': ,  # TODO: Sum Total of ACH / Fee Credits Cleared  # noqa
-
-                'SUM_PAYMENTS': d(
-                    lambda: sum(
-                        enrollment
-                        .payments
-                        .aggregate(Sum('amount'))
-                        for enrollment in contact.enrollments.all()
-                    ),
-                ),
-
-                # TODO:
-                # 'ANDCOFULLNAME': ,
-                # 'DATE:m/d/Y||{DEBIT_DATE}': ,
-                # 'DraftSchedule': ,
-                # 'DebtPayGateway': ,
-                # CF:Creditor Name
-
-                'CF:Residential Status': d(
-                    lambda: get_enum_name(
-                        code=contact_attr('residential_status')(),
-                        names=US_STATES,
-                    ),
-                ),
-
-                'CF:Dependents (total for both applicants)': (
-                    contact_attr('dependants')
-                ),
-
-                'CF:3RD PARTY SPEAKER FULL NAME': (
-                    contact_attr('third_party_speaker_full_name')
-                ),
-
-                'CF:3RD PARTY SPEAKER LAST 4 OF SSN': (
-                    contact_attr('third_party_speaker_last_4_of_ssn')
-                ),
-
-                'CF:Hardships': d(
-                    lambda: get_enum_name(
-                        code=contact_attr('hardships')(),
-                        names=HARDSHIPS_CHOICES,
-                    ),
-                ),
-
-                'CF:Hardship Description': contact_attr('hardship_description'),
-
-                # TODO: {if '{CF:Hardships}' == 'Death In Family'}■{else}◻{endif}  # noqa
-
-                'NETINCOME': d(lambda: contact.incomes.take_home_pay),
-                'TOTALINCOME': d(lambda: contact.incomes.total()),
-
-                'OTHERINCOME': d(
-                    lambda: (
-                        contact.incomes.total() -
-                        contact.incomes.take_home_pay
-                    )
-                ),
-
-                'MORTGAGE': d(lambda: contact.expenses.rent),
-                'UTILITIES': d(lambda: contact.expenses.utilities),
-                'TRANSPORTATION': d(lambda: contact.expenses.transportation),
-                'INSURANCE': d(lambda: contact.expenses.insurance_premiums),
-                'FOOD': d(lambda: contact.expenses.food),
-                'TELEPHONE': d(lambda: contact.expenses.telephone),
-                'MEDICALBILLS': d(lambda: contact.expenses.medical_bills),
-                'BACKTAXES': d(lambda: contact.expenses.back_taxes),
-                'STUDENTLOANS': d(lambda: contact.expenses.student_loans),
-                'ALIMONYSUPPORT': d(lambda: contact.expenses.child_support),
-                'CHILDCARE': d(lambda: contact.expenses.child_care),
-                'MISCOTHER': d(lambda: contact.expenses.other_expenses),
-
-            })
+            # The dictionary of document tags is computed only once on the first
+            # use of the context resolution function, and individual tags
+            # defined within it cache their evaluation results.
+            tags = tags or {
+                # Tag name matching should be case-insensitive, so this function
+                # will make all tag keys lowercase.  For this to work, tag names
+                # specified in document templates should also be lowercased
+                # before attempting lookup in the tag dictionary.
+                key.lower(): value
+                # Pass all local variables to the tag dictionary builder:
+                for key, value in static_tags(**locals()).items()
+            }
 
             # Return immediately if the requested tag is present in the cached
             # tag dictionary.  This will always be the case for static tags.
