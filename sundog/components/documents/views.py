@@ -4,13 +4,17 @@ from datatableview import Datatable
 from datatableview.helpers import make_processor, through_filter
 from django.apps.registry import Apps
 from django.contrib.auth.decorators import login_required
+from django.core.urlresolvers import resolve
 from django.forms.models import ModelForm
 from django.forms.widgets import Select, SelectMultiple
+from django.http import HttpResponse
 from django.template.defaultfilters import date as date_filter
+from django.views.generic.detail import BaseDetailView
 from django.views.generic.edit import UpdateView
 from fm.views import AjaxCreateView, AjaxDeleteView, AjaxUpdateView
 from settings import SHORT_DATETIME_FORMAT
 from sundog.components.documents.models import Document
+from sundog.components.files.models import File
 from sundog.models import (
     Activity,
     BankAccount,
@@ -24,11 +28,12 @@ from sundog.models import (
 )
 from sundog.routing import decorate_view, route
 from sundog.utils import (
-    PDFView,
     SundogDatatableView,
     format_column,
     template_column,
 )
+from urllib.parse import urlsplit
+from weasyprint import CSS, HTML, default_url_fetcher
 
 
 class DocumentsCRUDViewMixin:
@@ -159,7 +164,104 @@ class DocumentsDeleteAJAX(DocumentsAJAXFormMixin, AjaxDeleteView):
 
 @route(r'^documents/(?P<pk>\d+)/preview/pdf/?$', name='documents.preview.pdf')
 @decorate_view(login_required)
-class DocumentsPreviewPDF(DocumentsCRUDViewMixin, PDFView):
+class DocumentsPreviewPDF(DocumentsCRUDViewMixin, BaseDetailView):
+
+    # TODO: Put this in a static file somewhere
+    pdf_css = '''
+        @media all {
+            .page-break { display: none; }
+        }
+
+        @media print {
+
+            .page-break {
+                display: block;
+                page-break-before: always;
+            }
+
+            html {
+                font-family: sans;
+                font-stretch: condensed;
+            }
+
+            @page {
+                size: letter;
+                margin-top: 0.5in;
+                margin-bottom: 0.5in;
+                margin-left: 0.25in;
+                margin-right: 0.25in;
+            }
+
+        }
+    '''
+
+    # Render the document template into a PDF:
+    def render_to_response(self, context):
+        # Resources linked in the document template such as images and other
+        # embedded documents will be fetched by the PDF generation process from
+        # their URLs specified in the template by the PDF generation process
+        # using this function.  Some resources are hosted by the system and
+        # require authentication to access at their canonical URLs.  The PDF
+        # generation system is part of the system itself so it is clearly
+        # authorized to access system resources on behalf of the user (at least
+        # so long as uploaded files have no differentiated permissions), but it
+        # will not include client credentials or cookies in the requests it
+        # would perform to the uploaded files view.  Therefore, URLs for
+        # uploaded files are given special treatment in this custom URL fetcher.
+        # made public;
+        def url_fetcher(url):
+            parsed_url = urlsplit(url)
+
+            # Only give special treatment to URLs hitting the system's hostname:
+            if parsed_url.netloc != self.request.get_host():
+                return default_url_fetcher(url)
+
+            # This attempts to resolve a system view matching the requested URL;
+            # for this to work, the URL passed to the view resolution function
+            # must first be made relative, so this strips out the scheme and
+            # authority parts and leaves only from the path on.
+            resolved_url = resolve(
+                parsed_url
+                ._replace(
+                    scheme='',
+                    netloc='',
+                )
+                .geturl()
+            )
+
+            # Only URLs for viewing uploaded files are given special treatment:
+            if not resolved_url or resolved_url.url_name != 'files.view':
+                return default_url_fetcher(url)
+
+            # This continues the regular URL fetch process with the AWS S3 URL
+            # for the specified uploaded file, which includes all necessary
+            # authentication credentials.
+            return default_url_fetcher(
+                File
+                .objects
+                .get(
+                    pk=resolved_url.kwargs['pk'],
+                )
+                .get_absolute_url()
+            )
+
+        return HttpResponse(
+            content=(
+                HTML(
+                    base_url=self.request.build_absolute_uri(),
+                    string=self.object.render(context),
+                    url_fetcher=url_fetcher,
+                )
+                .write_pdf(
+                    stylesheets=[
+                        CSS(
+                            string=self.pdf_css,
+                        ),
+                    ],
+                )
+            ),
+            content_type='application/pdf',
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

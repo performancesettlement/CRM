@@ -4,13 +4,11 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from django.db.models import CharField
 from django.db.models.fields import BLANK_CHOICE_DASH
-from django.http import Http404, HttpResponse
+from django.http import Http404
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
-from django.views.generic.detail import BaseDetailView
 from django_auth_app.services import get_user_timezone
 from sundog.constants import SHORT_DATE_FORMAT
-from weasyprint import CSS, HTML
 
 import calendar
 import hashlib
@@ -356,36 +354,6 @@ def template_column(
                 )
         ),
     )
-
-
-pdf_css = '''
-@media all {
-    .page-break { display: none; }
-}
-
-@media print {
-    .page-break { display: block; page-break-before: always; }
-}
-'''
-
-
-class PDFView(BaseDetailView):
-    def render_to_response(self, context):
-        return HttpResponse(
-            content=(
-                HTML(
-                    string=self.object.render(context),
-                )
-                .write_pdf(
-                    stylesheets=[
-                        CSS(
-                            string=pdf_css,
-                        ),
-                    ],
-                )
-            ),
-            content_type='application/pdf',
-        )
 
 
 class SundogDatatableView(XEditableDatatableView):
