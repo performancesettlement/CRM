@@ -9,14 +9,6 @@
   </a>
 
   <a
-    id="{{ instance.pk }}-edit-contact-status"
-    href="{% url "edit_contact_status" contact_id=instance.pk %}"
-    class="edit-contact-status"
-  >
-    <span title="Edit Status" class="glyphicon glyphicon-th"></span>
-  </a>
-
-  <a
     id="{{ instance.pk }}-edit-contact-info"
     href="{% url "edit_contact" contact_id=instance.pk %}"
     class="edit-contact-info"
