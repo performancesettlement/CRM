@@ -4,6 +4,7 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from importlib import import_module
 from pkgutil import iter_modules
+from sundog.utils import modify_dict
 from sys import modules
 
 
@@ -45,21 +46,15 @@ def route(regex, name=None):
     urlpatterns = package_urls(views)
     '''
 
-    def modify(dictionary, key, default, function):
-        if key not in dictionary:
-            dictionary[key] = default
-        dictionary[key] = function(dictionary[key])
-        return dictionary
-
     def routed(view):
         nonlocal regex
         nonlocal name
-        modify(
+        modify_dict(
             modules[view.__module__].__dict__,
             Route,
             {},
             lambda module_routes:
-                modify(
+                modify_dict(
                     module_routes,
                     view,
                     [],

@@ -32,6 +32,11 @@ services:
         gelf-address: "udp://logstash-local-12201.service.consul.test:12201"
 
   elasticsearch:
+    environment:
+      # Elasticsearch 5 uses a lot of RAM on start without these options.
+      # This limits it somewhat.  Still large, but manageable.
+      # Development shouldn't need more than this.
+      ES_JAVA_OPTS: "-Xms256m -Xmx256m"
     logging:
       driver: "gelf"
       options:

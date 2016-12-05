@@ -79,6 +79,9 @@
     <script type="text/javascript">
       $(function() {
         $.fm();
+
+        {# Fix bad interactions between django-fm and other modal dialogs #}
+        $('div.fm-modal[tabindex="-1"]').removeAttr('tabindex')
       });
     </script>
   </body>

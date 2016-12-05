@@ -18,7 +18,7 @@ DATABASE_HOST = local_config.DATABASE_HOST
 DATABASE_PORT = local_config.DATABASE_PORT
 DATABASE_PASSWORD = local_config.DATABASE_PASSWORD
 
-INDEX_PAGE = '/account/login/'
+INDEX_PAGE = '/contacts'
 LOGIN_URL = '/account/login/'
 ADMIN_MEDIA_PREFIX = '/static/admin/'
 
@@ -48,6 +48,7 @@ INSTALLED_APPS = (
     'crispy_forms',
     'datatableview',
     'django_bootstrap_breadcrumbs',
+    'django_cleanup',
     'django_s3_storage',
     'fm',
     'multiselectfield',
@@ -150,67 +151,87 @@ LOGGING = {
 
     'version': 1,
     'disable_existing_loggers': False,
+
     'formatters': {
+
         'verbose': {
             'format':
                 "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
             'datefmt': "%d/%b/%Y %H:%M:%S",
         },
+
         'simple': {
             'format': '%(levelname)s %(message)s',
         },
+
     },
+
     'filters': {
+
         'require_debug_false': {
             '()': 'django.utils.log.RequireDebugFalse',
         },
+
     },
+
     'handlers': {
+
         'mail': {
             'level': 'ERROR',
             'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler',
             'formatter': 'verbose',
         },
+
         'syslog': {
             'level': 'DEBUG',
             'class': 'logging.handlers.SysLogHandler',
             'facility': 'local5',
             'formatter': 'simple',
         },
+
         'logstash': {
             'level': 'DEBUG',
             'class': 'logstash.TCPLogstashHandler',
             'host': 'logstash',
-            'port': 5000,
+            'port': '5000',
             'version': 1,
         },
+
     },
+
     'root': {
         'handlers': ['mail', 'syslog', 'logstash'],
         'level': 'DEBUG',
     },
+
     'loggers': {
+
         'root': {
             'handlers': ['logstash'],
             'level': 'DEBUG',
         },
+
         'sundog': {
             'handlers': ['mail', 'syslog', 'logstash'],
             'level': 'DEBUG',
         },
+
         'django_auth_app': {
             'handlers': ['mail', 'syslog', 'logstash'],
             'level': 'DEBUG',
         },
+
         'django': {
             'handlers': ['syslog', 'logstash'],
             'level': 'DEBUG',
         },
+
         'django.db.backends': {
             'handlers': ['syslog', 'logstash'],
             'level': 'DEBUG',
         },
+
         'django.request': {
             'handlers': ['syslog', 'mail', 'logstash'],
             'level': 'DEBUG',
@@ -220,14 +241,17 @@ LOGGING = {
             'handlers': ['syslog', 'mail', 'logstash'],
             'level': 'DEBUG',
         },
+
         'gunicorn.access': {
             'handlers': ['syslog', 'mail', 'logstash'],
             'level': 'DEBUG',
         },
+
         'gunicorn.error': {
             'handlers': ['syslog', 'mail', 'logstash'],
             'level': 'DEBUG',
         },
+
     },
 }
 
@@ -305,7 +329,6 @@ TINYMCE_PLUGINS = {
     'autolink',
     'autoresize',
     'autosave',
-    'bbcode',
     'charmap',
     'code',
     'codesample',
@@ -346,6 +369,7 @@ TINYMCE_PLUGINS = {
 
 TINYMCE_DEFAULT_CONFIG = {
     'cleanup_on_startup': True,
+    'convert_urls': False,
     'custom_undo_redo_levels': 10,
     'external_plugins': {
         plugin: '{base}/plugins/{plugin}/plugin.min.js'.format(
@@ -354,18 +378,21 @@ TINYMCE_DEFAULT_CONFIG = {
         )
         for plugin in TINYMCE_PLUGINS
     },
+    'text': '<div class="page-break"></div>',
     'plugins': ','.join(TINYMCE_PLUGINS),
     'setup': 'tinymce_setup',
     'theme': 'modern',
     'toolbar': [
         ','.join(row)
         for row in [
+
             [
                 'styleselect',
                 'formatselect',
                 'fontselect',
                 'fontsizeselect',
             ],
+
             [
                 'newdocument'
                 '|',
@@ -386,6 +413,7 @@ TINYMCE_DEFAULT_CONFIG = {
                 'alignjustify',
                 'alignnone',
             ],
+
             [
                 'cut',
                 'copy',
@@ -407,6 +435,7 @@ TINYMCE_DEFAULT_CONFIG = {
                 'image',
                 'code',
             ],
+
             [
                 'insertdatetime',
                 'preview',
@@ -430,6 +459,7 @@ TINYMCE_DEFAULT_CONFIG = {
                 '|',
                 'pagebreak',
             ],
+
         ]
     ],
 }
