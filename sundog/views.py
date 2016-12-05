@@ -13,7 +13,6 @@ from django.utils.timezone import now
 
 from django_auth_app.utils import serialize_user
 from numpy import arange
-from sundog import services
 from sundog.cache.user.info import get_cache_user
 from sundog.constants import SHORT_DATE_FORMAT, FIXED_VALUES
 from sundog.decorators import bypass_impersonation_login_required
@@ -24,7 +23,7 @@ from sundog.forms import ContactForm, ImpersonateUserForm, StageForm, StatusForm
     FeeProfileRuleForm, WorkflowSettingsForm, EnrollmentForm, PaymentForm, CompensationTemplateForm, \
     CompensationTemplatePayeeForm
 from datetime import datetime, timedelta
-from sundog.models import Contact, Stage, STAGE_TYPE_CHOICES, Status, \
+from sundog.models import CAMPAIGN_SOURCES_CHOICES, Contact, Stage, STAGE_TYPE_CHOICES, Status, \
     Campaign, Activity, Uploaded, Expenses, Incomes, Creditor, Debt, DebtNote, Enrollment, EnrollmentPlan, \
     FeeProfile, FeeProfileRule, WorkflowSettings, DEBT_SETTLEMENT, Payment, Company, CompensationTemplate
 
@@ -65,10 +64,21 @@ def index(request):
 
 @login_required
 def contact_dashboard(request, contact_id):
-    contact = Contact.objects.prefetch_related('contact_debts').get(contact_id=contact_id)
-    bank_account = contact.bank_account.all() if contact else None
-    bank_account = bank_account[0] if bank_account else None
-    form_bank_account = BankAccountForm(instance=bank_account)
+    contact = (
+        Contact
+        .objects
+        .prefetch_related('contact_debts')
+        .get(
+            contact_id=contact_id,
+        )
+    )
+    form_bank_account = BankAccountForm(
+        instance=(
+            contact.bank_account
+            if hasattr(contact, 'bank_account')
+            else None
+        ),
+    )
     form_bank_account.fields['contact'].initial = contact
     form_note = NoteForm(contact, request.user)
     form_call = CallForm(contact, request.user)
@@ -78,7 +88,7 @@ def contact_dashboard(request, contact_id):
     form_incomes = IncomesForm(contact)
     form_debt_note = DebtNoteForm()
     e_signed_docs = list(contact.e_signed_docs.all())
-    generated_docs = list(contact.generated_docs.all())
+    generated_documents = list(contact.generated_documents.all())
     uploaded_docs = list(contact.uploaded_docs.all())
     enrolled_debts = contact.contact_debts.filter(enrolled=True)
     not_enrolled_debts = contact.contact_debts.filter(enrolled=False)
@@ -97,7 +107,7 @@ def contact_dashboard(request, contact_id):
         'form_debt_note': form_debt_note,
         'activities': activities,
         'e_signed_docs': e_signed_docs,
-        'generated_docs': generated_docs,
+        'generated_documents': generated_documents,
         'uploaded_docs': uploaded_docs,
         'enrolled_debts': enrolled_debts,
         'not_enrolled_debts': not_enrolled_debts,
@@ -456,7 +466,8 @@ def campaigns(request):
         'edit_form_campaign': edit_form_campaign,
         'paginator': paginator,
         'page': page,
-        'menu_page': 'contacts'
+        'menu_page': 'contacts',
+        'media_types': dict(CAMPAIGN_SOURCES_CHOICES),
     }
     template_path = 'contact/campaigns.html'
     return _render_response(request, context_info, template_path)
@@ -567,12 +578,14 @@ def get_stage_statuses(request):
 def edit_bank_account(request, contact_id):
     if request.method == 'POST' and request.POST:
         contact = Contact.objects.get(contact_id=contact_id)
-        bank_account = contact.bank_account.all() if contact else None
-        bank_account = bank_account[0] if bank_account else None
-        if bank_account:
-            form = BankAccountForm(request.POST, instance=bank_account)
-        else:
-            form = BankAccountForm(request.POST)
+        form = BankAccountForm(
+            request.POST,
+            instance=(
+                contact.bank_account
+                if hasattr(contact, 'bank_account')
+                else None
+            ),
+        )
         if form.is_valid():
             form.save()
             response = {'result': 'Ok'}
@@ -1742,19 +1755,6 @@ def edit_compensation_template(request, company_id, compensation_template_id):
 
 
 #######################################################################
-
-
-@bypass_impersonation_login_required
-def files_recent(request):
-    recent_files_list = services.get_access_file_history(request.user)
-    context_info = {'request': request, 'user': request.user, 'recent_files_list': recent_files_list}
-    return _render_response(request, context_info, 'file/recent_files.html')
-
-
-@bypass_impersonation_login_required
-def help(request):
-    context_info = {'request': request, 'user': request.user}
-    return _render_response(request, context_info, 'file/recent_files.html')
 
 
 def terms(request):

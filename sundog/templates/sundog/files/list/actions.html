@@ -1,0 +1,32 @@
+<span class="text-nowrap">
+
+  <a
+    class="files-delete fm-delete"
+    data-fm-callback="reload"
+    data-fm-head="Delete this file?  {{ instance.title }}"
+    href="{% url "files.delete.ajax" pk=instance.pk %}"
+    id="{{ instance.pk }}-delete-files"
+  >
+    <span title="Delete file" class="table-action glyphicon glyphicon-remove"></span>
+  </a>
+
+  <a
+    class="files-view"
+    href="{% url "files.view" pk=instance.pk %}"
+    id="{{ instance.pk }}-view-file"
+    target="_blank"
+  >
+    <span title="View file" class="table-action glyphicon glyphicon-eye-open"></span>
+  </a>
+
+  <a
+    class="files-edit fm-update"
+    data-fm-callback="reload"
+    data-fm-head="Editing file: {{ instance.title }}"
+    href="{% url "files.edit.ajax" pk=instance.pk %}"
+    id="{{ instance.pk }}-edit-file"
+  >
+    <span title="Edit file" class="table-action glyphicon glyphicon-arrow-right"></span>
+  </a>
+
+</span>
