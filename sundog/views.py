@@ -23,7 +23,7 @@ from sundog.forms import ContactForm, ImpersonateUserForm, StageForm, StatusForm
     FeeProfileRuleForm, WorkflowSettingsForm, EnrollmentForm, PaymentForm, CompensationTemplateForm, \
     CompensationTemplatePayeeForm
 from datetime import datetime, timedelta
-from sundog.models import Contact, Stage, STAGE_TYPE_CHOICES, Status, \
+from sundog.models import CAMPAIGN_SOURCES_CHOICES, Contact, Stage, STAGE_TYPE_CHOICES, Status, \
     Campaign, Activity, Uploaded, Expenses, Incomes, Creditor, Debt, DebtNote, Enrollment, EnrollmentPlan, \
     FeeProfile, FeeProfileRule, WorkflowSettings, DEBT_SETTLEMENT, Payment, Company, CompensationTemplate
 
@@ -466,7 +466,8 @@ def campaigns(request):
         'edit_form_campaign': edit_form_campaign,
         'paginator': paginator,
         'page': page,
-        'menu_page': 'contacts'
+        'menu_page': 'contacts',
+        'media_types': dict(CAMPAIGN_SOURCES_CHOICES),
     }
     template_path = 'contact/campaigns.html'
     return _render_response(request, context_info, template_path)
