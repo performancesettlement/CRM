@@ -93,6 +93,11 @@ def multiply(value, arg):
     return Decimal(value) * Decimal(arg)
 
 
+@register.filter(name='divide')
+def divide(value, arg):
+    return Decimal(value) / Decimal(arg)
+
+
 @register.filter(name='minus')
 def minus(value, arg):
     return value - arg

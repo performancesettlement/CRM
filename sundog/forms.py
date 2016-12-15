@@ -1,11 +1,9 @@
 import copy
 from itertools import chain
 from django import forms
-from django.contrib.auth.models import User
 from django.core.validators import validate_email
 from django.db.models import Q
 from django.utils.encoding import force_text
-from django.utils.safestring import mark_safe
 import pytz
 from django_auth_app import enums
 from sundog.models import Contact, Stage, Status, Campaign, Source, BankAccount, Note, Call,\
@@ -14,7 +12,6 @@ from sundog.models import Contact, Stage, Status, Campaign, Source, BankAccount,
     CompensationTemplate, CompensationTemplatePayee, NONE_CHOICE_LABEL, Payee, COMPENSATION_TEMPLATE_PAYEE_TYPE_CHOICES, \
     AVAILABLE_FOR_CHOICES, COMPENSATION_TEMPLATE_TYPES_CHOICES, SettlementOffer, Settlement, Fee
 
-from sundog import services
 from sundog.constants import (
     SHORT_DATE_FORMAT,
     FIXED_VALUES,
@@ -32,19 +29,6 @@ def get_date_input_settings(attrs=None):
     if attrs:
         settings['attrs'].update(attrs)
     return settings
-
-
-class ImpersonateUserForm(forms.ModelForm):
-    class Meta:
-        model = User
-        fields = ['id']
-
-    id = forms.ModelChoiceField(
-        required=True, widget=forms.Select(attrs={'class': 'form-control'}), queryset=[])
-
-    def __init__(self, id, *args, **kwargs):
-        super(ImpersonateUserForm, self).__init__(*args, **kwargs)
-        self.fields['id'].queryset = services.get_impersonable_users(id)
 
 
 EMPTY_LABEL = '--Select--'
@@ -394,7 +378,8 @@ class DebtNoteForm(forms.ModelForm):
         widgets = {
             'debt_id': forms.HiddenInput(),
             'debt': forms.HiddenInput(),
-            'content': forms.Textarea(attrs={'class': 'col-xs-12 no-padding', 'style': 'resize: none;', 'maxlength': 2000}),
+            'content': forms.Textarea(attrs={'class': 'col-xs-12 no-padding', 'style': 'resize: none;',
+                                             'maxlength': 2000}),
         }
         fields = '__all__'
 
@@ -411,7 +396,8 @@ class EnrollmentPlanForm(forms.ModelForm):
             'show_fee_subtotal_column': forms.CheckboxInput(),
             'savings_adjustment': forms.CheckboxInput(),
             'show_savings_accumulation': forms.CheckboxInput(),
-            'states': forms.SelectMultiple(choices=enums.US_STATES, attrs={'class': 'col-xs-2 no-padding-sides', 'style': 'height: 200px;'}),
+            'states': forms.SelectMultiple(choices=enums.US_STATES, attrs={'class': 'col-xs-2 no-padding-sides',
+                                                                           'style': 'height: 200px;'}),
             'fee_profile': forms.Select(attrs={'class': 'col-xs-2 no-padding-sides'})
         }
         fields = '__all__'
@@ -476,7 +462,8 @@ class FeePlanForm(forms.ModelForm):
                 self.fields['percentage_amount'].widget.attrs.update({'disabled': 'disabled', 'style': 'display:none;'})
             else:
                 self.initial['percentage_amount'] = self.instance.amount
-                self.fields['fixed_amount'].widget.attrs.update({'disabled': 'disabled', 'style': 'max-width: 140px; display: none;'})
+                self.fields['fixed_amount'].widget.attrs.update({'disabled': 'disabled',
+                                                                 'style': 'max-width: 140px; display: none;'})
 
 
 class FeeForm(forms.ModelForm):
@@ -593,14 +580,36 @@ class RadioSelectNotNull(forms.RadioSelect):
         return self.renderer(name, str_value, final_attrs, choices)
 
 
+DISPLAYABLE_STATUSES_CHOICES = (
+    ('in_review', 'In-Review'),
+    ('declined', 'Declined'),
+    ('accepted', 'Accepted'),
+    ('client_auth_needed', 'Client Authorization is Needed'),
+    ('sett_letter_needed', 'Settlement Letter is Needed'),
+    ('client_auth_sett_letter_needed', 'Client Authorization and Settlement Letter are Needed'),
+)
+
+
+ATTRS_CLASS_COL_XS_3 = {'attrs': {'class': 'col-xs-3 no-padding-sides'}}
+
+SETTLEMENT_DATE_INPUT_SETTINGS = copy.deepcopy(DATE_INPUT_SETTINGS)
+SETTLEMENT_DATE_INPUT_SETTINGS.update(ATTRS_CLASS_COL_XS_3)
+
+
 class SettlementOfferForm(forms.ModelForm):
+    status = forms.ChoiceField(choices=DISPLAYABLE_STATUSES_CHOICES,
+                               widget=forms.Select(**ATTRS_CLASS_COL_XS_3))
+
     class Meta:
         model = SettlementOffer
         widgets = {
+            'negotiator': forms.Select(**ATTRS_CLASS_COL_XS_3),
             'made_by': RadioSelectNotNull(attrs={'style': 'margin: 0;'}),
-            'notes': forms.Textarea(),
-            'date': forms.DateInput(**DATE_INPUT_SETTINGS),
-            'valid_until': forms.DateInput(**DATE_INPUT_SETTINGS),
+            'notes': forms.Textarea(**ATTRS_CLASS_COL_XS_3),
+            'date': forms.DateInput(**SETTLEMENT_DATE_INPUT_SETTINGS),
+            'valid_until': forms.DateInput(**SETTLEMENT_DATE_INPUT_SETTINGS),
+            'debt_amount': forms.NumberInput(**ATTRS_CLASS_COL_XS_3),
+            'offer_amount': forms.NumberInput(**ATTRS_CLASS_COL_XS_3),
         }
         exclude = ['enrollment']
 

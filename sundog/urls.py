@@ -46,6 +46,7 @@ urlpatterns = module_urls(views) + package_urls(sundog.components) + [
     url(r'^contact/(?P<contact_id>\d+)/enrollment/$', views.contact_enrollment_details, name='contact_enrollment_details'),
     url(r'^contact/(?P<contact_id>\d+)/enrollment/payment/add/$', views.add_payment, name='add_payment'),
     url(r'^contact/(?P<contact_id>\d+)/enrollment/payment/edit/$', views.edit_payment, name='edit_payment'),
+    url(r'^contact/(?P<contact_id>\d+)/enrollment/performanceFees/?$', views.contact_schedule_performance_fees, name='contact_schedule_performance_fees'),
     url(r'^contact/(?P<contact_id>\d+)/enrollmentPlan/(?P<enrollment_plan_id>\d+)/getInfo/$', views.get_enrollment_plan_info, name='get_enrollment_plan_info'),
     url(r'^contact/(?P<contact_id>\d+)/debts/getInfo/$', views.get_debts_info, name='get_debts_info'),
     url(r'^debt/(?P<debt_id>\d+)/offer/$', views.get_debt_offer, name='get_debt_offer'),
@@ -77,7 +78,6 @@ urlpatterns = module_urls(views) + package_urls(sundog.components) + [
     url(r'^creditor/add/$', views.add_creditor, name='add_creditor'),
 
     url(r'^client/add/$', views.add_client_ajax, name='ajax_client_add'),
-    url(r'^profile/impersonate_user/$', views.impersonate_user, name='impersonate_user'),
     url(r'^profile/stop_impersonate_user/$', views.stop_impersonate_user, name='stop_impersonate_user'),
     url(r'^admin/update_preferences_for_section_collapsed_state/$', ajax.update_preferences_for_section_collapsed_state, name='update_section_collapsed_state'),
     url(r'^admin/get_preferences_for_sections_collapsed_state/$', ajax.get_preferences_for_sections_collapsed_state, name='get_sections_collapsed_state'),

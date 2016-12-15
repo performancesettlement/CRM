@@ -162,6 +162,7 @@
     <script src="{% static "js/plugins/datapicker/bootstrap-datepicker.js" %}"></script>
     <script type="text/javascript">
         var baseContactSettlementUrl = '{% url "contact_settlement" contact_id=contact.contact_id settlement_offer_id=settlement_offer.settlement_offer_id %}';
+        var settlementOfferUrl = '{% url "contact_settlement_offer" contact_id=contact.contact_id %}';
     </script>
     <script src="{% static "js/contact/contact_settlement.js" %}"></script>
 {% endblock %}

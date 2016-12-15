@@ -1,6 +1,5 @@
 from colorful.fields import RGBColorField
 from decimal import Decimal
-from django.apps import apps
 from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -13,7 +12,7 @@ from settings import MEDIA_PRIVATE
 from sundog.constants import SHORT_DATE_FORMAT
 from sundog.media import S3PrivateFileField
 from sundog.routing import package_models
-from sundog.templatetags.my_filters import currency, percent
+from sundog.templatetags.my_filters import currency
 from sundog.utils import format_price
 
 import copy
@@ -826,6 +825,9 @@ class Debt(models.Model):
     def owed_to(self):
         return self.debt_buyer if self.debt_buyer else self.original_creditor
 
+    def debt_text(self):
+        return self.original_creditor.name + ': ' + currency(self.current_debt_amount)
+
     def save(self, *args, **kwargs):
         if self.enrolled is None:
             self.enrolled = True if self.original_debt_amount and self.original_debt_amount >= Decimal('500') else False
@@ -841,6 +843,7 @@ SETTLEMENT_OFFER_STATUS_CHOICES = (
     ('in_review', 'In-Review'),
     ('declined', 'Declined'),
     ('accepted', 'Accepted'),
+    ('completed', 'Completed'),
     ('client_auth_needed', 'Client Authorization is Needed'),
     ('sett_letter_needed', 'Settlement Letter is Needed'),
     ('client_auth_sett_letter_needed', 'Client Authorization and Settlement Letter are Needed'),
@@ -852,13 +855,15 @@ class SettlementOffer(models.Model):
     enrollment = models.ForeignKey(Enrollment, related_name='settlement_offers')
     debt = models.ForeignKey(Debt, related_name='offers')
     made_by = models.CharField(max_length=10, choices=SETTLEMENT_OFFER_MADE_BY_CHOICES, default='negotiator')
-    negotiator = models.ForeignKey(User)
+    negotiator = models.ForeignKey(User, related_name='negotiated_offers')
     status = models.CharField(max_length=40, choices=SETTLEMENT_OFFER_STATUS_CHOICES,  default='in_review')
     date = models.DateTimeField()
     valid_until = models.DateTimeField(blank=True, null=True)
     debt_amount = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
     offer_amount = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
     notes = models.CharField(max_length=1000, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
 
     def __init__(self, *args, **kwargs):
         super(SettlementOffer, self).__init__(*args, **kwargs)
@@ -879,7 +884,7 @@ class SettlementOffer(models.Model):
 
 class Settlement(models.Model):
     settlement_id = models.AutoField(primary_key=True)
-    settlement_offer = models.ForeignKey(SettlementOffer)
+    settlement_offer = models.ForeignKey(SettlementOffer, related_name='settlements')
     payable_to = models.CharField(max_length=20)
     mail_to_company = models.EmailField(max_length=40)
     no_payments = models.BooleanField(default=False)
@@ -892,8 +897,8 @@ class Settlement(models.Model):
     letter_date = models.DateTimeField(blank=True, null=True)
     extra_info = models.CharField(max_length=1000, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
-    created_by = models.ForeignKey(User, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+    created_by = models.ForeignKey(User, blank=True, null=True)
 
 
 class BankAccount(models.Model):

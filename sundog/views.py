@@ -1,8 +1,6 @@
 from _decimal import ROUND_UP
 from decimal import Decimal
 from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib import messages
-from django.contrib.messages import SUCCESS
 from django.core import mail
 from django.core.paginator import Paginator
 from django.db import transaction
@@ -13,14 +11,12 @@ from django.shortcuts import render, render_to_response, redirect
 from django.urls import reverse
 from django.utils.timezone import now
 
-from django_auth_app.utils import serialize_user
 from numpy import arange
 from sundog import services
-from sundog.cache.user.info import get_cache_user
 from sundog.constants import SHORT_DATE_FORMAT, FIXED_VALUES
 from sundog.decorators import bypass_impersonation_login_required
 
-from sundog.forms import ContactForm, ImpersonateUserForm, StageForm, StatusForm, \
+from sundog.forms import ContactForm, StageForm, StatusForm, \
     CampaignForm, SourceForm, ContactStatusForm, BankAccountForm, NoteForm, CallForm, EmailForm, UploadedForm, \
     ExpensesForm, IncomesForm, CreditorForm, DebtForm, DebtNoteForm, EnrollmentPlanForm, FeePlanForm, FeeProfileForm, \
     FeeProfileRuleForm, WorkflowSettingsForm, EnrollmentForm, PaymentForm, CompensationTemplateForm, \
@@ -29,7 +25,7 @@ from datetime import datetime, timedelta
 from sundog.models import Contact, Stage, STAGE_TYPE_CHOICES, Status, \
     Campaign, Activity, Uploaded, Expenses, Incomes, Creditor, Debt, DebtNote, Enrollment, EnrollmentPlan, \
     FeeProfile, FeeProfileRule, WorkflowSettings, DEBT_SETTLEMENT, Payment, Company, CompensationTemplate, \
-    SettlementOffer, SETTLEMENT_SUB_TYPE_CHOICES
+    SettlementOffer, SETTLEMENT_SUB_TYPE_CHOICES, Settlement
 
 from sundog.services import reorder_stages, reorder_status
 from sundog.templatetags.my_filters import currency, percent
@@ -49,7 +45,6 @@ import copy
 import logging
 import settings
 import sys
-
 
 logger = logging.getLogger(__name__)
 
@@ -259,7 +254,8 @@ def add_call(request, contact_id):
             contact_status = form.cleaned_data.pop('contact_status')
             form.save()
             if contact_status and contact.status.status_id != contact_status.status_id:
-                status_form = ContactStatusForm({'contact_id': contact_id, 'status': contact_status.status_id, 'stage': contact_status.stage.stage_id}, instance=contact)
+                status_form = ContactStatusForm({'contact_id': contact_id, 'status': contact_status.status_id,
+                                                 'stage': contact_status.stage.stage_id}, instance=contact)
                 status_form.save()
             response = {'result': 'Ok'}
         else:
@@ -516,7 +512,7 @@ def add_contact(request):
         'user': request.user,
         'form': form,
         'form_errors': get_form_errors(form) or None,
-        'templates':  [('Add a Client', 'add_a_client')],
+        'templates': [('Add a Client', 'add_a_client')],
         'label': 'Add',
         'menu_page': 'contacts',
     }
@@ -537,7 +533,7 @@ def edit_contact(request, contact_id):
         'form': form,
         'contact_id': contact_id,
         'form_errors': get_form_errors(form) or None,
-        'templates':  [('Add a Client', 'add_a_client')],
+        'templates': [('Add a Client', 'add_a_client')],
         'label': 'Edit',
         'menu_page': 'contacts'
     }
@@ -562,7 +558,8 @@ def delete_contact(request, contact_id):
 def get_stage_statuses(request):
     if request.POST and 'stage_id' in request.POST:
         stage_id = request.POST['stage_id']
-        statuses = [{'id': status.status_id, 'name': status.name} for status in list(Status.objects.filter(stage__stage_id=stage_id))]
+        statuses = [{'id': status.status_id, 'name': status.name} for status in
+                    list(Status.objects.filter(stage__stage_id=stage_id))]
         return JsonResponse({'statuses': statuses})
 
 
@@ -607,7 +604,7 @@ def edit_contact_status(request, contact_id):
 def add_lead_source(request):
     form = ContactForm(request.POST or None)
     if request.method == 'POST' and request.POST and form.is_valid():
-        lead_source = form.save() # TODO: redirect to lead sources list? # noqa
+        lead_source = form.save()  # TODO: redirect to lead sources list? # noqa
         return redirect('home')
     context_info = {
         'request': request,
@@ -683,9 +680,9 @@ def add_creditor(request):
 def contact_debts(request, contact_id):
     contact = (
         Contact
-        .objects
-        .prefetch_related('contact_debts')
-        .get(contact_id=contact_id)
+            .objects
+            .prefetch_related('contact_debts')
+            .get(contact_id=contact_id)
     )
     order_by_list = [
         'original_creditor',
@@ -815,13 +812,13 @@ def add_enrollment_plan(request):
         if fee_data_2:
             form_fee_2 = FeePlanForm(request.POST, prefix='2')
         if (
-            form.is_valid() and
-            form_fee_1.is_valid() and (
-                not fee_data_2 or (
-                    fee_data_2 and
-                    form_fee_2.is_valid()
+                        form.is_valid() and
+                        form_fee_1.is_valid() and (
+                            not fee_data_2 or (
+                                    fee_data_2 and
+                                    form_fee_2.is_valid()
+                        )
                 )
-            )
         ):
             enrollment_plan = form.save()
             fee_1 = form_fee_1.save(commit=False)
@@ -841,7 +838,7 @@ def add_enrollment_plan(request):
                 form_errors += get_form_errors(form_fee_2)
     plans = [('', '--New Plan--')] + [
         (str(plan.enrollment_plan_id), plan.name) for plan in enrollment_plans
-    ]
+        ]
     has_second_fee = (
         form_errors and
         next(
@@ -933,9 +930,9 @@ def delete_enrollment_plan(request, enrollment_plan_id):
         try:
             (
                 EnrollmentPlan
-                .objects
-                .get(enrollment_plan_id=enrollment_plan_id)
-                .delete()
+                    .objects
+                    .get(enrollment_plan_id=enrollment_plan_id)
+                    .delete()
             )
         except EnrollmentPlan.DoesNotExist:
             pass
@@ -957,7 +954,7 @@ def add_fee_profile(request):
             prefix=str(i),
         )
         for i in forms_range
-    ]
+        ]
     form = FeeProfileForm(request.POST or None)
     fee_profiles = FeeProfile.objects.all()
     if request.method == 'POST' and request.POST:
@@ -973,11 +970,11 @@ def add_fee_profile(request):
                     )
                 )
         if (
-            form.is_valid() and
-            all([
-                form.is_valid()
-                for form in received_profile_rules_forms
-            ])
+                    form.is_valid() and
+                    all([
+                            form.is_valid()
+                            for form in received_profile_rules_forms
+                            ])
         ):
             fee_profile = form.save()
             for form_rule in received_profile_rules_forms:
@@ -1019,9 +1016,9 @@ def edit_fee_profile(request, fee_profile_id):
     form_errors = None
     instance = (
         FeeProfile
-        .objects
-        .prefetch_related('rules')
-        .get(fee_profile_id=fee_profile_id)
+            .objects
+            .prefetch_related('rules')
+            .get(fee_profile_id=fee_profile_id)
     )
     rules = list(instance.rules.all())
     form = FeeProfileForm(request.POST or None, instance=instance)
@@ -1057,11 +1054,11 @@ def edit_fee_profile(request, fee_profile_id):
                 )
         received_profile_rules_forms.extend(profile_rules_forms)
         if (
-            form.is_valid() and
-            all([
-                form.is_valid()
-                for form in received_profile_rules_forms
-            ])
+                    form.is_valid() and
+                    all([
+                            form.is_valid()
+                            for form in received_profile_rules_forms
+                            ])
         ):
             fee_profile = form.save()
             for form_rule in received_profile_rules_forms:
@@ -1100,7 +1097,7 @@ def edit_fee_profile(request, fee_profile_id):
             prefix=str(i),
         )
         for i in range(number_of_previous_rule_count + 1, 11)
-    ]
+        ]
     profiles = [('', '--Add Profile--')] + [(str(profile.fee_profile_id), profile.name) for profile in fee_profiles]
     context_info = {
         'request': request,
@@ -1158,9 +1155,9 @@ def enrollments_list(request):
 
     query = (
         Enrollment
-        .objects
-        .prefetch_related('contact')
-        .prefetch_related('payments')
+            .objects
+            .prefetch_related('contact')
+            .prefetch_related('payments')
     )
 
     if order_by.replace('-', '') == 'created_at':
@@ -1252,7 +1249,8 @@ def workflow_settings_save(request):
 
 @login_required
 def add_contact_enrollment(request, contact_id):
-    contact = Contact.objects.prefetch_related('contact_debts').prefetch_related('incomes').prefetch_related('expenses').prefetch_related('bank_account').get(contact_id=contact_id)
+    contact = Contact.objects.prefetch_related('contact_debts').prefetch_related('incomes').prefetch_related(
+        'expenses').prefetch_related('bank_account').get(contact_id=contact_id)
     bank_account = contact.bank_account.all().first()
     try:
         enrollment = Enrollment.objects.get(contact=contact)
@@ -1271,7 +1269,8 @@ def add_contact_enrollment(request, contact_id):
         form_2_data = get_data('2', post_data)
         if form_2_data:
             form_fee_2 = FeeForm(form_2_data, prefix='2')
-        if bank_account.info_complete() and form.is_valid() and form_fee_1.is_valid() and (not form_fee_2 or (form_fee_2 and form_fee_2.is_valid())):
+        if bank_account.info_complete() and form.is_valid() and form_fee_1.is_valid() and (
+            not form_fee_2 or (form_fee_2 and form_fee_2.is_valid())):
             with transaction.atomic():
                 enrollment = form.save()
                 fee_1 = form_fee_1.save(commit=False)
@@ -1338,7 +1337,7 @@ def edit_contact_enrollment(request, contact_id):
             post_data['first_date'] = instance.first_date.strftime(SHORT_DATE_FORMAT)
         form = EnrollmentForm(contact, post_data, instance=instance)
         fee_instances = list(instance.fees.all())
-        fee_forms, _ = get_forms(post_data, FeeForm, prefix=1, instances=None)
+        fee_forms, _ = get_forms(post_data, FeeForm, prefix=1, until=2, instances=None)
         if form.is_valid() and all([form.is_valid() for form in fee_forms]):
             with transaction.atomic():
                 enrollment = form.save()
@@ -1391,7 +1390,8 @@ def edit_contact_enrollment(request, contact_id):
 
 @login_required
 def contact_enrollment_details(request, contact_id):
-    contact = Contact.objects.prefetch_related('contact_debts').prefetch_related('incomes').prefetch_related('expenses').get(contact_id=contact_id)
+    contact = Contact.objects.prefetch_related('contact_debts').prefetch_related('incomes').prefetch_related(
+        'expenses').get(contact_id=contact_id)
     try:
         enrollment = Enrollment.objects.prefetch_related('payments').get(contact=contact)
     except Enrollment.DoesNotExist:
@@ -1416,6 +1416,112 @@ def contact_enrollment_details(request, contact_id):
 
 
 @login_required
+def contact_schedule_performance_fees(request, contact_id):
+    contact = Contact.objects.prefetch_related('contact_debts').prefetch_related('enrollments').prefetch_related(
+        'expenses').get(contact_id=contact_id)
+    settlement_id = request.GET.get('settlement_id')
+
+    if settlement_id:
+        settlement = Settlement.objects.prefetch_related('settlement_offer') \
+            .prefetch_related('settlement_offer__enrollment').prefetch_related('settlement_offer__debt') \
+            .prefetch_related('settlement_offer__enrollment__compensation_template') \
+            .prefetch_related('settlement_offer__enrollment__compensation_template__payees') \
+            .get(settlement_id=settlement_id)
+    else:
+        settlement = None
+    debt = None
+    enrollment = Enrollment.objects.prefetch_related('compensation_template').get(contact__contact_id=contact_id)
+    comp_template = enrollment.compensation_template
+    settlement_offer = None
+    fee_percentage = None
+    settlement_payments_count = 0
+    total_fee_amount = Decimal('0.00')
+    start_date = now().strftime(SHORT_DATE_FORMAT)
+    payees = []
+    if settlement:
+        settlement_offer = settlement.settlement_offer
+        debt = settlement_offer.debt
+        settlement_payments_count = len(list(settlement.settlement_payments.all()))
+        fees = list(enrollment.fees.all())
+        for fee in fees:
+            if fee.type == 'percent':
+                fee_percentage = fee.amount
+                break
+        total_fee_amount = roundup_places(settlement_offer.debt_amount * (fee_percentage / 100))
+        payees = list(comp_template.payees.all())
+        payee_index = 0
+        fee_accumulator = Decimal('0.00')
+        total_payments = settlement_payments_count + 3
+        payments_number = request.GET.getlist('p_number')
+        if payments_number:
+            payments_number = [int(x) for x in payments_number]
+        else:
+            payments_number = [settlement_payments_count - 1 for _ in range(0, len(payees))]
+        if not payments_number:
+            start_index = len(payees) - len(payments_number)
+            for i in range(start_index, len(payments_number)):
+                payments_number[i] = settlement_payments_count - 1
+        payments_dates = request.GET.getlist('p_dates', [start_date for _ in range(0, len(payees))])
+        if len(payments_dates) < len(payees):
+            start_index = len(payees) - len(payments_dates)
+            for i in range(start_index, len(payments_dates)):
+                payments_dates[i] = start_date
+        for payee in payees:
+            payee.total_fee = roundup_places(total_fee_amount * (payee.fee_amount / 100))
+            fee_accumulator += payee.total_fee
+            if payee_index == len(payees) - 1:
+                payee.total_fee += fee_accumulator - total_fee_amount
+            payee.options = []
+            for payment_index in range(1, total_payments + 1):
+                amount = roundup_places(payee.total_fee / payment_index)
+                option_str = str(payment_index) + ' Payment' + ('s' if payment_index > 1 else '') + ' - ' \
+                                                                                                  + currency(amount)
+                payee.options.append((amount, option_str))
+            payee_index += 1
+            payee.payments_forms = []
+            payee.total_payments = Decimal('0.00')
+            for payment_form_index in range(0, settlement_payments_count):
+                form = PaymentForm(initial={'date': payments_dates[payment_form_index],
+                                            'amount': payee.options[int(payments_number[payment_form_index])][0]},
+                                   prefix=payment_form_index + 1, attr_class='col-xs-12 no-padding-sides')
+                payee.payments_forms.append(form)
+                payee.total_payments += payee.options[payment_form_index][0]
+
+    settled_debts = Settlement.objects.prefetch_related('settlement_offer').prefetch_related('settlement_offer__debt') \
+        .prefetch_related('settlement_offer__debt__original_creditor') \
+        .filter(settlement_offer__enrollment__contact__contact_id=contact_id)
+    settled_debts_options = [('', '--Select--')] + \
+        [(str(settlement.settlement_id), settlement.settlement_offer.debt.debt_text()) for settlement in settled_debts]
+    comp_template_fee_count = len(list(comp_template.payees.all())) if comp_template else 0
+    if request.is_ajax():
+        response_forms = {}
+        forms_data = [{payee.compensation_template_payee_id: [str(form) for form in payee.payments_forms]} for payee in payees]
+        for data in forms_data:
+            response_forms.update(data)
+        return JsonResponse({'forms': response_forms})
+    else:
+        context_info = {
+            'request': request,
+            'user': request.user,
+            'contact': contact,
+            'settlement_id': str(settlement.settlement_id) if settlement else None,
+            'settlement_payments_count': str(settlement_payments_count),
+            'fee_percentage': fee_percentage,
+            'settlement_offer': settlement_offer,
+            'start_date': start_date,
+            'debt': debt,
+            'payees': payees,
+            'total_fee_amount': total_fee_amount,
+            'comp_template': comp_template,
+            'comp_template_fee_count': comp_template_fee_count,
+            'settled_debts_options': settled_debts_options,
+            'menu_page': 'contacts',
+        }
+        template_path = 'contact/schedule_performance_fees.html'
+        return _render_response(request, context_info, template_path)
+
+
+@login_required
 def get_enrollment_plan_info(request, contact_id, enrollment_plan_id):
     if not request.is_ajax():
         return redirect('home')
@@ -1424,16 +1530,21 @@ def get_enrollment_plan_info(request, contact_id, enrollment_plan_id):
         contact = Contact.objects.prefetch_related('contact_debts').get(contact_id=contact_id)
         date_now = now()
         first_date_str = request.GET.get('first_date')
-        first_date = datetime.strptime((first_date_str if first_date_str else (date_now + timedelta(days=1)).strftime(SHORT_DATE_FORMAT)), SHORT_DATE_FORMAT)
+        first_date = datetime.strptime(
+            (first_date_str if first_date_str else (date_now + timedelta(days=1)).strftime(SHORT_DATE_FORMAT)),
+            SHORT_DATE_FORMAT)
         start_date_str = request.GET.get('start_date')
-        start_date = datetime.strptime((start_date_str if start_date_str else (first_date + timedelta(days=32)).strftime(SHORT_DATE_FORMAT)), SHORT_DATE_FORMAT)
+        start_date = datetime.strptime(
+            (start_date_str if start_date_str else (first_date + timedelta(days=32)).strftime(SHORT_DATE_FORMAT)),
+            SHORT_DATE_FORMAT)
         second_date_str = request.GET.get('second_date')
         second_date = datetime.strptime(second_date_str, SHORT_DATE_FORMAT) if second_date_str else None
         debt_ids = get_debts_ids(request.GET)
         fee_values = get_fees_values(request.GET)
         total_debt = contact.total_enrolled_current_debts(ids=debt_ids)
         payments = []
-        plan = EnrollmentPlan.objects.prefetch_related('fee_profile').prefetch_related('fee_profile__rules').get(enrollment_plan_id=enrollment_plan_id)
+        plan = EnrollmentPlan.objects.prefetch_related('fee_profile').prefetch_related('fee_profile__rules').get(
+            enrollment_plan_id=enrollment_plan_id)
         default_months = None
         if to_int(plan.program_length_default) != -1:
             default_months = int(plan.program_length_default)
@@ -1458,7 +1569,8 @@ def get_enrollment_plan_info(request, contact_id, enrollment_plan_id):
         fees = {}
         min_length = to_int(plan.program_length_minimum)
         max_length = to_int(plan.program_length_maximum)
-        program_lengths = [(str(x), ('{} Months' if x > 1 else '{} Month').format(x)) for x in range(min_length, max_length + 1, plan.program_length_increment)]
+        program_lengths = [(str(x), ('{} Months' if x > 1 else '{} Month').format(x)) for x in
+                           range(min_length, max_length + 1, plan.program_length_increment)]
         fees_amounts = Decimal('0.00')
         total_fees_amounts = Decimal('0.00')
         fee_plans = plan.fee_plans.all()
@@ -1476,7 +1588,9 @@ def get_enrollment_plan_info(request, contact_id, enrollment_plan_id):
                 perc = Decimal(base_amount)
                 amount = total_debt * (perc / 100)
                 if rule_for_fee:
-                    options = [(str(op), percent(op)) for op in arange(rule_for_fee.sett_fee_low, rule_for_fee.sett_fee_high + 1, rule_for_fee.sett_fee_inc)]
+                    options = [(str(op), percent(op)) for op in
+                               arange(rule_for_fee.sett_fee_low, rule_for_fee.sett_fee_high + 1,
+                                      rule_for_fee.sett_fee_inc)]
                 else:
                     if perc:
                         options = [(str(perc), percent(perc))]
@@ -1671,7 +1785,8 @@ def add_compensation_template(request, company_id):
     form_errors = []
     if request.method == 'POST' and request.POST:
         forms, _ = get_forms(request.POST, CompensationTemplatePayeeForm)
-        forms_validation = sum(Decimal(form.data[str(form.prefix) + '-fee_amount']) for form in forms) == Decimal('100.00')
+        forms_validation = sum(Decimal(form.data[str(form.prefix) + '-fee_amount']) for form in forms) == Decimal(
+            '100.00')
         if form.is_valid() and len(forms) > 0 and all([form.is_valid() for form in forms]) and forms_validation:
             company = Company.objects.get(company_id=company_id)
             with transaction.atomic():
@@ -1712,7 +1827,8 @@ def edit_compensation_template(request, company_id, compensation_template_id):
     instances = list(instance.payees.all())
     if request.method == 'POST' and request.POST:
         forms, instances = get_forms(request.POST, CompensationTemplatePayeeForm, instances=instances)
-        forms_validation = sum(Decimal(form.data[str(form.prefix) + '-fee_amount']) for form in forms) == Decimal('100.00')
+        forms_validation = sum(Decimal(form.data[str(form.prefix) + '-fee_amount']) for form in forms) == Decimal(
+            '100.00')
         if form.is_valid() and len(forms) > 0 and all([form.is_valid() for form in forms]) and forms_validation:
             company = Company.objects.get(company_id=company_id)
             with transaction.atomic():
@@ -1776,9 +1892,20 @@ def contact_settlement_offer(request, contact_id):
     form_errors = []
     if request.method == 'POST' and request.POST:
         if form.is_valid():
+            if not settlement_offer_id:
+                current_completed_offer = enrollment.settlement_offers.prefetch_related('settlements') \
+                    .prefetch_related('settlements__settlement_payments').first()
+                if current_completed_offer:
+                    settlement = current_completed_offer.settlements.first()
+                    payments = settlement.settlement_payments.filter(status='open').all()
+                    for payment in payments:
+                        payment.delete()
+                    settlement.delete()
+                    current_completed_offer.delete()
             settlement_offer = form.save(commit=False)
             if not settlement_offer_id:
                 settlement_offer.enrollment = enrollment
+                settlement_offer.created_by = request.user
             settlement_offer.save()
             request.session['debt_id'] = settlement_offer.debt.debt_id
             response = {'result': 'Ok'}
@@ -1787,12 +1914,14 @@ def contact_settlement_offer(request, contact_id):
             response = {'errors': form_errors}
         return JsonResponse(response)
     debts = list(contact.contact_debts.prefetch_related('offers').filter(enrolled=True))
-    offers = list(enrollment.settlement_offers.filter(status='accepted'))
+    offers = list(enrollment.settlement_offers.filter(status__in=['accepted', 'completed']))
     offer_saved = False
     debt_id = request.session.get('debt_id', 0)
     if debt_id:
         offer_saved = True
         request.session.pop('debt_id')
+    if not debt_id:
+        debt_id = request.GET.get('debt_id', 0)
     context_info = {
         'request': request,
         'user': request.user,
@@ -1816,7 +1945,7 @@ def get_debt_offer(request, debt_id):
         debt = Debt.objects.prefetch_related('offers').get(debt_id=debt_id)
         offer = debt.offers.first()
         response = {}
-        if offer:
+        if offer and offer.status != 'completed':
             response['settlement_offer_id'] = str(offer.settlement_offer_id)
             response['made_by'] = offer.made_by
             response['negotiator'] = str(offer.negotiator.pk)
@@ -1877,6 +2006,8 @@ def contact_settlement(request, contact_id, settlement_offer_id):
             else:
                 fee_payees = []
             with transaction.atomic():
+                settlement_offer.status = 'completed'
+                settlement_offer.save()
                 settlement = form.save(commit=False)
                 settlement.settlement_offer = settlement_offer
                 settlement.save()
@@ -1904,7 +2035,8 @@ def contact_settlement(request, contact_id, settlement_offer_id):
                     fee_payments = []
                     total_payee_fee_amount = roundup_places(total_fee_amount * (fee_payee.fee_amount / 100))
                     for payment in payments:
-                        settlement_ratio_of_total_debt = roundup_places(payment.amount / settlement_offer.offer_amount, FOUR_PLACES)
+                        settlement_ratio_of_total_debt = roundup_places(payment.amount / settlement_offer.offer_amount,
+                                                                        FOUR_PLACES)
                         amount = roundup_places(total_payee_fee_amount * settlement_ratio_of_total_debt)
                         fee_accumulator += amount
                         if payment_index == payment_count - 1:
@@ -1962,35 +2094,6 @@ def terms(request):
 
 def render404(request):
     return render(request, '404.html', status=404)
-
-
-@permission_required('auth.impersonate_user')
-def impersonate_user(request):
-    post_data = request.POST
-    form = ImpersonateUserForm(id=request.user.id)
-    context_info = {'request': request, 'form': form}
-    template_path = 'impersonate_user.html'
-    if post_data:
-        impersonated_user_id = post_data.get('id')
-        form_errors = []
-        if impersonated_user_id:
-            request.session["user_impersonation"] = True
-            request.session["user_impersonator"] = serialize_user(request.user)
-            try:
-                impersonated_user = get_cache_user(impersonated_user_id)
-                request.session["user_impersonated"] = \
-                    serialize_user(impersonated_user)
-                return redirect('home')
-            except Exception as e:
-                logger.error("An error occurred trying to impersonate user.")
-                logger.error(str(e))
-                form_errors.append("Invalid user for impersonation.")
-        else:
-            form_errors.append("User is required for impersonation.")
-        context_info["form_errors"] = form_errors
-        return _render_response(request, context_info, template_path)
-    else:
-        return _render_response(request, context_info, template_path)
 
 
 @bypass_impersonation_login_required

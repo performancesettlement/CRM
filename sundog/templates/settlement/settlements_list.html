@@ -1,0 +1,18 @@
+{% extends "sundog/base/table.html" %}
+
+{% load staticfiles my_filters %}
+{% load django_bootstrap_breadcrumbs %}
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    {% breadcrumb "Settlements" "settlements_list" %}
+{% endblock %}
+
+{% block title %}
+    {{ block.super }} - Settlements
+{% endblock title %}
+
+{% block table_view_post_content %}
+    <script type="text/javascript"></script>
+    <script src="{% static "js/settlement/settlements_list.js" %}"></script>
+{% endblock table_view_post_content %}

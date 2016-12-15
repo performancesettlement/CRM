@@ -1,0 +1,145 @@
+{% extends "app-base.html" %}
+{% load staticfiles my_filters admin_urls %}
+{% block extrahead %}
+    <link href="{% static "css/plugins/datapicker/datepicker3.css" %}" rel="stylesheet">
+{% endblock extrahead %}
+{% block content %}
+    <div class="row wrapper border-bottom white-bg page-heading">
+        <div class="col-lg-12 m-t-md">
+            <ol class="breadcrumb">
+                <li>
+                    <a href="{% url 'list_contacts' %}">Contacts</a>
+                </li>
+                <li>
+                    <a href="{% url 'contact_dashboard' contact_id=contact.contact_id %}">{{ contact.full_name_straight }}</a>
+                </li>
+                <li>
+                    <a href="{% url 'contact_enrollment_details' contact_id=contact.contact_id %}">Enrollment Details</a>
+                </li>
+                <li class="active bold">
+                    Performance Fee Scheduler
+                </li>
+            </ol>
+        </div>
+    </div>
+    <div class="col-xs-12 m-t-md">
+        <div class="col-xs-2 no-padding-sides">
+            <div class="col-xs-12 no-padding">Contact</div>
+            <div class="col-xs-12 no-padding blue font-medium font-bold">{{ contact.full_name_straight }}</div>
+        </div>
+        <div class="col-xs-2 no-padding-sides">
+            <label class="col-xs-12 no-padding" for="debt-selector">Choose Settled Debt</label>
+            <select class="col-xs-10 no-padding" id="debt-selector">
+                {% for option in settled_debts_options %}
+                <option value="{{ option.0 }}" {% if option.0 == settlement_id %}selected{% endif %}>{{ option.1 }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-xs-2 no-padding-sides">
+            <label class="col-xs-12 no-padding">Comp Template</label>
+            <div class="col-xs-12 no-padding">{{ comp_template.name }}</div>
+        </div>
+        <div class="col-xs-1 p-xs no-padding-sides">
+            <button id="preview-button" class="btn btn-default" type="button">Preview</button>
+        </div>
+    </div>
+    {% if settlement_id %}
+    <div class="col-xs-12 m-t-md">
+        <div id="totals">
+            <div class="inline m-r-md">
+                <div class="m-b-xs font-bold">Original Debt Amount</div>
+                <div class="blue font-medium font-bold">{{ debt.original_debt_amount|currency }}</div>
+            </div>
+            <div class="inline m-r-md">
+                <div class="m-b-xs font-bold">Settlement Amount</div>
+                <div class="blue font-medium font-bold">{{ settlement_offer.offer_amount|currency }}</div>
+            </div>
+            <div class="inline m-r-md">
+                <div class="m-b-xs font-bold">Client Savings</div>
+                <div class="blue font-medium font-bold">{{ debt.original_debt_amount|minus:settlement_offer.offer_amount|currency }}</div>
+            </div>
+            <div class="inline m-r-md">
+                <div class="m-b-xs font-bold">Performance Fee Total</div>
+                <div class="blue font-medium font-bold">{{ total_fee_amount|currency }}</div>
+            </div>
+            <div class="inline m-r-md">
+                <div class="m-b-xs font-bold">Enrollment Plan</div>
+                <div class="blue font-medium font-bold">{{ enrollment.enrollment_plan.name }}</div>
+            </div>
+            <div class="inline m-r-md">
+                <div class="m-b-xs font-bold">Comp Template</div>
+                <div class="blue font-medium font-bold">{{ comp_template.name }}</div>
+            </div>
+            <div class="inline m-r-md">
+                <div class="m-b-xs font-bold">Available Balance</div>
+                <div class="blue font-medium font-bold">0.00$ {# TODO: implement balance #}</div>
+            </div>
+        </div>
+    </div>
+{#    {% if a debt is selected %}#}
+    <div class="col-xs-12 m-t-md">
+        <div class="col-xs-6 no-padding pull-left bold">PERCENT FEE <div class="blue">{{ fee_percentage|percent }}</div></div>
+        <div class="col-xs-6 no-padding pull-right bold">SETTLEMENT PAYMENTS <div class="blue">{{ settlement_payments_count }}</div></div>
+    </div>
+    <div class="col-xs-12 m-t-md">
+    {% for payee in payees %}
+        {% with 12|divide:comp_template_fee_count as col_size %}
+        <div id="payee-{{ payees.compensation_payee_id }}" class="col-xs-{{ col_size }} border p-md payees">
+            <div class="col-xs-12 no-padding-sides">{{ payee.name }}</div>
+            <div class="col-xs-12 no-padding-sides">
+                <label>PAYMENT</label>
+                <div>
+                    <select class="payments-selector">
+                        {% for option in payee.options %}
+                        <option value="{{ option.0 }}" {% if settlement_payments_count == option.0 %}selected{% endif %}>{{ option.1 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="col-xs-12 no-padding-sides m-t-md">
+                <label>START DATE</label>
+                <div>
+                    <input class="start-date" data-date-autoclose="true" data-provide="datepicker" id="{{ payees.compensation_payee_id }}-start_date" placeholder="mm/dd/yyyy" type="text" value="{{ start_date }}">
+                </div>
+            </div>
+            <div class="col-xs-12 no-padding-sides m-t-md">
+                <label for="{{ payees.compensation_payee_id }}-memo" >MEMO</label>
+                <div>
+                    <input id="{{ payees.compensation_payee_id }}-memo" type="text">
+                </div>
+            </div>
+            <div class="col-xs-12 no-padding-sides m-t-md">
+                <label>PAYEE TOTAL FEE</label>
+                <div class="bold">{{ payee.fee_amount|percent }} - {{ payee.total_fee|currency }}</div>
+            </div>
+            <div class="fee-payments col-xs-12 no-padding-sides border-top m-t-md">
+                {% for payment_form in payee.payments_forms %}
+                <div class="col-xs-12 m-b-md p-xs no-padding-sides">
+                    <div class="col-xs-6">
+                        <label>Date</label>
+                        {{ payment_form.date }}
+                    </div>
+                    <div class="col-xs-6">
+                        <label>Amount</label>
+                        {{ payment_form.amount }}
+                    </div>
+                </div>
+                {% endfor %}
+                <div class="col-xs-12 no-padding-sides bold">Scheduled Total: {{ payee.total_payments|currency }}</div>
+            </div>
+        </div>
+        {% endwith %}
+    {% endfor %}
+    </div>
+    <div class="col-xs-12 m-t-md padding-for-footer">
+        <div class="text-center m-b-xs bold">Fee Amortization</div>
+        <div class="well p-xs text-center col-xs-offset-5 col-xs-2 green bold">{{ total_fee_amount|currency }} To Be Scheduled</div>
+    </div>
+    {% endif %}
+
+    <script type="text/javascript">
+        var schedulePerformanceFeesUrl = '{% url "contact_schedule_performance_fees" contact_id=contact.contact_id %}';
+    </script>
+    <script src="{% static "js/plugins/datapicker/bootstrap-datepicker.js" %}"></script>
+    <script src="{% static "js/contact/schedule_performance_fees.js" %}"></script>
+{% endblock %}

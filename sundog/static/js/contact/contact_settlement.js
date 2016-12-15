@@ -21,7 +21,7 @@ $(document).ready(function() {
         }
     });
 
-    $('#enrollement-form').submit(function(event) {
+    $('#settlement-form').submit(function(event) {
         event.preventDefault();
         var form = $(this);
         var formData = form.serializeArray();
@@ -34,7 +34,7 @@ $(document).ready(function() {
                     showErrorPopup(response.errors);
                 }
                 if (response.result === 'Ok') {
-                    refreshScreen();
+                    redirect(settlementOfferUrl);
                 }
             }
         });

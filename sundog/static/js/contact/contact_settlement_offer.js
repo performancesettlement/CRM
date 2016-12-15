@@ -54,8 +54,10 @@ $(document).ready(function() {
         });
     });
 
-    if (offerSaved && debtId > 0) {
+    if (offerSaved) {
         showSuccessPopup('Offer successfully saved.');
+    }
+    if (debtId > 0) {
         $('#debt-' + debtId + '-radio').click();
     }
 });

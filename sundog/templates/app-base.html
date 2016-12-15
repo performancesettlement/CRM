@@ -32,7 +32,11 @@
           </li>
 
           <li class="menu-elem {% ifequal menu_page "enrollments" %}menu-active{% endifequal %}">
-            <a href="{% url 'enrollments_list' %}">Enrollment</a>
+            <a href="{% url 'enrollments_list' %}">Enrollments</a>
+          </li>
+
+          <li class="menu-elem {% ifequal menu_page "settlements" %}menu-active{% endifequal %}">
+            <a href="{% url 'settlements_list' %}">Settlements</a>
           </li>
 
           <li class="menu-elem {% ifequal menu_page "documents" %}menu-active{% endifequal %}">

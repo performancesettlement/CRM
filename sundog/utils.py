@@ -226,7 +226,7 @@ def get_payments_data(data, starting_index=3):
     return payments
 
 
-def get_forms(data, form_class, prefix=1, instances=None):
+def get_forms(data, form_class, prefix=1, instances=None, until=None):
     forms = []
     while True:
         form_data = get_data(str(prefix), data)
@@ -247,6 +247,8 @@ def get_forms(data, form_class, prefix=1, instances=None):
             forms.append(form_class(form_data, **kwargs))
             prefix += 1
         else:
+            break
+        if until and until < prefix:
             break
     return forms, instances
 

@@ -255,16 +255,12 @@ $(document).ready(function() {
         }
     });
 
-    $('#id_first_date').change(function(e) {
-        if (e.originalEvent) {
-            requestEnrollmentPlanInfo(true, false);
-        }
+    $('#id_first_date').on('changeDate', function() {
+        requestEnrollmentPlanInfo(true, false);
     });
 
-    $('#id_start_date').change(function(e) {
-        if (e.originalEvent) {
-            requestEnrollmentPlanInfo(true, false);
-        }
+    $('#id_start_date').on('changeDate', function() {
+        requestEnrollmentPlanInfo(true, false);
     });
 
     $('#fees').on('change', '.fee-select', function(e) {

@@ -2,9 +2,6 @@
 {% load staticfiles my_filters admin_urls %}
 {% block extrahead %}
     <link href="{% static "css/plugins/datapicker/datepicker3.css" %}" rel="stylesheet">
-    <link href="{% static "css/plugins/morris/morris-0.4.3.min.css" %}" rel="stylesheet">
-    <link href="{% static "css/plugins/dataTables/dataTables.bootstrap.css" %}" rel="stylesheet">
-    <link href="{% static "css/plugins/dataTables/dataTables.responsive.css" %}" rel="stylesheet">
 {% endblock extrahead %}
 {% block content %}
     <div class="row wrapper border-bottom white-bg page-heading">
@@ -12,6 +9,9 @@
             <ol class="breadcrumb">
                 <li>
                     <a href="">Enrollments</a>
+                </li>
+                <li class="active">
+                    <strong><a href="">Enrollments</a></strong>
                 </li>
             </ol>
         </div>

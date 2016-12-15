@@ -23,9 +23,9 @@
         <div class="col-xs-12 no-padding-sides">
             <h3>{{ contact.full_name_straight }}</h3>
             <p>
-                <a class="underlined" href="{% url "contact_enrollment_details" contact_id=contact.contact_id %}" class="m-r-xs">Enrollment Details</a>
+                <a class="underlined m-r-xs" href="{% url "contact_enrollment_details" contact_id=contact.contact_id %}">Enrollment Details</a>
                 |
-                <a class="underlined" href="{% url "contact_debts" contact_id=contact.contact_id %}" class="m-l-xs">Creditors</a>
+                <a class="underlined m-l-xs" href="{% url "contact_debts" contact_id=contact.contact_id %}">Creditors</a>
             </p>
         </div>
         <div id="totals" class="col-xs-12 m-t-md no-padding-sides">
@@ -49,7 +49,7 @@
                     <div class="inline pull-left m-r-xs">
                         <input id="debt-{{ debt.debt_id }}-radio" class="debt-radio" type="radio">
                     </div>
-                    <div class="inline debt-title {% if debt.get_settlement_offer and debt.get_settlement_offer.status == 'accepted' %}line-through{% endif %}">
+                    <div class="inline debt-title {% if debt.get_settlement_offer and debt.get_settlement_offer.status == 'accepted' or debt.get_settlement_offer.status == 'completed' %}line-through{% endif %}">
                         {{ debt.owed_to.name }} - {{ debt.original_creditor_account_number }}
                     </div>
                 </div>
@@ -66,7 +66,7 @@
                 {% for offer in offers %}
                 <div class="col-xs-12 no-padding-sides">
                     <div class="pull-left">
-                        <p><a class="underlined" href="{% if offer.status != 'completed' %}{% url "contact_settlement" contact_id=contact.contact_id settlement_offer_id=offer.settlement_offer_id %}{% else %}{# TODO: Add negotiations dashboard link #}{% endif %}">{{ offer.debt.owed_to.name }}</a></p>
+                        <p>{% if offer.status != 'completed' %}<a class="underlined" href="{% url "contact_settlement" contact_id=contact.contact_id settlement_offer_id=offer.settlement_offer_id %}">{{ offer.debt.owed_to.name }}</a>{% else %}{{ offer.debt.owed_to.name }}{% endif %}</p>
                         <p>{{ offer.offer_amount|currency }} on {{ offer.debt_amount|currency }} - {{ offer.get_offer_percentage|percent }}</p>
                     </div>
                     <div class="pull-right">

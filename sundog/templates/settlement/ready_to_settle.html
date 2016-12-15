@@ -1,0 +1,19 @@
+{% extends "sundog/base/table.html" %}
+
+{% load staticfiles my_filters %}
+{% load django_bootstrap_breadcrumbs %}
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    {% breadcrumb "Settlements" "settlements_list" %}
+    {% breadcrumb "Ready to Settle" "ready_to_settle" %}
+{% endblock %}
+
+{% block title %}
+    {{ block.super }} - Ready to Settle
+{% endblock title %}
+
+{% block table_view_post_content %}
+    <script type="text/javascript"></script>
+    <script src="{% static "js/settlement/ready_to_settle.js" %}"></script>
+{% endblock table_view_post_content %}
