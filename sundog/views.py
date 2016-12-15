@@ -1277,7 +1277,7 @@ def workflow_settings_save(request):
 @login_required
 def add_contact_enrollment(request, contact_id):
     contact = Contact.objects.prefetch_related('contact_debts').prefetch_related('incomes').prefetch_related('expenses').prefetch_related('bank_account').get(contact_id=contact_id)
-    bank_account = contact.bank_account.all().first()
+    bank_account = contact.bank_account
     try:
         enrollment = Enrollment.objects.get(contact=contact)
     except Enrollment.DoesNotExist:
@@ -1332,7 +1332,7 @@ def add_contact_enrollment(request, contact_id):
 @login_required
 def edit_contact_enrollment(request, contact_id):
     contact = Contact.objects.prefetch_related('contact_debts').prefetch_related('incomes').prefetch_related('expenses').prefetch_related('bank_account').get(contact_id=contact_id)
-    bank_account = contact.bank_account.all().first()
+    bank_account = contact.bank_account
     try:
         instance = Enrollment.objects.get(contact=contact)
     except Enrollment.DoesNotExist:
@@ -1587,7 +1587,7 @@ def add_payment(request, contact_id):
     response = {'result': None}
     if request.method == 'POST' and request.POST:
         contact = Contact.objects.get(contact_id=contact_id)
-        bank_account = contact.bank_account.all().first()
+        bank_account = contact.bank_account
         try:
             enrollment = Enrollment.objects.get(contact__contact_id=contact_id)
         except Enrollment.DoesNotExist:
