@@ -5,11 +5,12 @@ cffi==1.8.3
 chardet==2.3.0
 defusedxml==0.4.1
 dj-database-url==0.4.1
-Django==1.10.1
+Django==1.10.3
 django-allauth==0.27.0
 django-appconf==1.0.2
 django-avatar==3.1.0
 django-bootstrap-breadcrumbs==0.8
+django-cleanup==0.4.2
 django-colorfield==0.1.10
 django-colorful==1.2
 django-compressor==2.1
@@ -35,6 +36,7 @@ pbr==1.10.0
 Pillow==3.3.1
 psycopg2==2.6.2
 pycparser==2.14
+pystache==0.5.4
 python-dateutil==2.5.3
 python-logstash==0.4.6
 python3-openid==3.0.10
@@ -46,9 +48,11 @@ rjsmin==1.0.12
 six==1.10.0
 Unidecode==0.4.19
 urllib3==1.17
+weasyprint==0.33
 whitenoise==3.2.1
 Willow==0.3.1
 xlrd==1.0.0
+
 git+https://github.com/mgomezch/django-datatable-view@87565dc4ac8252d685339c55206a663b887110c8#egg=django-datatable-view
 git+https://github.com/mgomezch/django-fm@3eff0d69df0d166a279a0e489b3fc45cbf766eaf#egg=django-fm
 git+https://github.com/mgomezch/django-tinymce@b7c492a25e84ae7bb6580d452f570c49cf15bb1d#egg=django-tinymce

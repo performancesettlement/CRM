@@ -1,22 +1,16 @@
 from datatableview import Datatable
-from datatableview.columns import (
-    CompoundColumn,
-    DateColumn,
-    DisplayColumn,
-    TextColumn,
-)
+from datatableview.columns import DateColumn, DisplayColumn
 from datatableview.helpers import through_filter
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.shortcuts import redirect
 from django.template.defaultfilters import date, timesince
-from django.template.loader import render_to_string
 from furl import furl
 from settings import SHORT_DATETIME_FORMAT
 from sundog.middleware import Responder
 from sundog.models import Contact
 from sundog.routing import decorate_view, route
-from sundog.utils import SundogDatatableView, const
+from sundog.utils import SundogDatatableView, const, format_column, template_column
 
 
 @route(r'^contacts/?$', name='contacts.list')
@@ -104,31 +98,14 @@ class ContactsList(SundogDatatableView):
             processor=const('Debt Settlement'),  # TODO
         )
 
-        full_name = CompoundColumn(
-            'Full name',
-            sources=[
-                TextColumn(source='last_name'),
-                TextColumn(source='first_name'),
-                TextColumn(source='middle_name'),
+        full_name = format_column(
+            label='Full name',
+            template='{last_name}, {first_name} {middle_name}',
+            fields=[
+                'last_name',
+                'first_name',
+                'middle_name',
             ],
-            processor=(
-                lambda *args, **kwargs: (
-                    [
-                        '{last_name}, {first_name} {middle_name}'
-                        .format(**locals())
-                        for names in [
-                            dict(
-                                enumerate(
-                                    kwargs.get('default_value', [])
-                                )
-                            )
-                        ]
-                        for last_name in [names.get(0, '')]
-                        for first_name in [names.get(1, '')]
-                        for middle_name in [names.get(2, '')]
-                    ] or ['']
-                )[0]
-            ),
         )
 
         data_source = DisplayColumn(
@@ -152,17 +129,9 @@ class ContactsList(SundogDatatableView):
             ),
         )
 
-        actions = DisplayColumn(
+        actions = template_column(
             label='Actions',
-            processor=(
-                lambda instance, *_, **__:
-                    render_to_string(
-                        template_name='sundog/contacts/list/actions.html',
-                        context={
-                            'contact_id': instance.contact_id,
-                        },
-                    )
-            ),
+            template_name='sundog/contacts/list/actions.html',
         )
 
         class Meta:
@@ -183,8 +152,6 @@ class ContactsList(SundogDatatableView):
                 'time_in_status',
                 'actions',
             ]
-
-            footer = True
 
             ordering = [
                 '-created_at',

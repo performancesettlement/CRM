@@ -13,6 +13,7 @@ from django.utils.timezone import now
 
 from numpy import arange
 from sundog import services
+from sundog.cache.user.info import get_cache_user
 from sundog.constants import SHORT_DATE_FORMAT, FIXED_VALUES
 from sundog.decorators import bypass_impersonation_login_required
 
@@ -22,7 +23,7 @@ from sundog.forms import ContactForm, StageForm, StatusForm, \
     FeeProfileRuleForm, WorkflowSettingsForm, EnrollmentForm, PaymentForm, CompensationTemplateForm, \
     CompensationTemplatePayeeForm, SettlementOfferForm, SettlementForm, FeeForm
 from datetime import datetime, timedelta
-from sundog.models import Contact, Stage, STAGE_TYPE_CHOICES, Status, \
+from sundog.models import CAMPAIGN_SOURCES_CHOICES, Contact, Stage, STAGE_TYPE_CHOICES, Status, \
     Campaign, Activity, Uploaded, Expenses, Incomes, Creditor, Debt, DebtNote, Enrollment, EnrollmentPlan, \
     FeeProfile, FeeProfileRule, WorkflowSettings, DEBT_SETTLEMENT, Payment, Company, CompensationTemplate, \
     SettlementOffer, SETTLEMENT_SUB_TYPE_CHOICES, Settlement
@@ -63,10 +64,21 @@ def index(request):
 
 @login_required
 def contact_dashboard(request, contact_id):
-    contact = Contact.objects.prefetch_related('contact_debts').get(contact_id=contact_id)
-    bank_account = contact.bank_account.all() if contact else None
-    bank_account = bank_account[0] if bank_account else None
-    form_bank_account = BankAccountForm(instance=bank_account)
+    contact = (
+        Contact
+        .objects
+        .prefetch_related('contact_debts')
+        .get(
+            contact_id=contact_id,
+        )
+    )
+    form_bank_account = BankAccountForm(
+        instance=(
+            contact.bank_account
+            if hasattr(contact, 'bank_account')
+            else None
+        ),
+    )
     form_bank_account.fields['contact'].initial = contact
     form_note = NoteForm(contact, request.user)
     form_call = CallForm(contact, request.user)
@@ -76,7 +88,7 @@ def contact_dashboard(request, contact_id):
     form_incomes = IncomesForm(contact)
     form_debt_note = DebtNoteForm()
     e_signed_docs = list(contact.e_signed_docs.all())
-    generated_docs = list(contact.generated_docs.all())
+    generated_documents = list(contact.generated_documents.all())
     uploaded_docs = list(contact.uploaded_docs.all())
     enrolled_debts = contact.contact_debts.filter(enrolled=True)
     not_enrolled_debts = contact.contact_debts.filter(enrolled=False)
@@ -95,7 +107,7 @@ def contact_dashboard(request, contact_id):
         'form_debt_note': form_debt_note,
         'activities': activities,
         'e_signed_docs': e_signed_docs,
-        'generated_docs': generated_docs,
+        'generated_documents': generated_documents,
         'uploaded_docs': uploaded_docs,
         'enrolled_debts': enrolled_debts,
         'not_enrolled_debts': not_enrolled_debts,
@@ -455,7 +467,8 @@ def campaigns(request):
         'edit_form_campaign': edit_form_campaign,
         'paginator': paginator,
         'page': page,
-        'menu_page': 'contacts'
+        'menu_page': 'contacts',
+        'media_types': dict(CAMPAIGN_SOURCES_CHOICES),
     }
     template_path = 'contact/campaigns.html'
     return _render_response(request, context_info, template_path)
@@ -567,12 +580,14 @@ def get_stage_statuses(request):
 def edit_bank_account(request, contact_id):
     if request.method == 'POST' and request.POST:
         contact = Contact.objects.get(contact_id=contact_id)
-        bank_account = contact.bank_account.all() if contact else None
-        bank_account = bank_account[0] if bank_account else None
-        if bank_account:
-            form = BankAccountForm(request.POST, instance=bank_account)
-        else:
-            form = BankAccountForm(request.POST)
+        form = BankAccountForm(
+            request.POST,
+            instance=(
+                contact.bank_account
+                if hasattr(contact, 'bank_account')
+                else None
+            ),
+        )
         if form.is_valid():
             form.save()
             response = {'result': 'Ok'}
@@ -1251,7 +1266,7 @@ def workflow_settings_save(request):
 def add_contact_enrollment(request, contact_id):
     contact = Contact.objects.prefetch_related('contact_debts').prefetch_related('incomes').prefetch_related(
         'expenses').prefetch_related('bank_account').get(contact_id=contact_id)
-    bank_account = contact.bank_account.all().first()
+    bank_account = contact.bank_account
     try:
         enrollment = Enrollment.objects.get(contact=contact)
     except Enrollment.DoesNotExist:
@@ -1323,7 +1338,7 @@ def add_contact_enrollment(request, contact_id):
 def edit_contact_enrollment(request, contact_id):
     contact = Contact.objects.prefetch_related('contact_debts').prefetch_related('incomes') \
         .prefetch_related('expenses').prefetch_related('bank_account').get(contact_id=contact_id)
-    bank_account = contact.bank_account.all().first()
+    bank_account = contact.bank_account
     try:
         instance = Enrollment.objects.get(contact=contact)
     except Enrollment.DoesNotExist:
@@ -1419,7 +1434,7 @@ def contact_enrollment_details(request, contact_id):
 def contact_schedule_performance_fees(request, contact_id):
     contact = Contact.objects.prefetch_related('contact_debts').prefetch_related('enrollments').prefetch_related(
         'expenses').get(contact_id=contact_id)
-    settlement_id = request.GET.get('settlement_id')
+    settlement_id = request.GET.get('settlement_id', request.POST.get('settlement_id'))
 
     if settlement_id:
         settlement = Settlement.objects.prefetch_related('settlement_offer') \
@@ -1432,11 +1447,25 @@ def contact_schedule_performance_fees(request, contact_id):
     debt = None
     enrollment = Enrollment.objects.prefetch_related('compensation_template').get(contact__contact_id=contact_id)
     comp_template = enrollment.compensation_template
+    if request.method == 'POST' and request.POST:
+        payments_data = get_payments_data(request.POST, starting_index=1)
+        now_date = now()
+        if all((payment_data['date'] > now_date for payment_data in payments_data)):
+            with transaction.atomic():
+                for payment_data in payments_data:
+                    payment = Payment(date=payment_data['date'], amount=payment_data['amount'], status='open',
+                                      charge_type='fee', type='Earned Performance Fee', enrollment=enrollment,
+                                      settlement=settlement, gateway=enrollment.custodial_account)
+                    payment.save()
+            response = {'result': 'Ok'}
+        else:
+            response = {'errors': "Dates must be in the future."}
+        return JsonResponse(response)
     settlement_offer = None
     fee_percentage = None
     settlement_payments_count = 0
     total_fee_amount = Decimal('0.00')
-    start_date = now().strftime(SHORT_DATE_FORMAT)
+    start_date = (now() + timedelta(days=1)).strftime(SHORT_DATE_FORMAT)
     payees = []
     if settlement:
         settlement_offer = settlement.settlement_offer
@@ -1466,6 +1495,8 @@ def contact_schedule_performance_fees(request, contact_id):
             start_index = len(payees) - len(payments_dates)
             for i in range(start_index, len(payments_dates)):
                 payments_dates[i] = start_date
+        index = 0
+        payment_form_index = 1
         for payee in payees:
             payee.total_fee = roundup_places(total_fee_amount * (payee.fee_amount / 100))
             fee_accumulator += payee.total_fee
@@ -1476,16 +1507,23 @@ def contact_schedule_performance_fees(request, contact_id):
                 amount = roundup_places(payee.total_fee / payment_index)
                 option_str = str(payment_index) + ' Payment' + ('s' if payment_index > 1 else '') + ' - ' \
                                                                                                   + currency(amount)
-                payee.options.append((amount, option_str))
+                payee.options.append((payment_index, option_str))
             payee_index += 1
             payee.payments_forms = []
             payee.total_payments = Decimal('0.00')
-            for payment_form_index in range(0, settlement_payments_count):
-                form = PaymentForm(initial={'date': payments_dates[payment_form_index],
-                                            'amount': payee.options[int(payments_number[payment_form_index])][0]},
-                                   prefix=payment_form_index + 1, attr_class='col-xs-12 no-padding-sides')
+            payment_number = int(payments_number[index])
+            number_of_fees = payee.options[payment_number][0]
+            first_date = get_next_work_date(datetime.strptime(payments_dates[index], SHORT_DATE_FORMAT))
+            date = first_date
+            for fee_index in range(0, number_of_fees):
+                amount = payee.options[payment_number][1].split(' - ')[-1].replace(',', '').replace('$', '')
+                form = PaymentForm(initial={'date': date.strftime(SHORT_DATE_FORMAT), 'amount': amount},
+                                   prefix=payment_form_index, attr_class='col-xs-12 no-padding-sides')
+                date = get_next_work_date(add_months(first_date, fee_index + 1))
                 payee.payments_forms.append(form)
-                payee.total_payments += payee.options[payment_form_index][0]
+                payee.total_payments += Decimal(amount)
+                payment_form_index += 1
+            index += 1
 
     settled_debts = Settlement.objects.prefetch_related('settlement_offer').prefetch_related('settlement_offer__debt') \
         .prefetch_related('settlement_offer__debt__original_creditor') \
@@ -1495,9 +1533,13 @@ def contact_schedule_performance_fees(request, contact_id):
     comp_template_fee_count = len(list(comp_template.payees.all())) if comp_template else 0
     if request.is_ajax():
         response_forms = {}
-        forms_data = [{payee.compensation_template_payee_id: [str(form) for form in payee.payments_forms]} for payee in payees]
-        for data in forms_data:
-            response_forms.update(data)
+        for payee in payees:
+            response_forms[payee.compensation_template_payee_id] = []
+            for form in payee.payments_forms:
+                response_forms[payee.compensation_template_payee_id].append(
+                    {'date': str(form.fields['date'].get_bound_field(form, 'date')),
+                     'amount': str(form.fields['amount'].get_bound_field(form, 'amount'))}
+                )
         return JsonResponse({'forms': response_forms})
     else:
         context_info = {
@@ -1705,7 +1747,7 @@ def add_payment(request, contact_id):
     response = {'result': None}
     if request.method == 'POST' and request.POST:
         contact = Contact.objects.get(contact_id=contact_id)
-        bank_account = contact.bank_account.all().first()
+        bank_account = contact.bank_account
         try:
             enrollment = Enrollment.objects.get(contact__contact_id=contact_id)
         except Enrollment.DoesNotExist:
@@ -1961,7 +2003,7 @@ def get_debt_offer(request, debt_id):
 @login_required
 def contact_settlement(request, contact_id, settlement_offer_id):
     contact = Contact.objects.prefetch_related('bank_account').get(contact_id=contact_id)
-    bank_account = contact.bank_account.all().first()
+    bank_account = contact.bank_account
     number_of_payments = int(request.GET.get('payments', '1'))
     start_date_str = request.GET.get('start_date', now().strftime(SHORT_DATE_FORMAT))
     date = get_next_work_date(datetime.strptime(start_date_str, SHORT_DATE_FORMAT))
@@ -2073,19 +2115,6 @@ def contact_settlement(request, contact_id, settlement_offer_id):
 
 
 #######################################################################
-
-
-@bypass_impersonation_login_required
-def files_recent(request):
-    recent_files_list = services.get_access_file_history(request.user)
-    context_info = {'request': request, 'user': request.user, 'recent_files_list': recent_files_list}
-    return _render_response(request, context_info, 'file/recent_files.html')
-
-
-@bypass_impersonation_login_required
-def help(request):
-    context_info = {'request': request, 'user': request.user}
-    return _render_response(request, context_info, 'file/recent_files.html')
 
 
 def terms(request):

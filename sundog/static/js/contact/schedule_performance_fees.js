@@ -34,7 +34,19 @@ $(document).ready(function() {
                         var forms = response.forms[payeeId];
                         var feePaymentsContainer = payee.find('.fee-payments');
                         feePaymentsContainer.html('');
-                        feePaymentsContainer.html(forms.join(''));
+                        var formFieldsContent = '';
+                        for (var i = 0; i < forms.length; i++) {
+                            var dateInput = '<div class="col-xs-6 m-b-xs">' +
+                                '<label>Date</label>' +
+                                forms[i].date +
+                                '</div>';
+                            var amountInput = '<div class="col-xs-6 m-b-xs">' +
+                                '<label>Amount</label>' +
+                                forms[i].amount +
+                                '</div>';
+                            formFieldsContent += dateInput + amountInput;
+                        }
+                        feePaymentsContainer.html(formFieldsContent);
                     });
                 }
             }
@@ -43,5 +55,25 @@ $(document).ready(function() {
 
     $('.start-date, .payments-selector').change(function() {
         getPaymentForms();
+    });
+
+    $('#schedule-fees-button').click(function() {
+        var form = $('#schedule-fees-form');
+        var formData = form.serializeArray();
+        var settlementId = $('#debt-selector').val();
+        formData.push({name: 'settlement_id', value: settlementId});
+        $.ajax({
+            url: form.attr('action'),
+            data: formData,
+            type: 'POST',
+            success: function(response) {
+                if (response.errors) {
+                    showErrorPopup(response.errors);
+                }
+                if (response.result === 'Ok') {
+                    redirect(schedulePerformanceFeesUrl);
+                }
+            }
+        });
     });
 });

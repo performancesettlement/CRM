@@ -5,7 +5,11 @@ SITE_DOMAIN = ''
 SITE_HOST = ''
 HOST = environ.get('HOST', 'localhost')
 
-ALLOWED_HOSTS = [host for host in [environ.get('ALLOWED_HOST')] if host]
+ALLOWED_HOSTS = [
+    host
+    for host in [environ.get('ALLOWED_HOST')]
+    if host
+] or ['*']
 
 DEBUG = environ.get('DEBUG', 'True') == 'True'
 

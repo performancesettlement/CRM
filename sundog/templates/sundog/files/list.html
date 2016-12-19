@@ -7,20 +7,19 @@
 
 {% block breadcrumbs %}
   {{ block.super }}
-  {% breadcrumb "Documents" "documents.list" %}
+  {% breadcrumb "Files" "files.list" %}
 {% endblock %}
 
 
 {% block title %}
   {{ block.super }}
-  - Documents
+  - Files
 {% endblock title %}
 
 
 {% block table_view_head %}
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.11.2/css/bootstrap-select.min.css" integrity="sha256-6pWNO2Viaad+qrj8CQ4U9iYrylSPRgLOzaHGtCba1f4=" crossorigin="anonymous" />
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.11.2/js/bootstrap-select.min.js" integrity="sha256-NpjFqxNtMOVQfuoDn4f9ZgUe3ua/MTbmkM8kl+mfU70=" crossorigin="anonymous"></script>
-  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/4.4.3/tinymce.min.js" integrity="sha256-AuSdEJpOGFPsqPZKZf3Leo0EKuCOyAICY1fwp8jiwwc=" crossorigin="anonymous"></script>
 {% endblock table_view_head %}
 
 
@@ -28,12 +27,12 @@
   <div class="col-xs-12 m-t-md m-b-md">
     <div class="inline">
       <a
-        href="{% url "documents.add.ajax" %}"
+        href="{% url "files.add.ajax" %}"
         class="fm-create btn btn-primary"
-        data-fm-head="Add Document"
+        data-fm-head="Add File"
         data-fm-callback="reload"
       >
-        Add Document
+        Add File
       </a>
     </div>
   </div>

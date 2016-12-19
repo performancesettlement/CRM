@@ -19,7 +19,6 @@ urlpatterns = module_urls(views) + package_urls(sundog.components) + [
     url(r'^tinymce/', include('tinymce.urls')),
 
     url(r'^$', views.index, name='index'),
-    url(r'^help/$', views.help, name="help"),
     url(r'^terms/$', views.terms, name="terms"),
 
     url(r'^contact/add/$', views.add_contact, name='add_contact'),

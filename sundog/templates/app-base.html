@@ -21,6 +21,7 @@
   <div id="wrapper" class="col-xs-12">
     <div class="row border-bottom">
       <nav class="navbar navbar-static-top" role="navigation" style="margin-bottom: 0">
+
         <ul class="nav navbar-top-links navbar-left m-l-md">
 
           <li class="menu-elem {% ifequal menu_page "contacts" %}menu-active{% endifequal %}">
@@ -43,22 +44,18 @@
             <a href="{% url 'documents' %}">Documents</a>
           </li>
 
+          <li class="menu-elem {% ifequal menu_page "files" %}menu-active{% endifequal %}">
+            <a href="{% url 'files' %}">Files</a>
+          </li>
+
         </ul>
 
         <ul class="nav navbar-top-links navbar-right">
-
-          <li>
-            <a href="{% url 'help' %}">
-              <i class="fa fa-question-circle"></i> Help
-            </a>
-          </li>
-
           <li>
             <a href="{% url 'django_auth_app:logout'%}">
               <i class="fa fa-sign-out"></i> Log out
             </a>
           </li>
-
         </ul>
 
       </nav>

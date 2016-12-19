@@ -1,9 +1,11 @@
+from datatableview.columns import CompoundColumn, DisplayColumn, TextColumn
 from datatableview.views import XEditableDatatableView
 from datetime import datetime, timedelta
 from decimal import Decimal
 from django.db.models import CharField
 from django.db.models.fields import BLANK_CHOICE_DASH
 from django.http import Http404
+from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django_auth_app.services import get_user_timezone
 from sundog.constants import SHORT_DATE_FORMAT
@@ -96,8 +98,52 @@ def get_data(prefix, post_data):
     return data
 
 
-def const(x, *_, **__):
-    return lambda *_, **__: x
+def get_enum_name(code, names, default=''):
+    return (
+        str(
+            next(
+                (
+                    name
+                    for code_, name in names
+                    if code_ == code
+                ),
+                default,
+            ),
+        )
+        if code
+        else default
+    )
+
+
+def const(value, *_, **__):
+    return lambda *_, **__: value
+
+
+def catching(computation, catcher, exception=Exception):
+    try:
+        return computation()
+    except exception as e:
+        return catcher(e)
+
+
+def defaulting(computation, value, exception=Exception):
+    return catching(
+        computation=computation,
+        catcher=const(value),
+        exception=exception,
+    )
+
+
+def mutate(x, f):
+    f(x)
+    return x
+
+
+def modify_dict(dictionary, key, default, function):
+    if key not in dictionary:
+        dictionary[key] = default
+    dictionary[key] = function(dictionary[key])
+    return dictionary
 
 
 # From https://djangosnippets.org/snippets/2328/
@@ -260,8 +306,72 @@ def get_next_work_date(date):
     return date
 
 
+def format_column(label, template, fields):
+    return CompoundColumn(
+        label,
+        sources=[
+            TextColumn(source=field)
+            for field in fields
+        ],
+        processor=(
+            lambda *args, **kwargs: template.format(
+                **{
+                    field: values.get(field, '')
+                    for values in [
+                        dict(
+                            zip(
+                                fields,
+                                kwargs.get('default_value', []),
+                            ),
+                        ),
+                    ]
+                    for field in fields
+                },
+            )
+        ),
+    )
+
+
+def template_column(
+    label,
+    template_name,
+    context={},
+    context_builder=const({}),
+):
+    return DisplayColumn(
+        label=label,
+        processor=(
+            lambda instance, *args, **kwargs:
+                render_to_string(
+                    template_name=template_name,
+                    context={
+                        'instance': instance,
+                        'args': args,
+                        'kwargs': kwargs,
+                        **context,
+                        **context_builder(
+                            instance=instance,
+                            context=context,
+                            label=label,
+                            template_name=template_name,
+                            *args,
+                            **kwargs,
+                        ),
+                    },
+                )
+        ),
+    )
+
+
 class SundogDatatableView(XEditableDatatableView):
+    # Override this attribute with the list of column names (not labels, just
+    # the internal names used in code) for which a per-column search input
+    # should be provided.
     searchable_columns = []
+
+    # This enables the table footer, which is actually displayed just below the
+    # table header and includes all of the per-column search input fields.
+    footer = True
 
     def get_datatable(self):
         datatable = super().get_datatable()
