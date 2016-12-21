@@ -5,7 +5,7 @@
     data-fm-callback="reload"
     data-fm-head="Delete this file?  {{ instance.title }}"
     href="{% url "files.delete.ajax" pk=instance.pk %}"
-    id="{{ instance.pk }}-delete-files"
+    id="{{ instance.pk }}-delete-file"
   >
     <span title="Delete file" class="table-action glyphicon glyphicon-remove"></span>
   </a>

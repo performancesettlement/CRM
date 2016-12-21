@@ -19,7 +19,13 @@ from sundog.util.views import (
 )
 
 
-@route(r'^contacts/?$', name='contacts.list')
+@route(
+    regex=r'^contacts/?$',
+    name=[
+        'contacts',
+        'contacts.list',
+    ],
+)
 @route(r'^contacts/?$', name='list_contacts')  # FIXME: Replace view name usages
 @route(r'^contacts/lists/$', name='new_list')  # FIXME: Create proper view
 @route(r'^dataSources/$', name='data_sources')  # FIXME: Create proper view

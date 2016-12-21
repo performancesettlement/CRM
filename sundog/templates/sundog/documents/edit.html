@@ -5,9 +5,16 @@
 
 {% block breadcrumbs %}
   {{ block.super }}
-  {% breadcrumb "Documents" "documents.list" %}
+  {% breadcrumb "Documents" "documents" %}
   {% breadcrumb object.title object %}
 {% endblock %}
+
+
+{% block title %}
+  {{ block.super }}
+  - Documents
+  - {{ object.title }}
+{% endblock title %}
 
 
 {% block app_view_head %}

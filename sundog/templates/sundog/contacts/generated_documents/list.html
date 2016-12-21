@@ -7,9 +7,9 @@
 
 {% block breadcrumbs %}
   {{ block.super }}
-  {% breadcrumb "Contacts" "contacts.list" %}
+  {% breadcrumb "Contacts" "contacts" %}
   {% breadcrumb contact.full_name contact %}
-  {% breadcrumb "Generated documents" "contacts.generated_documents.list" contact_id=contact.pk %}
+  {% breadcrumb "Generated documents" "contacts.generated_documents" contact_id=contact.pk %}
 {% endblock %}
 
 
