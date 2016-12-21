@@ -4,7 +4,7 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from importlib import import_module
 from pkgutil import iter_modules
-from sundog.utils import modify_dict
+from sundog.util.functional import modify_dict
 from sys import modules
 
 

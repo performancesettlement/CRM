@@ -7,6 +7,7 @@ from pystache.defaults import TAG_ESCAPE
 from pystache.renderengine import context_get
 from pystache.renderer import Renderer
 from re import match
+
 from sundog.models import (
     ACCOUNT_TYPE_CHOICES,
     ACTIVITY_TYPE_CHOICES,
@@ -14,10 +15,9 @@ from sundog.models import (
     HARDSHIPS_CHOICES,
     NOTE_TYPE_CHOICES,
 )
-from sundog.utils import (
-    defaulting,
-    get_enum_name,
-)
+
+from sundog.util.functional import defaulting
+from sundog.utils import get_enum_name
 
 
 class Alias:

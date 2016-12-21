@@ -10,7 +10,13 @@ from settings import SHORT_DATETIME_FORMAT
 from sundog.middleware import Responder
 from sundog.models import Contact
 from sundog.routing import decorate_view, route
-from sundog.utils import SundogDatatableView, const, format_column, template_column
+from sundog.util.functional import const
+
+from sundog.util.views import (
+    SundogDatatableView,
+    format_column,
+    template_column,
+)
 
 
 @route(r'^contacts/?$', name='contacts.list')

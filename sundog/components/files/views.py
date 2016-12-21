@@ -13,13 +13,15 @@ from os.path import basename
 from settings import SHORT_DATETIME_FORMAT
 from sundog.components.files.models import File
 from sundog.routing import decorate_view, route
-from sundog.utils import (
+from sundog.util.functional import modify_dict
+
+from sundog.util.views import (
     SundogDatatableView,
     format_column,
-    get_or_404,
-    modify_dict,
     template_column,
 )
+
+from sundog.utils import get_or_404
 
 
 class FilesCRUDViewMixin:
@@ -158,7 +160,7 @@ class FilesEdit(FilesCRUDViewMixin, UpdateView):
     template_name = 'sundog/files/edit.html'
 
 
-@route(r'^files/(?P<pk>\d+)(?:/edit)/ajax/?$', name='files.edit.ajax')
+@route(r'^files/(?P<pk>\d+)(?:/edit)?/ajax/?$', name='files.edit.ajax')
 @decorate_view(login_required)
 class FilesEditAJAX(FilesAJAXFormMixin, AjaxUpdateView):
     pass

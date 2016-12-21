@@ -15,6 +15,7 @@ from fm.views import AjaxCreateView, AjaxDeleteView, AjaxUpdateView
 from settings import SHORT_DATETIME_FORMAT
 from sundog.components.documents.models import Document
 from sundog.components.files.models import File
+
 from sundog.models import (
     Activity,
     BankAccount,
@@ -26,12 +27,15 @@ from sundog.models import (
     Stage,
     Status,
 )
+
 from sundog.routing import decorate_view, route
-from sundog.utils import (
+
+from sundog.util.views import (
     SundogDatatableView,
     format_column,
     template_column,
 )
+
 from urllib.parse import urlsplit
 from weasyprint import CSS, HTML, default_url_fetcher
 

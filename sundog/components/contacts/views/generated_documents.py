@@ -12,7 +12,12 @@ from settings import SHORT_DATETIME_FORMAT
 from sundog.components.documents.models import GeneratedDocument
 from sundog.models import Contact
 from sundog.routing import decorate_view, route
-from sundog.utils import SundogDatatableView, format_column, template_column
+
+from sundog.util.views import (
+    SundogDatatableView,
+    format_column,
+    template_column,
+)
 
 
 class GeneratedDocumentsCRUDViewMixin:

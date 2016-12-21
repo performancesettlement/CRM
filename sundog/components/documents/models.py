@@ -18,7 +18,7 @@ from sundog.components.documents.enums import (
 )
 from sundog.media import S3PrivateFileField
 from sundog.models import Contact
-from sundog.utils import LongCharField
+from sundog.util.models import LongCharField
 from tinymce.models import HTMLField
 
 

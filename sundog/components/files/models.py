@@ -11,7 +11,7 @@ from sundog.components.files.enums import (
     TYPE_CHOICES_DICT,
 )
 from sundog.media import S3PrivateFileField
-from sundog.utils import LongCharField
+from sundog.util.models import LongCharField
 
 
 def file_filename(instance, filename):
