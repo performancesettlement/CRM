@@ -2,7 +2,12 @@ from django.db.models import CharField
 from django.db.models.fields import BLANK_CHOICE_DASH
 from django.forms import URLField as URLFormField
 from django.utils.translation import ugettext as _
-from sundog.util.forms import validate_domain_name, validate_url
+
+from sundog.util.forms import (
+    PasswordField as PasswordFormField,
+    validate_domain_name,
+    validate_url,
+)
 
 
 # From https://djangosnippets.org/snippets/2328/
@@ -57,3 +62,13 @@ class URLField(LongCharField):
 
 class DomainNameField(LongCharField):
     default_validators = [validate_domain_name]
+
+
+class PasswordField(LongCharField):
+
+    def formfield(self, **kwargs):
+        defaults = {
+            'form_class': PasswordFormField,
+        }
+        defaults.update(kwargs)
+        return super().formfield(**defaults)

@@ -1,0 +1,23 @@
+<span class="text-nowrap">
+
+  <a
+    class="templates-delete fm-delete"
+    data-fm-callback="reload"
+    data-fm-head="Delete E-mail Template?  {{ instance.name }}"
+    href="{% url "emarketing.templates.delete.ajax" pk=instance.pk %}"
+    id="{{ instance.pk }}-delete-template"
+  >
+    <span title="Delete E-mail Template" class="table-action glyphicon glyphicon-remove"></span>
+  </a>
+
+  <a
+    class="templates-edit fm-update"
+    data-fm-callback="reload"
+    data-fm-head="Editing Email Template: {{ instance.name }}"
+    href="{% url "emarketing.templates.edit.ajax" pk=instance.pk %}"
+    id="{{ instance.pk }}-edit-template"
+  >
+    <span title="Edit E-mail Template" class="table-action glyphicon glyphicon-arrow-right"></span>
+  </a>
+
+</span>

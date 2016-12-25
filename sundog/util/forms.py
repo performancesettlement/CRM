@@ -4,6 +4,7 @@ from django.core.validators import (
     URLValidator,
 )
 
+from django.forms import CharField, PasswordInput
 from django.utils.deconstruct import deconstructible
 from django.utils.translation import ugettext as _
 from re import IGNORECASE
@@ -27,3 +28,7 @@ class DomainNameValidator(RegexValidator):
 
 
 validate_domain_name = DomainNameValidator()
+
+
+class PasswordField(CharField):
+    widget = PasswordInput

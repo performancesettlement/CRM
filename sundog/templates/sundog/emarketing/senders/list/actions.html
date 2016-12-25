@@ -1,0 +1,23 @@
+<span class="text-nowrap">
+
+  <a
+    class="senders-delete fm-delete"
+    data-fm-callback="reload"
+    data-fm-head="Delete Sender?  {{ instance.name }}"
+    href="{% url "emarketing.senders.delete.ajax" pk=instance.pk %}"
+    id="{{ instance.pk }}-delete-sender"
+  >
+    <span title="Delete Sender" class="table-action glyphicon glyphicon-remove"></span>
+  </a>
+
+  <a
+    class="senders-edit fm-update"
+    data-fm-callback="reload"
+    data-fm-head="Editing Sender: {{ instance.name }}"
+    href="{% url "emarketing.senders.edit.ajax" pk=instance.pk %}"
+    id="{{ instance.pk }}-edit-sender"
+  >
+    <span title="Edit Sender" class="table-action glyphicon glyphicon-arrow-right"></span>
+  </a>
+
+</span>
