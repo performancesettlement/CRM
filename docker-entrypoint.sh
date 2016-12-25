@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 
+touch sundog/migrations/__init__.py
 python manage.py makemigrations
 yes yes | python manage.py migrate
 
