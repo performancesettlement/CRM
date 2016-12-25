@@ -82,7 +82,7 @@ class DocumentsCRUDViewMixin:
 
 
 @route(
-    r'^documents/$',
+    r'^documents/?$',
     name=[
         'documents',
         'documents.list',

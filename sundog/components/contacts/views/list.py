@@ -26,7 +26,14 @@ from sundog.util.views import (
         'contacts.list',
     ],
 )
-@route(r'^contacts/?$', name='list_contacts')  # FIXME: Replace view name usages
+@route(
+    regex=r'^contacts/?$',
+    name=[
+        'contacts',
+        'contacts.list',
+        'list_contacts',  # FIXME: Replace view name usages
+    ],
+)
 @route(r'^contacts/lists/$', name='new_list')  # FIXME: Create proper view
 @route(r'^dataSources/$', name='data_sources')  # FIXME: Create proper view
 @decorate_view(login_required)
