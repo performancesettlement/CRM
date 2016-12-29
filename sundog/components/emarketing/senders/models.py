@@ -1,3 +1,5 @@
+from django.contrib.auth.models import User
+
 from django.core.validators import (
     MaxValueValidator,
     MinValueValidator,
@@ -5,10 +7,15 @@ from django.core.validators import (
 
 from django.db.models import (
     BooleanField,
+    DateTimeField,
     EmailField,
+    ForeignKey,
     IntegerField,
     Model,
+    SET_NULL,
 )
+
+from django.urls import reverse
 
 from sundog.util.models import (
     DomainNameField,
@@ -19,7 +26,21 @@ from sundog.util.models import (
 
 class Sender(Model):
 
-    name = LongCharField(unique=True)
+    created_at = DateTimeField(
+        auto_now_add=True,
+    )
+
+    created_by = ForeignKey(
+        to=User,
+        on_delete=SET_NULL,
+        blank=True,
+        null=True,
+    )
+
+    name = LongCharField(
+        unique=True,
+    )
+
     sender_address = EmailField()
     reply_address = EmailField()
     bounce_address = EmailField()
@@ -56,6 +77,9 @@ class Sender(Model):
         verbose_name='require SSL/TLS for SMTP',
     )
 
+    class Meta:
+        get_latest_by = 'created_at'
+
     def __str__(self):
         return self.name
 
@@ -66,4 +90,3 @@ class Sender(Model):
                 self.id,
             ]
         )
-

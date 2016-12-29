@@ -24,15 +24,30 @@ def file_filename(instance, filename):
 
 class File(Model):
 
+    created_at = DateTimeField(
+        auto_now_add=True,
+    )
+
+    created_by = ForeignKey(
+        to=User,
+        on_delete=SET_NULL,
+        blank=True,
+        null=True,
+    )
+
     TYPE_CHOICES = TYPE_CHOICES
     TYPE_CHOICES_DICT = TYPE_CHOICES_DICT
+    type = LongCharField(
+        choices=TYPE_CHOICES,
+    )
 
-    type = LongCharField(choices=TYPE_CHOICES)
-    created_at = DateTimeField(auto_now_add=True)
-    created_by = ForeignKey(to=User, on_delete=SET_NULL, blank=True, null=True)
     title = LongCharField()
+
     filename = LongCharField()
-    content = S3PrivateFileField(upload_to=file_filename)
+
+    content = S3PrivateFileField(
+        upload_to=file_filename,
+    )
 
     class Meta:
         get_latest_by = 'created_at'

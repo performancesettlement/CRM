@@ -54,12 +54,12 @@ class DocumentsCRUDViewMixin:
         class Meta:
             model = Document
 
-            fields = [
-                'title',
-                'type',
-                'state',
-                'template_body',
-            ]
+            fields = '''
+                title
+                type
+                state
+                template_body
+            '''.split()
 
             widgets = {
                 'state': SelectMultiple(
@@ -82,11 +82,14 @@ class DocumentsCRUDViewMixin:
 
 
 @route(
-    r'^documents/?$',
-    name=[
-        'documents',
-        'documents.list',
-    ]
+    regex=r'''
+        ^documents
+        /?$
+    ''',
+    name='''
+        documents
+        documents.list
+    '''.split(),
 )
 @decorate_view(login_required)
 class DocumentsList(DocumentsCRUDViewMixin, SundogDatatableView):
@@ -102,27 +105,27 @@ class DocumentsList(DocumentsCRUDViewMixin, SundogDatatableView):
         created_by_full_name = format_column(
             label='Created by',
             template='{created_by__first_name} {created_by__last_name}',
-            fields=[
-                'created_by__first_name',
-                'created_by__last_name',
-            ],
+            fields='''
+                created_by__first_name
+                created_by__last_name
+            '''.split(),
         )
 
         class Meta:
             structure_template = 'datatableview/bootstrap_structure.html'
 
-            columns = [
-                'id',
-                'created_at',
-                'created_by_full_name',
-                'title',
-                'type',
-                'actions',
-            ]
+            columns = '''
+                id
+                created_at
+                created_by_full_name
+                title
+                type
+                actions
+            '''.split()
 
-            ordering = [
-                '-created_at',
-            ]
+            ordering = '''
+                -created_at
+            '''.split()
 
             processors = {
                 'created_at': through_filter(
@@ -135,11 +138,33 @@ class DocumentsList(DocumentsCRUDViewMixin, SundogDatatableView):
             }
 
 
+@route(
+    regex=r'''
+        ^documents
+        /(?P<pk>\d+)
+        (?:/edit)?
+        /?$
+    ''',
+    name='documents.edit',
+)
+@decorate_view(login_required)
+class DocumentsEdit(DocumentsCRUDViewMixin, UpdateView):
+    template_name = 'sundog/documents/edit.html'
+
+
 class DocumentsAJAXFormMixin(DocumentsCRUDViewMixin):
     template_name = 'sundog/base/fm_form.html'
 
 
-@route(r'^documents/add/ajax/?$', name='documents.add.ajax')
+@route(
+    regex=r'''
+        ^documents
+        /add
+        /ajax
+        /?$
+    ''',
+    name='documents.add.ajax',
+)
 @decorate_view(login_required)
 class DocumentsAddAJAX(DocumentsAJAXFormMixin, AjaxCreateView):
 
@@ -148,25 +173,46 @@ class DocumentsAddAJAX(DocumentsAJAXFormMixin, AjaxCreateView):
         return super().form_valid(form)
 
 
-@route(r'^documents/(?P<pk>\d+)(?:/edit)?/?$', name='documents.edit')
-@decorate_view(login_required)
-class DocumentsEdit(DocumentsCRUDViewMixin, UpdateView):
-    template_name = 'sundog/documents/edit.html'
-
-
-@route(r'^documents/(?P<pk>\d+)(?:/edit)/ajax/?$', name='documents.edit.ajax')
+@route(
+    regex=r'''
+        ^documents
+        /(?P<pk>\d+)
+        (?:/edit)
+        /ajax
+        /?$
+    ''',
+    name='documents.edit.ajax',
+)
 @decorate_view(login_required)
 class DocumentsEditAJAX(DocumentsAJAXFormMixin, AjaxUpdateView):
     pass
 
 
-@route(r'^documents/(?P<pk>\d+)/delete/ajax/$', name='documents.delete.ajax')
+@route(
+    regex=r'''
+        ^documents
+        /(?P<pk>\d+)
+        /delete
+        /ajax
+        /?$
+    ''',
+    name='documents.delete.ajax',
+)
 @decorate_view(login_required)
 class DocumentsDeleteAJAX(DocumentsAJAXFormMixin, AjaxDeleteView):
     pass
 
 
-@route(r'^documents/(?P<pk>\d+)/preview/pdf/?$', name='documents.preview.pdf')
+@route(
+    regex=r'''
+        ^documents
+        /(?P<pk>\d+)
+        /preview
+        /pdf
+        /?$
+    ''',
+    name='documents.preview.pdf',
+)
 @decorate_view(login_required)
 class DocumentsPreviewPDF(DocumentsCRUDViewMixin, BaseDetailView):
 

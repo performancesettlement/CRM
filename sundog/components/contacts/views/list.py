@@ -21,18 +21,12 @@ from sundog.util.views import (
 
 @route(
     regex=r'^contacts/?$',
-    name=[
-        'contacts',
-        'contacts.list',
-    ],
-)
-@route(
-    regex=r'^contacts/?$',
-    name=[
-        'contacts',
-        'contacts.list',
-        'list_contacts',  # FIXME: Replace view name usages
-    ],
+    # FIXME: Replace list_contacts view name usages with contacts.list
+    name='''
+        contacts
+        contacts.list
+        list_contacts
+    '''.split(),
 )
 @route(r'^contacts/lists/$', name='new_list')  # FIXME: Create proper view
 @route(r'^dataSources/$', name='data_sources')  # FIXME: Create proper view
@@ -49,20 +43,20 @@ class ContactsList(SundogDatatableView):
 
     default_list = 'my_contacts'
 
-    searchable_columns = [
-        'type_',
-        'created_at',
-        'company',
-        'assigned_to',
-        'full_name',
-        'phone_number',
-        'email',
-        'stage',
-        'status',
-        'data_source',
-        'last_call_activity',
-        'time_in_status',
-    ]
+    searchable_columns = '''
+        type_
+        created_at
+        company
+        assigned_to
+        full_name
+        phone_number
+        email
+        stage
+        status
+        data_source
+        last_call_activity
+        time_in_status
+    '''.split()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -120,11 +114,11 @@ class ContactsList(SundogDatatableView):
         full_name = format_column(
             label='Full name',
             template='{last_name}, {first_name} {middle_name}',
-            fields=[
-                'last_name',
-                'first_name',
-                'middle_name',
-            ],
+            fields='''
+                last_name
+                first_name
+                middle_name
+            '''.split(),
         )
 
         data_source = DisplayColumn(
@@ -156,25 +150,25 @@ class ContactsList(SundogDatatableView):
         class Meta:
             structure_template = 'datatableview/bootstrap_structure.html'
 
-            columns = [
-                'type_',
-                'created_at',
-                'company',
-                'assigned_to',
-                'full_name',
-                'phone_number',
-                'email',
-                'stage',
-                'status',
-                'data_source',
-                'last_call_activity',
-                'time_in_status',
-                'actions',
-            ]
+            columns = '''
+                type_
+                created_at
+                company
+                assigned_to
+                full_name
+                phone_number
+                email
+                stage
+                status
+                data_source
+                last_call_activity
+                time_in_status
+                actions
+            '''.split()
 
-            ordering = [
-                '-created_at',
-            ]
+            ordering = '''
+                -created_at
+            '''.split()
 
             processors = {
                 'created_at': through_filter(

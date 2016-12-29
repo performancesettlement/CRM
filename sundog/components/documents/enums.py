@@ -1,7 +1,7 @@
 from sundog.models import NONE_CHOICE_LABEL
 
 
-TYPE_CHOICES = (
+DOCUMENT_TYPE_CHOICES = (
     (None, NONE_CHOICE_LABEL),
     ('1099c', '1099-C'),
     ('30_day_notice', '30 Day Notice (debt has moved)'),
@@ -35,10 +35,8 @@ TYPE_CHOICES = (
     ('voided_check', 'Voided Check'),
 )
 
-TYPE_CHOICES_DICT = dict(TYPE_CHOICES)
 
-
-STATE_CHOICES = (
+DOCUMENT_STATE_CHOICES = (
 
     ('Armed Forces', (
         ('AA', 'Americas'),
@@ -134,9 +132,3 @@ STATE_CHOICES = (
     )),
 
 )
-
-STATE_CHOICES_DICT = {
-    key: value
-    for group, choices in STATE_CHOICES
-    for key, value in choices
-}

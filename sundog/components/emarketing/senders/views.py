@@ -1,14 +1,17 @@
 from datatableview import Datatable
+from datatableview.helpers import through_filter
 from django.contrib.auth.decorators import login_required
 from django.forms.models import ModelForm
-from django.views.generic.base import RedirectView
+from django.template.defaultfilters import date
 from django.views.generic.edit import UpdateView
 from fm.views import AjaxCreateView, AjaxDeleteView, AjaxUpdateView
+from settings import SHORT_DATETIME_FORMAT
 from sundog.components.emarketing.senders.models import Sender
 from sundog.routing import decorate_view, route
 
 from sundog.util.views import (
     SundogDatatableView,
+    format_column,
     template_column,
 )
 
@@ -27,37 +30,32 @@ class SendersCRUDViewMixin:
         class Meta:
             model = Sender
 
-            fields = [
-                'name',
-                'sender_address',
-                'reply_address',
-                'bounce_address',
-                'smtp_server',
-                'smtp_port',
-                'smtp_username',
-                'smtp_password',
-                'smtp_require_tls',
-            ]
+            fields = '''
+                name
+                sender_address
+                reply_address
+                bounce_address
+                smtp_server
+                smtp_port
+                smtp_username
+                smtp_password
+                smtp_require_tls
+            '''.split()
 
     class Meta:
         abstract = True
 
 
 @route(
-    regex=r'^emarketing/?$',
-    name='emarketing',
-)
-class EmarketingRedirect(RedirectView):
-    query_string = True
-    pattern_name = 'emarketing.senders'
-
-
-@route(
-    regex=r'^emarketing/senders/?$',
-    name=[
-        'emarketing.senders',
-        'emarketing.senders.list',
-    ],
+    regex=r'''
+        ^emarketing
+        /senders
+        /?$
+    ''',
+    name='''
+        emarketing.senders
+        emarketing.senders.list
+    '''.split(),
 )
 @decorate_view(login_required)
 class SendersList(SendersCRUDViewMixin, SundogDatatableView):
@@ -70,15 +68,37 @@ class SendersList(SendersCRUDViewMixin, SundogDatatableView):
             template_name='sundog/emarketing/senders/list/actions.html',
         )
 
+        created_by_full_name = format_column(
+            label='Created by',
+            template='{created_by__first_name} {created_by__last_name}',
+            fields='''
+                created_by__first_name
+                created_by__last_name
+            '''.split(),
+        )
+
         class Meta:
             structure_template = 'datatableview/bootstrap_structure.html'
 
-            columns = [
-                'id',
-                'name',
-                'sender_address',
-                'smtp_server',
-            ]
+            columns = '''
+                id
+                created_at
+                created_by_full_name
+                name
+                sender_address
+                smtp_server
+            '''.split()
+
+            ordering = '''
+                -created_at
+            '''.split()
+
+            processors = {
+                'created_at': through_filter(
+                    date,
+                    arg=SHORT_DATETIME_FORMAT,
+                ),
+            }
 
 
 class SendersAJAXFormMixin(SendersCRUDViewMixin):
@@ -86,16 +106,31 @@ class SendersAJAXFormMixin(SendersCRUDViewMixin):
 
 
 @route(
-    regex=r'^emarketing/senders/add/ajax/?$',
+    regex=r'''
+        ^emarketing
+        /senders
+        /add
+        /ajax
+        /?$
+    ''',
     name='emarketing.senders.add.ajax',
 )
 @decorate_view(login_required)
 class SendersAddAJAX(SendersAJAXFormMixin, AjaxCreateView):
-    pass
+
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        return super().form_valid(form)
 
 
 @route(
-    regex=r'^emarketing/senders/(?P<pk>\d+)(?:/edit)?/?$',
+    regex=r'''
+        ^emarketing
+        /senders
+        /(?P<pk>\d+)
+        (?:/edit)?
+        /?$
+    ''',
     name='emarketing.senders.edit',
 )
 @decorate_view(login_required)
@@ -104,7 +139,14 @@ class SendersEdit(SendersCRUDViewMixin, UpdateView):
 
 
 @route(
-    regex=r'^emarketing/senders/(?P<pk>\d+)(?:/edit)?/ajax/?$',
+    regex=r'''
+        ^emarketing
+        /senders
+        /(?P<pk>\d+)
+        (?:/edit)?
+        /ajax
+        /?$
+    ''',
     name='emarketing.senders.edit.ajax',
 )
 @decorate_view(login_required)
@@ -113,7 +155,14 @@ class SendersEditAJAX(SendersAJAXFormMixin, AjaxUpdateView):
 
 
 @route(
-    regex=r'^emarketing/senders/(?P<pk>\d+)/delete/ajax/$',
+    regex=r'''
+        ^emarketing
+        /senders
+        /(?P<pk>\d+)
+        /delete
+        /ajax
+        /$
+    ''',
     name='emarketing.senders.delete.ajax',
 )
 @decorate_view(login_required)

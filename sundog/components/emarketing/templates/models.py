@@ -8,10 +8,9 @@ from django.db.models import (
     TextField,
 )
 
-from sundog.components.emarketing.templates.enums import (
-    CATEGORY_CHOICES,
-    CATEGORY_CHOICES_DICT,
-)
+from django.urls import reverse
+
+from sundog.components.emarketing.templates.enums import CATEGORY_CHOICES
 
 from sundog.util.models import (
     LongCharField,
@@ -23,7 +22,7 @@ from tinymce.models import HTMLField
 class EmailTemplate(Model):
 
     CATEGORY_CHOICES = CATEGORY_CHOICES
-    CATEGORY_CHOICES_DICT = CATEGORY_CHOICES_DICT
+    CATEGORY_CHOICES_DICT = dict(CATEGORY_CHOICES)
 
     created_at = DateTimeField(
         auto_now_add=True,

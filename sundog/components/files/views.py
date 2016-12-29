@@ -38,11 +38,11 @@ class FilesCRUDViewMixin:
         class Meta:
             model = File
 
-            fields = [
-                'type',
-                'title',
-                'content',
-            ]
+            fields = '''
+                type
+                title
+                content
+            '''.split()
 
             # The default file input field shows the full path to the file from
             # the root of the S3 bucket where it's stored.  This is noisy, as
@@ -75,11 +75,14 @@ class FilesCRUDViewMixin:
 
 
 @route(
-    r'^files/$',
-    name=[
-        'files',
-        'files.list',
-    ]
+    regex=r'''
+        ^files
+        /?$
+    ''',
+    name='''
+        files
+        files.list
+    '''.split()
 )
 @decorate_view(login_required)
 class FilesList(FilesCRUDViewMixin, SundogDatatableView):
@@ -95,27 +98,27 @@ class FilesList(FilesCRUDViewMixin, SundogDatatableView):
         created_by_full_name = format_column(
             label='Created by',
             template='{created_by__first_name} {created_by__last_name}',
-            fields=[
-                'created_by__first_name',
-                'created_by__last_name',
-            ],
+            fields='''
+                created_by__first_name
+                created_by__last_name
+            '''.split(),
         )
 
         class Meta:
             structure_template = 'datatableview/bootstrap_structure.html'
 
-            columns = [
-                'id',
-                'created_at',
-                'created_by_full_name',
-                'type',
-                'title',
-                'filename',
-            ]
+            columns = '''
+                id
+                created_at
+                created_by_full_name
+                type
+                title
+                filename
+            '''.split()
 
-            ordering = [
-                '-created_at',
-            ]
+            ordering = '''
+                -created_at
+            '''.split()
 
             processors = {
                 'created_at': through_filter(
@@ -128,21 +131,15 @@ class FilesList(FilesCRUDViewMixin, SundogDatatableView):
             }
 
 
-class FilesAJAXFormMixin(FilesCRUDViewMixin):
-    template_name = 'sundog/base/fm_form.html'
-
-
-@route(r'^files/add/ajax/?$', name='files.add.ajax')
-@decorate_view(login_required)
-class FilesAddAJAX(FilesAJAXFormMixin, AjaxCreateView):
-
-    def form_valid(self, form):
-        form.instance.created_by = self.request.user
-        form.instance.filename = form.instance.content.name
-        return super().form_valid(form)
-
-
-@route(r'^files/(?P<pk>\d+)/view/?$', name='files.view')
+@route(
+    regex=r'''
+        ^files
+        /(?P<pk>\d+)
+        /view
+        /?$
+    ''',
+    name='files.view',
+)
 @decorate_view(login_required)
 class FilesView(FilesCRUDViewMixin, BaseDetailView):
     def render_to_response(self, context):
@@ -154,19 +151,67 @@ class FilesView(FilesCRUDViewMixin, BaseDetailView):
         )
 
 
-@route(r'^files/(?P<pk>\d+)(?:/edit)?/?$', name='files.edit')
+class FilesAJAXFormMixin(FilesCRUDViewMixin):
+    template_name = 'sundog/base/fm_form.html'
+
+
+@route(
+    regex=r'''
+        ^files
+        /add
+        /ajax
+        /?$
+    ''',
+    name='files.add.ajax',
+)
+@decorate_view(login_required)
+class FilesAddAJAX(FilesAJAXFormMixin, AjaxCreateView):
+
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        form.instance.filename = form.instance.content.name
+        return super().form_valid(form)
+
+
+@route(
+    regex=r'''
+        ^files
+        /(?P<pk>\d+)
+        (?:/edit)?
+        /?$
+    ''',
+    name='files.edit',
+)
 @decorate_view(login_required)
 class FilesEdit(FilesCRUDViewMixin, UpdateView):
     template_name = 'sundog/files/edit.html'
 
 
-@route(r'^files/(?P<pk>\d+)(?:/edit)?/ajax/?$', name='files.edit.ajax')
+@route(
+    regex=r'''
+        ^files
+        /(?P<pk>\d+)
+        (?:/edit)?
+        /ajax
+        /?$
+    ''',
+    name='files.edit.ajax',
+)
 @decorate_view(login_required)
 class FilesEditAJAX(FilesAJAXFormMixin, AjaxUpdateView):
     pass
 
 
-@route(r'^files/(?P<pk>\d+)/delete/ajax/$', name='files.delete.ajax')
+@route(
+    regex=r'''
+        ^files
+        /(?P<pk>\d+)
+        /delete
+        /ajax
+        /?$
+    ''',
+    name='files.delete.ajax',
+)
 @decorate_view(login_required)
 class FilesDeleteAJAX(FilesAJAXFormMixin, AjaxDeleteView):
     pass

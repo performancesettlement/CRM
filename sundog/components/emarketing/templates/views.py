@@ -32,13 +32,13 @@ class EmailTemplatesCRUDViewMixin:
         class Meta:
             model = EmailTemplate
 
-            fields = [
-                'campaign_title',
-                'email_subject',
-                'category',
-                'html_template',
-                'text_template',
-            ]
+            fields = '''
+                campaign_title
+                email_subject
+                category
+                html_template
+                text_template
+            '''.split()
 
             widgets = {
                 'category': Select(
@@ -53,11 +53,15 @@ class EmailTemplatesCRUDViewMixin:
 
 
 @route(
-    r'^emarketing/templates/?$',
-    name=[
-        'emarketing.templates',
-        'emarketing.templates.list',
-    ]
+    regex=r'''
+        ^emarketing
+        /templates
+        /?$
+    ''',
+    name='''
+        emarketing.templates
+        emarketing.templates.list
+    ''',
 )
 @decorate_view(login_required)
 class EmailTemplatesList(EmailTemplatesCRUDViewMixin, SundogDatatableView):
@@ -73,27 +77,27 @@ class EmailTemplatesList(EmailTemplatesCRUDViewMixin, SundogDatatableView):
         created_by_full_name = format_column(
             label='Created by',
             template='{created_by__first_name} {created_by__last_name}',
-            fields=[
-                'created_by__first_name',
-                'created_by__last_name',
-            ],
+            fields='''
+                created_by__first_name
+                created_by__last_name
+            '''.split(),
         )
 
         class Meta:
             structure_template = 'datatableview/bootstrap_structure.html'
 
-            columns = [
-                'id',
-                'created_at',
-                'created_by_full_name',
-                'campaign_title',
-                'email_subject',
-                'category',
-            ]
+            columns = '''
+                id
+                created_at
+                created_by_full_name
+                campaign_title
+                email_subject
+                category
+            '''.split()
 
-            ordering = [
-                '-created_at',
-            ]
+            ordering = '''
+                -created_at
+            '''.split()
 
             processors = {
                 'created_at': through_filter(
@@ -113,7 +117,13 @@ class EmailTemplatesAJAXFormMixin(EmailTemplatesCRUDViewMixin):
 
 
 @route(
-    regex=r'^emarketing/templates/add/ajax/?$',
+    regex=r'''
+        ^emarketing
+        /templates
+        /add
+        /ajax
+        /?$
+    ''',
     name='emarketing.templates.add.ajax',
 )
 @decorate_view(login_required)
@@ -125,7 +135,13 @@ class EmailTemplatesAddAJAX(EmailTemplatesAJAXFormMixin, AjaxCreateView):
 
 
 @route(
-    regex=r'^emarketing/templates/(?P<pk>\d+)(?:/edit)?/?$',
+    regex=r'''
+        ^emarketing
+        /templates
+        /(?P<pk>\d+)
+        (?:/edit)?
+        /?$
+    ''',
     name='emarketing.templates.edit',
 )
 @decorate_view(login_required)
@@ -134,7 +150,14 @@ class EmailTemplatesEdit(EmailTemplatesCRUDViewMixin, UpdateView):
 
 
 @route(
-    regex=r'^emarketing/templates/(?P<pk>\d+)(?:/edit)/ajax/?$',
+    regex=r'''
+        ^emarketing
+        /templates
+        /(?P<pk>\d+)
+        (?:/edit)
+        /ajax
+        /?$
+    ''',
     name='emarketing.templates.edit.ajax',
 )
 @decorate_view(login_required)
@@ -143,7 +166,14 @@ class EmailTemplatesEditAJAX(EmailTemplatesAJAXFormMixin, AjaxUpdateView):
 
 
 @route(
-    regex=r'^emarketing/templates/(?P<pk>\d+)/delete/ajax/$',
+    regex=r'''
+        ^emarketing
+        /templates
+        /(?P<pk>\d+)
+        /delete
+        /ajax
+        /$
+    ''',
     name='emarketing.templates.delete.ajax',
 )
 @decorate_view(login_required)

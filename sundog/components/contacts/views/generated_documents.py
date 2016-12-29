@@ -41,10 +41,10 @@ class GeneratedDocumentsCRUDViewMixin:
         class Meta:
             model = GeneratedDocument
 
-            fields = [
-                'title',
-                'template',
-            ]
+            fields = '''
+                title
+                template
+            '''.split()
 
             widgets = {
                 'template': Select(
@@ -60,11 +60,16 @@ class GeneratedDocumentsCRUDViewMixin:
 
 
 @route(
-    regex=r'^contacts/(?P<contact_id>\d+)/generated_documents/?$',
-    name=[
-        'contacts.generated_documents',
-        'contacts.generated_documents.list',
-    ],
+    regex=r'''
+        ^contacts
+        /(?P<contact_id>\d+)
+        /generated_documents
+        /?$
+    ''',
+    name='''
+        contacts.generated_documents
+        contacts.generated_documents.list
+    '''.split(),
 )
 @decorate_view(login_required)
 class GeneratedDocumentsList(
@@ -94,26 +99,27 @@ class GeneratedDocumentsList(
 
         created_by_full_name = format_column(
             label='Created by',
-            fields=[
-                'created_by__first_name',
-                'created_by__last_name',
-            ],
+            fields='''
+                created_by__first_name
+                created_by__last_name
+            '''.split(),
             template='{created_by__first_name} {created_by__last_name}',
         )
 
         class Meta:
             structure_template = 'datatableview/bootstrap_structure.html'
 
-            columns = [
-                'title',
-                'created_at',
-                'created_by_full_name',
-                'actions',
-            ]
+            columns = '''
+                id
+                created_at
+                created_by_full_name
+                title
+                actions
+            '''.split()
 
-            ordering = [
-                '-created_at',
-            ]
+            ordering = '''
+                -created_at
+            '''.split()
 
             processors = {
                 'created_at': through_filter(
@@ -124,7 +130,14 @@ class GeneratedDocumentsList(
 
 
 @route(
-    regex=r'^contacts/(?P<contact_id>\d+)/generated_documents/(?P<pk>\d+)/view',
+    regex=r'''
+        ^contacts
+        /(?P<contact_id>\d+)
+        /generated_documents
+        /(?P<pk>\d+)
+        /view
+        /?$
+    ''',
     name='contacts.generated_documents.view'
 )
 @decorate_view(login_required)
@@ -142,7 +155,14 @@ class GeneratedDocumentsAJAXFormMixin(GeneratedDocumentsCRUDViewMixin):
 
 
 @route(
-    regex=r'^contacts/(?P<contact_id>\d+)/generated_documents/add/ajax/?$',
+    regex=r'''
+        ^contacts
+        /(?P<contact_id>\d+)
+        /generated_documents
+        /add
+        /ajax
+        /?$
+    ''',
     name='contacts.generated_documents.add.ajax'
 )
 @decorate_view(login_required)
@@ -172,10 +192,15 @@ class GeneratedDocumentsAddAJAX(
 
 
 @route(
-    regex=(
-        r'^contacts/(?P<contact_id>\d+)/generated_documents/(?P<pk>\d+)/delete'
-        r'/ajax/?$'
-    ),
+    regex=r'''
+        ^contacts
+        /(?P<contact_id>\d+)
+        /generated_documents
+        /(?P<pk>\d+)
+        /delete
+        /ajax
+        /?$
+    ''',
     name='contacts.generated_documents.delete.ajax',
 )
 @decorate_view(login_required)

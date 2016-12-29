@@ -4,5 +4,3 @@ CATEGORY_CHOICES = (
     ('notifications', 'Notifications'),
     ('trigger', 'Trigger'),
 )
-
-CATEGORY_CHOICES_DICT = dict(CATEGORY_CHOICES)
