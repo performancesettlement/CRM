@@ -1,32 +1,50 @@
 <span class="text-nowrap">
 
   <a
+    aria-label="Delete Document"
     class="documents-delete fm-delete"
     data-fm-callback="reload"
     data-fm-head="Delete this document?  {{ instance.title }}"
     href="{% url "documents.delete.ajax" pk=instance.pk %}"
-    id="{{ instance.pk }}-delete-document"
+    id="delete-document-{{ instance.pk }}"
   >
-    <span title="Delete document" class="table-action glyphicon glyphicon-remove"></span>
+    <span
+      aria-hidden="true"
+      class="table-action glyphicon glyphicon-remove"
+      title="Delete Document"
+    >
+    </span>
   </a>
 
   <a
+    aria-label="Preview Document"
     class="documents-preview"
     href="{% url "documents.preview.pdf" pk=instance.pk %}"
-    id="{{ instance.pk }}-preview-document"
+    id="preview-document-{{ instance.pk }}"
     target="_blank"
   >
-    <span title="Preview document" class="table-action glyphicon glyphicon-eye-open"></span>
+    <span
+      aria-hidden="true"
+      class="table-action glyphicon glyphicon-eye-open"
+      title="Preview document"
+    >
+    </span>
   </a>
 
   <a
+    aria-label="Edit Document"
     class="documents-edit fm-update"
     data-fm-callback="reload"
     data-fm-head="Editing document: {{ instance.title }}"
     href="{% url "documents.edit.ajax" pk=instance.pk %}"
-    id="{{ instance.pk }}-edit-document"
+    id="edit-document-{{ instance.pk }}"
   >
-    <span title="Edit document" class="table-action glyphicon glyphicon-arrow-right"></span>
+    <span
+      aria-hidden="true"
+      class="table-action glyphicon glyphicon-arrow-right"
+      title="Edit Document"
+    >
+    </span>
   </a>
 
 </span>

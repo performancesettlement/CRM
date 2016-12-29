@@ -1,23 +1,35 @@
 <span class="text-nowrap">
 
   <a
+    aria-label="Delete Sender"
     class="senders-delete fm-delete"
     data-fm-callback="reload"
     data-fm-head="Delete Sender?  {{ instance.name }}"
     href="{% url "emarketing.senders.delete.ajax" pk=instance.pk %}"
-    id="{{ instance.pk }}-delete-sender"
+    id="delete-sender-{{ instance.pk }}"
   >
-    <span title="Delete Sender" class="table-action glyphicon glyphicon-remove"></span>
+    <span
+      aria-hidden="true"
+      class="table-action glyphicon glyphicon-remove"
+      title="Delete Sender"
+    >
+    </span>
   </a>
 
   <a
+    aria-label="Edit Sender"
     class="senders-edit fm-update"
     data-fm-callback="reload"
     data-fm-head="Editing Sender: {{ instance.name }}"
     href="{% url "emarketing.senders.edit.ajax" pk=instance.pk %}"
-    id="{{ instance.pk }}-edit-sender"
+    id="edit-sender-{{ instance.pk }}"
   >
-    <span title="Edit Sender" class="table-action glyphicon glyphicon-arrow-right"></span>
+    <span
+      aria-hidden="true"
+      class="table-action glyphicon glyphicon-arrow-right"
+      title="Edit Sender"
+    >
+    </span>
   </a>
 
 </span>

@@ -1,23 +1,35 @@
 <span class="text-nowrap">
 
   <a
+    aria-label="Delete Template"
     class="templates-delete fm-delete"
     data-fm-callback="reload"
     data-fm-head="Delete E-mail Template?  {{ instance.name }}"
     href="{% url "emarketing.templates.delete.ajax" pk=instance.pk %}"
-    id="{{ instance.pk }}-delete-template"
+    id="delete-template-{{ instance.pk }}"
   >
-    <span title="Delete E-mail Template" class="table-action glyphicon glyphicon-remove"></span>
+    <span
+      aria-hidden="true"
+      class="table-action glyphicon glyphicon-remove"
+      title="Delete E-mail Template"
+    >
+    </span>
   </a>
 
   <a
+    aria-label="Edit Template"
     class="templates-edit fm-update"
     data-fm-callback="reload"
     data-fm-head="Editing Email Template: {{ instance.name }}"
     href="{% url "emarketing.templates.edit.ajax" pk=instance.pk %}"
-    id="{{ instance.pk }}-edit-template"
+    id="edit-template-{{ instance.pk }}"
   >
-    <span title="Edit E-mail Template" class="table-action glyphicon glyphicon-arrow-right"></span>
+    <span
+      aria-hidden="true"
+      class="table-action glyphicon glyphicon-arrow-right"
+      title="Edit E-mail Template"
+    >
+    </span>
   </a>
 
 </span>

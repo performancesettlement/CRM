@@ -1,28 +1,44 @@
-<a
-  class="generated_documents-view"
-  href="{% url "contacts.generated_documents.view" contact_id=contact.pk pk=instance.pk %}"
-  id="{{ instance.pk }}-generated_documents-view"
-  target="_blank"
->
-  <span title="View generated document" class="table-action glyphicon glyphicon-eye-open"></span>
-</a>
+<span class="text-nowrap">
 
-<a
-  class="generated_documents-download"
-  href="{% url "contacts.generated_documents.view" contact_id=contact.pk pk=instance.pk %}"
-  id="{{ instance.pk }}-generated_documents-download"
-  target="_blank"
-  download
->
-  <span title="Download generated document" class="table-action glyphicon glyphicon-download"></span>
-</a>
+  <a
+    class="generated_documents-delete fm-delete"
+    data-fm-callback="reload"
+    data-fm-head="Delete this generated document?  {{ instance.title }}"
+    href="{% url "contacts.generated_documents.delete.ajax" contact_id=contact.pk pk=instance.pk %}"
+    id="generated_documents-delete-{{ instance.pk }}"
+  >
+    <span
+      title="Delete generated document"
+      class="table-action glyphicon glyphicon-trash"
+    >
+    </span>
+  </a>
 
-<a
-  class="generated_documents-delete fm-delete"
-  data-fm-callback="reload"
-  data-fm-head="Delete this generated document?  {{ instance.title }}"
-  href="{% url "contacts.generated_documents.delete.ajax" contact_id=contact.pk pk=instance.pk %}"
-  id="{{ instance.pk }}-generated_documents-delete"
->
-  <span title="Delete generated document" class="table-action glyphicon glyphicon-trash"></span>
-</a>
+  <a
+    class="generated_documents-download"
+    href="{% url "contacts.generated_documents.view" contact_id=contact.pk pk=instance.pk %}"
+    id="generated_documents-download-{{ instance.pk }}"
+    target="_blank"
+    download
+  >
+    <span
+      title="Download generated document"
+      class="table-action glyphicon glyphicon-download"
+    >
+    </span>
+  </a>
+
+  <a
+    class="generated_documents-view"
+    href="{% url "contacts.generated_documents.view" contact_id=contact.pk pk=instance.pk %}"
+    id="generated_documents-view-{{ instance.pk }}"
+    target="_blank"
+  >
+    <span
+      title="View generated document"
+      class="table-action glyphicon glyphicon-eye-open"
+    >
+    </span>
+  </a>
+
+</span>
