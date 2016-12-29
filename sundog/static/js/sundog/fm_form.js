@@ -1,12 +1,18 @@
 function initialize_modal_contents() {
-  $('.selectpicker').selectpicker('render');
 
-  tinyMCE.remove('.tinymce');
-  $('.tinymce').each(
-    function() {
-      initTinyMCE($(this));
-    }
-  );
+  if ($().selectpicker !== undefined) {
+    $('.selectpicker').selectpicker('render');
+  }
+
+  if (typeof tinyMCE !== 'undefined' && tinyMCE !== null) {
+    tinyMCE.remove('.tinymce');
+    $('.tinymce').each(
+      function() {
+        initTinyMCE($(this));
+      }
+    );
+  }
+
   return false;
 }
 
