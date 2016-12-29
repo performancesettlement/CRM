@@ -4,6 +4,7 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from importlib import import_module
 from pkgutil import iter_modules
+from re import sub
 from sundog.util.functional import modify_dict
 from sys import modules
 
@@ -60,7 +61,14 @@ def route(regex, name=None):
                     [],
                     lambda view_routes:
                         view_routes + [
-                            Route(regex, name_)
+                            Route(
+                                # Spaces are removed manually from the given
+                                # regular expression as Django sadly does not
+                                # compile URL pattern regexes with the VERBOSE
+                                # flag.
+                                sub('\s', '', regex),
+                                name_
+                            )
                             for name_ in (
                                 [name]
                                 if isinstance(name, str)
