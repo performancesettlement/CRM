@@ -33,7 +33,7 @@ class FieldsCRUDViewMixin:
             self.data_source = DataSource.objects.get(
                 pk=self.kwargs['data_source_id'],
             )
-        return self.contact
+        return self.data_source
 
     class form_class(ModelForm):
         class Meta:
