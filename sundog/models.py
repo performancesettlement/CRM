@@ -1513,14 +1513,6 @@ class Source(models.Model):
         return '%s' % self.name
 
 
-class DataSource(models.Model):
-    data_source_id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=100, unique=True)
-
-    def __str__(self):
-        return '%s' % self.name
-
-
 CAMPAIGN_PRIORITY_CHOICES = (
     (None, NONE_CHOICE_LABEL),
     (0, '0'),

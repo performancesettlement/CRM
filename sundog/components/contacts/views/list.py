@@ -29,7 +29,6 @@ from sundog.util.views import (
     '''.split(),
 )
 @route(r'^contacts/lists/$', name='new_list')  # FIXME: Create proper view
-@route(r'^dataSources/$', name='data_sources')  # FIXME: Create proper view
 @decorate_view(login_required)
 class ContactsList(SundogDatatableView):
     template_name = 'sundog/contacts/list.html'

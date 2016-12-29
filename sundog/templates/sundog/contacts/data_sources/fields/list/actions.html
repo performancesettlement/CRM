@@ -1,0 +1,19 @@
+<span class="text-nowrap">
+
+  <a
+    aria-label="Delete Field"
+    class="contacts-data_sources-fields-delete fm-delete"
+    data-fm-callback="reload"
+    data-fm-head="Delete Field?  {{ instance.name }}"
+    href="{% url "contacts.data_sources.fields.delete.ajax" data_source_id=data_source.pk pk=instance.pk %}"
+    id="contacts-data_sources-fields-delete-{{ instance.pk }}"
+  >
+    <span
+      aria-hidden="true"
+      class="table-action glyphicon glyphicon-trash"
+      title="Delete Field"
+    >
+    </span>
+  </a>
+
+</span>

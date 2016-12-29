@@ -1,0 +1,63 @@
+<span class="text-nowrap">
+
+  <a
+    aria-label="Delete Data Source"
+    class="contacts-data_sources-delete fm-delete"
+    data-fm-callback="reload"
+    data-fm-head="Delete Data Source?  {{ instance.name }}"
+    href="{% url "contacts.data_sources.delete.ajax" pk=instance.pk %}"
+    id="contacts-data_sources-delete-{{ instance.pk }}"
+  >
+    <span
+      aria-hidden="true"
+      class="table-action glyphicon glyphicon-trash"
+      title="Delete Data Source"
+    >
+    </span>
+  </a>
+
+  <a
+    aria-label="Edit Fields"
+    class="contacts-data_sources-edit-fields"
+    href="{% url "contacts.data_sources.fields" data_source_id=instance.pk %}"
+    id="contacts-data_sources-edit-fields-{{ instance.pk }}"
+  >
+    <span
+      aria-hidden="true"
+      class="table-action glyphicon glyphicon-th-list"
+      title="Edit Fields"
+    >
+    </span>
+  </a>
+
+  <a
+    aria-label="Edit Replacemennts"
+    class="contacts-data_sources-edit-replacements"
+    href="{% url "contacts.data_sources.replacements" data_source_id=instance.pk %}"
+    id="contacts-data_sources-edit-replacements-{{ instance.pk }}"
+  >
+    <span
+      aria-hidden="true"
+      class="table-action glyphicon glyphicon-cog"
+      title="Edit Replacements"
+    >
+    </span>
+  </a>
+
+  <a
+    aria-label="Edit Data Source"
+    class="contacts-data_sources-edit fm-update"
+    data-fm-callback="reload"
+    data-fm-head="Editing Data Source: {{ instance.name }}"
+    href="{% url "contacts.data_sources.edit.ajax" pk=instance.pk %}"
+    id="contacts-data_sources-edit-{{ instance.pk }}"
+  >
+    <span
+      aria-hidden="true"
+      class="table-action glyphicon glyphicon-arrow-right"
+      title="Edit Data Source"
+    >
+    </span>
+  </a>
+
+</span>

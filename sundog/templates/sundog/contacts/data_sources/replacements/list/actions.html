@@ -1,0 +1,17 @@
+<span class="text-nowrap">
+
+  <a
+    class="contacts-data_sources-replacements-delete fm-delete"
+    data-fm-callback="reload"
+    data-fm-head="Delete Replacement?  {{ instance.name }}"
+    href="{% url "contacts.data_sources.replacements.delete.ajax" data_source_id=data_source.pk pk=instance.pk %}"
+    id="contacts-data_sources-replacements-delete-{{ instance.pk }}"
+  >
+    <span
+      title="Delete Replacement"
+      class="table-action glyphicon glyphicon-trash"
+    >
+    </span>
+  </a>
+
+</span>
