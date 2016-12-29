@@ -73,7 +73,7 @@ class DataSource(Model):
         null=True,
     )
 
-    assigning_on = BooleanField(default=False)
+    enabled = BooleanField(default=True)
     public = BooleanField(default=False)
     assigned_to = ManyToManyField(
         User,

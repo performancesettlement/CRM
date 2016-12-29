@@ -33,7 +33,7 @@
   <div class="inline">
     <a
       class="btn btn-primary"
-      href="{% url 'contacts.data_sources.fields' data_source_id=instance.pk %}"
+      href="{% url 'contacts.data_sources.fields' data_source_id=object.pk %}"
     >
       Edit Fields
     </a>
@@ -42,13 +42,14 @@
   <div class="inline">
     <a
       class="btn btn-primary"
-      href="{% url 'contacts.data_sources.replacements' data_source_id=instance.pk %}"
+      href="{% url 'contacts.data_sources.replacements' data_source_id=object.pk %}"
     >
       Edit Replacements
     </a>
   </div>
 
-{% endblock table_view_pre_content %}
+{% endblock app_view_pre_content %}
+
 
 {% block app_view_content %}
 

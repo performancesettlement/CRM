@@ -2,7 +2,7 @@ from datatableview import Datatable
 from datatableview.helpers import make_processor, through_filter
 from django.contrib.auth.decorators import login_required
 from django.forms.models import ModelForm
-from django.forms.widgets import Select
+from django.forms.widgets import Select, SelectMultiple
 from django.template.defaultfilters import date as date_filter
 from django.views.generic.edit import UpdateView
 from fm.views import AjaxCreateView, AjaxDeleteView, AjaxUpdateView
@@ -37,7 +37,7 @@ class DataSourcesCRUDViewMixin:
                 file_type
                 status
                 campaign
-                assigning_on
+                enabled
                 public
                 assigned_to
                 notification
@@ -63,11 +63,18 @@ class DataSourcesCRUDViewMixin:
             '''.split()
 
             widgets = {
-                # TODO: assigned_to is ManyToManyField
+                'assigned_to': SelectMultiple(
+                    attrs={
+                        'class': 'selectpicker',
+                        'data-actions-box': 'true',
+                        'data-live-search': 'true',
+                    },
+                ),
                 **{
                     field: Select(
                         attrs={
                             'class': 'selectpicker',
+                            'data-live-search': 'true',
                         },
                     )
                     for field in '''
@@ -75,6 +82,7 @@ class DataSourcesCRUDViewMixin:
                         file_type
                         status
                         campaign
+                        notification
 
                         company
                         marketing_company
