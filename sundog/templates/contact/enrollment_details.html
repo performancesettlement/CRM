@@ -20,6 +20,7 @@
     <div class="col-xs-12 m-t-md">
         <button class="btn btn-primary" data-toggle="modal" data-target="#add-payment">Add Payment</button>
         <a class="m-l-xs btn btn-primary" href="{% url "edit_contact_enrollment" contact_id=contact.contact_id %}">Edit Enrollment Plan</a>
+        <a class="m-l-xs btn btn-primary" href="{% url "adjust_payments" contact_id=contact.contact_id %}">Adjust Payments</a>
         <a class="m-l-xs btn btn-primary" href="{% url "contact_schedule_performance_fees" contact_id=contact.contact_id %}">Schedule Performance Fees</a>
     </div>
     <div id="totals" class="col-xs-12 border p-xs m-t-md">

@@ -2,7 +2,7 @@ $(document).ready(function() {
     $('#delete-fee-profile').click(function(event) {
         event.preventDefault();
         var url = $(this).prop('href');
-        showConfirmationPopup(
+        showConfirmationDeletePopup(
             'There might be related enrollment plans that will be deleted. You will not be able to recover this data!',
             function() {
                 $.ajax({
@@ -21,7 +21,8 @@ $(document).ready(function() {
                         }
                     }
                 });
-            }
+            },
+            false
         );
     });
 

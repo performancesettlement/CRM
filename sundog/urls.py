@@ -1,6 +1,7 @@
 from django.conf.urls import include, url
 from django.conf.urls.static import static
 from django.contrib import admin
+
 from sundog import ajax, views
 from sundog.routing import module_urls, package_urls
 
@@ -46,6 +47,7 @@ urlpatterns = module_urls(views) + package_urls(sundog.components) + [
     url(r'^contact/(?P<contact_id>\d+)/enrollment/payment/add/$', views.add_payment, name='add_payment'),
     url(r'^contact/(?P<contact_id>\d+)/enrollment/payment/edit/$', views.edit_payment, name='edit_payment'),
     url(r'^contact/(?P<contact_id>\d+)/enrollment/performanceFees/?$', views.contact_schedule_performance_fees, name='contact_schedule_performance_fees'),
+    url(r'^contact/(?P<contact_id>\d+)/enrollment/payments/edit/$', views.adjust_payments, name='adjust_payments'),
     url(r'^contact/(?P<contact_id>\d+)/enrollmentPlan/(?P<enrollment_plan_id>\d+)/getInfo/$', views.get_enrollment_plan_info, name='get_enrollment_plan_info'),
     url(r'^contact/(?P<contact_id>\d+)/debts/getInfo/$', views.get_debts_info, name='get_debts_info'),
     url(r'^debt/(?P<debt_id>\d+)/offer/$', views.get_debt_offer, name='get_debt_offer'),

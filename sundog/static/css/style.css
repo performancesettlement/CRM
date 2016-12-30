@@ -8299,3 +8299,12 @@ input {
 .line-through {
     text-decoration: line-through;
 }
+
+.clean-checkbox {
+    height: auto !important;
+    margin: 0 !important;
+}
+
+.vertical-align {
+    vertical-align: middle;
+}

@@ -1,0 +1,226 @@
+{% extends "app-base.html" %}
+{% load staticfiles my_filters admin_urls %}
+{% block extrahead %}
+    <link href="{% static "css/plugins/datapicker/datepicker3.css" %}" rel="stylesheet">
+{% endblock extrahead %}
+{% block content %}
+    <div class="row wrapper border-bottom white-bg page-heading">
+        <div class="col-lg-12 m-t-md">
+            <ol class="breadcrumb">
+                <li>
+                    <a href="{% url 'list_contacts' %}">Contacts</a>
+                </li>
+                <li>
+                    <a href="{% url 'contact_dashboard' contact_id=contact.contact_id %}">{{ contact.full_name_straight }}</a>
+                </li>
+                <li>
+                    <a href="{% url 'contact_enrollment_details' contact_id=contact.contact_id %}">Enrollment Details</a>
+                </li>
+                <li class="active bold">
+                    Adjust Payments
+                </li>
+            </ol>
+        </div>
+    </div>
+    <div class="col-xs-12 m-t-md">
+        <a class="pull-left bold underlined" href="{% url 'contact_dashboard' contact_id=contact.contact_id %}"> {{ contact.full_name_straight }} - {{ contact.contact_id }}</a>
+        <button id="save" type="button" class="btn btn-primary pull-right">Save Changes</button>
+    </div>
+    <div class="col-xs-6 m-t-md border padding-for-footer">
+        <div class="col-xs-12 no-padding-sides border-bottom">
+            <h3 class="blue">Adjust Debits</h3>
+            <form id="edit-debits-form" class="col-xs-12 no-padding-sides m-b-md">
+                <div class="col-xs-12 no-padding-sides m-b-xs">
+                    <div class="col-xs-2 no-padding-left">
+                        <div class="inline">Active</div>
+                        <div class="inline vertical-align">{{ form_debit.active_checkbox }}</div>
+                    </div>
+                    {{ form_debit.active }}
+                </div>
+                <div class="col-xs-12 no-padding-sides m-b-xs">
+                    <div class="col-xs-2 no-padding-left">
+                        <div class="inline">Amount</div>
+                        <div class="inline vertical-align">{{ form_debit.amount_checkbox }}</div>
+                    </div>
+                    {{ form_debit.amount }}
+                </div>
+                <div class="col-xs-12 no-padding-sides m-b-xs">
+                    <div class="col-xs-2 no-padding-left">
+                        <div class="inline">Process Date</div>
+                        <div class="inline vertical-align">{{ form_debit.date_checkbox }}</div>
+                    </div>
+                    {{ form_debit.date }}
+                </div>
+                <div class="col-xs-12 no-padding-sides m-b-xs">
+                    <div class="col-xs-2 no-padding-left">
+                        <div class="inline">Memo</div>
+                        <div class="inline vertical-align">{{ form_debit.memo_checkbox }}</div>
+                    </div>
+                    {{ form_debit.memo }}
+                </div>
+                <div class="col-xs-12 no-padding-sides">
+                    <div class="inline">Cancel</div>
+                    <div class="inline vertical-align">{{ form_debit.cancel_checkbox }}</div>
+                </div>
+                <button class="btn select-all btn-default m-r-xs">Select All</button><button class="btn clear-all btn-default">Clear All</button>
+                <table class="table datatable m-t-md">
+                    <thead>
+                        <tr>
+                            <th>Select</th>
+                            <th>Active</th>
+                            <th>Amount</th>
+                            <th>Process Date</th>
+                            <th>Trans Type</th>
+                            <th>Memo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for debit in debits %}
+                        <tr id="payment-{{ debit.payment_id }}">
+                            <td><input class="select-checkbox" type="checkbox"></td>
+                            <td><span class="glyphicon glyphicon-asterisk {% if debit.active %}green{% else %}red{% endif %}"></span></td>
+                            <td>{{ debit.amount|currency }}</td>
+                            <td>{{ debit.date|date:'SHORT_DATE_FORMAT' }}</td>
+                            <td>{{ debit.type_label }}</td>
+                            <td>{{ debit.memo }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </form>
+        </div>
+        <div class="col-xs-12 no-padding-sides border-bottom">
+            <h3 class="blue">Adjust Settlements</h3>
+            <form id="edit-settlements-form" class="col-xs-12 no-padding-sides m-b-md">
+                <div class="col-xs-12 no-padding-sides m-b-xs">
+                    <div class="col-xs-2 no-padding-left">
+                        <div class="inline">Active</div>
+                        <div class="inline vertical-align">{{ form_settlement.active_checkbox }}</div>
+                    </div>
+                    {{ form_settlement.active }}
+                </div>
+                <div class="col-xs-12 no-padding-sides m-b-xs">
+                    <div class="col-xs-2 no-padding-left">
+                        <div class="inline">Amount</div>
+                        <div class="inline vertical-align">{{ form_settlement.amount_checkbox }}</div>
+                    </div>
+                    {{ form_settlement.amount }}
+                </div>
+                <div class="col-xs-12 no-padding-sides m-b-xs">
+                    <div class="col-xs-2 no-padding-left">
+                        <div class="inline">Process Date</div>
+                        <div class="inline vertical-align">{{ form_settlement.date_checkbox }}</div>
+                    </div>
+                    {{ form_settlement.date }}
+                </div>
+                <div class="col-xs-12 no-padding-sides m-b-xs">
+                    <div class="col-xs-2 no-padding-left">
+                        <div class="inline">Memo</div>
+                        <div class="inline vertical-align">{{ form_settlement.memo_checkbox }}</div>
+                    </div>
+                    {{ form_settlement.memo }}
+                </div>
+                <div class="col-xs-12 no-padding-sides">
+                    <div class="inline">Cancel</div>
+                    <div class="inline vertical-align">{{ form_settlement.cancel_checkbox }}</div>
+                </div>
+                <button class="btn select-all btn-default m-r-xs">Select All</button><button class="btn clear-all btn-default">Clear All</button>
+                <table class="table datatable m-t-md">
+                    <thead>
+                    <tr>
+                        <th>Select</th>
+                        <th>Active</th>
+                        <th>Amount</th>
+                        <th>Process Date</th>
+                        <th>Trans Type</th>
+                        <th>Memo</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for settlement in settlements %}
+                        <tr id="payment-{{ settlement.payment_id }}">
+                            <td><input class="select-checkbox" type="checkbox"></td>
+                            <td><span class="glyphicon glyphicon-asterisk {% if settlement.active %}green{% else %}red{% endif %}"></span></td>
+                            <td>{{ settlement.amount|currency }}</td>
+                            <td>{{ settlement.date|date:'SHORT_DATE_FORMAT' }}</td>
+                            <td>{{ settlement.sub_type_label }}</td>
+                            <td>{{ settlement.memo }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </form>
+        </div>
+    </div>
+    <div class="col-xs-6 m-t-md border padding-for-footer">
+        <div class="col-xs-12 no-padding-sides border-bottom">
+            <h3 class="blue">Adjust Credit / Fees</h3>
+            <form id="edit-fees-form" class="col-xs-12 no-padding-sides m-b-md">
+                <div class="col-xs-12 no-padding-sides m-b-xs">
+                    <div class="col-xs-2 no-padding-left">
+                        <div class="inline">Active</div>
+                        <div class="inline vertical-align">{{ form_fees.active_checkbox }}</div>
+                    </div>
+                    {{ form_fees.active }}
+                </div>
+                <div class="col-xs-12 no-padding-sides m-b-xs">
+                    <div class="col-xs-2 no-padding-left">
+                        <div class="inline">Amount</div>
+                        <div class="inline vertical-align">{{ form_fees.amount_checkbox }}</div>
+                    </div>
+                    {{ form_fees.amount }}
+                </div>
+                <div class="col-xs-12 no-padding-sides m-b-xs">
+                    <div class="col-xs-2 no-padding-left">
+                        <div class="inline">Process Date</div>
+                        <div class="inline vertical-align">{{ form_fees.date_checkbox }}</div>
+                    </div>
+                    {{ form_fees.date }}
+                </div>
+                <div class="col-xs-12 no-padding-sides m-b-xs">
+                    <div class="col-xs-2 no-padding-left">
+                        <div class="inline">Memo</div>
+                        <div class="inline vertical-align">{{ form_fees.memo_checkbox }}</div>
+                    </div>
+                    {{ form_fees.memo }}
+                </div>
+                <div class="col-xs-12 no-padding-sides">
+                    <div class="inline">Cancel</div>
+                    <div class="inline vertical-align">{{ form_fees.cancel_checkbox }}</div>
+                </div>
+                <button class="btn select-all btn-default m-r-xs">Select All</button><button class="btn clear-all btn-default">Clear All</button>
+                <table class="table datatable m-t-md">
+                    <thead>
+                    <tr>
+                        <th>Select</th>
+                        <th>Active</th>
+                        <th>Amount</th>
+                        <th>Process Date</th>
+                        <th>Trans Type</th>
+                        <th>Memo</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for fee in fees %}
+                        <tr id="payment-{{ fee.payment_id }}">
+                            <td><input class="select-checkbox" type="checkbox"></td>
+                            <td><span class="glyphicon glyphicon-asterisk {% if fee.active %}green{% else %}red{% endif %}"></span></td>
+                            <td>{{ fee.amount|currency }}</td>
+                            <td>{{ fee.date|date:'SHORT_DATE_FORMAT' }}</td>
+                            <td>{{ fee.paid_to.name }}</td>
+                            <td>{{ fee.memo }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </form>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        var adjustPaymentsUrl = '{% url "adjust_payments" contact_id=contact.contact_id %}';
+        var csrfToken = '{{ csrf_token }}';
+    </script>
+    <script src="{% static "js/plugins/datapicker/bootstrap-datepicker.js" %}"></script>
+    <script src="{% static "js/contact/adjust_payments.js" %}"></script>
+{% endblock %}

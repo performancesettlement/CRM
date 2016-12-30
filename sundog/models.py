@@ -992,6 +992,7 @@ SETTLEMENT_SUB_TYPE_CHOICES = (
 PAYMENT_STATUS_CHOICES = (
     ('open', 'Open'),
     ('cleared', 'Cleared'),
+    ('cancelled', 'Cancelled'),
 )
 
 PAYMENT_TRANSACTION_TYPE_CHOICES = (
@@ -1037,6 +1038,7 @@ class Payment(models.Model):
 
     class Meta:
         ordering = ['date']
+        get_latest_by = 'created_at'
 
     def __init__(self, *args, **kwargs):
         super(Payment, self).__init__(*args, **kwargs)
@@ -1055,9 +1057,6 @@ class Payment(models.Model):
 
     def __str__(self):
         return self.type + ': ' + self.date.strftime(SHORT_DATE_FORMAT) + ' - ' + currency(self.amount)
-
-    class Meta:
-        get_latest_by = 'created_at'
 
 
 ACTIVITY_TYPE_CHOICES = (

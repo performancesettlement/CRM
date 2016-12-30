@@ -213,11 +213,14 @@ def to_int(string, default=-1):
 
 
 def add_months(date, months):
-    month = date.month - 1 + months
-    year = int(date.year + month / 12)
-    month = month % 12 + 1
-    day = min(date.day, calendar.monthrange(year, month)[1])
-    return datetime(year, month, day)
+    if months != 0:
+        month = date.month - 1 + months
+        year = int(date.year + month / 12)
+        month = month % 12 + 1
+        day = min(date.day, calendar.monthrange(year, month)[1])
+        return datetime(year, month, day)
+    else:
+        return date
 
 
 def get_debts_ids(data):
@@ -304,6 +307,10 @@ def get_next_work_date(date):
     if week_day in [5, 6]:
         date += timedelta(days=7 - week_day)
     return date
+
+
+def get_date_from_str(date_str):
+    return datetime.strptime(date_str, SHORT_DATE_FORMAT).replace(tzinfo=pytz.utc)
 
 
 def format_column(label, template, fields):

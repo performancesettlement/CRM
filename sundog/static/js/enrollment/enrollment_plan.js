@@ -38,7 +38,7 @@ $(document).ready(function() {
     $('#delete-enrollment-plan').click(function(event) {
         event.preventDefault();
         var url = $(this).prop('href');
-        showConfirmationPopup(
+        showConfirmationDeletePopup(
             'There might be related ongoing enrollments that will be deleted. You will not be able to recover this data!',
             function() {
                 $.ajax({
@@ -57,7 +57,8 @@ $(document).ready(function() {
                         }
                     }
                 });
-            }
+            },
+            false
         );
     });
 

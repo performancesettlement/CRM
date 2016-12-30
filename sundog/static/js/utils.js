@@ -63,20 +63,24 @@ function showErrorPopup(error){
     }
 }
 
-function showConfirmationPopup(confirmMsg, callback) {
+function showConfirmationPopup(confirmMsg, confirmButtonText, callback, closeOnConfirm) {
     swal(
         {
             title: "Are you sure?",
             html: true,
             showCancelButton: true,
-            confirmButtonText: 'Yes delete it!',
+            confirmButtonText: confirmButtonText,
             confirmButtonColor: '#DD6B55',
-            closeOnConfirm: false,
+            closeOnConfirm: closeOnConfirm,
             type: "warning",
             text: confirmMsg
         },
         callback
     );
+}
+
+function showConfirmationDeletePopup(confirmMsg, callback, closeOnConfirm) {
+    showConfirmationPopup(confirmMsg, 'Yes delete it!', callback, closeOnConfirm);
 }
 
 function showSuccessPopup(msg) {

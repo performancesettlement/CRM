@@ -16,7 +16,7 @@ $(document).ready(function(){
     $('#budget-delete').click(function(event) {
         event.preventDefault();
         var url = $(this).prop('href');
-        showConfirmationPopup(
+        showConfirmationDeletePopup(
             'You will not be able to recover this data!',
             function() {
                 $.ajax({
@@ -35,7 +35,8 @@ $(document).ready(function(){
                         }
                     }
                 });
-            }
+            },
+            false
         );
     });
 });

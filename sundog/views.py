@@ -12,8 +12,7 @@ from django.urls import reverse
 from django.utils.timezone import now
 
 from numpy import arange
-from sundog import services
-from sundog.cache.user.info import get_cache_user
+import pytz
 from sundog.constants import SHORT_DATE_FORMAT, FIXED_VALUES
 from sundog.decorators import bypass_impersonation_login_required
 
@@ -21,7 +20,7 @@ from sundog.forms import ContactForm, StageForm, StatusForm, \
     CampaignForm, SourceForm, ContactStatusForm, BankAccountForm, NoteForm, CallForm, EmailForm, UploadedForm, \
     ExpensesForm, IncomesForm, CreditorForm, DebtForm, DebtNoteForm, EnrollmentPlanForm, FeePlanForm, FeeProfileForm, \
     FeeProfileRuleForm, WorkflowSettingsForm, EnrollmentForm, PaymentForm, CompensationTemplateForm, \
-    CompensationTemplatePayeeForm, SettlementOfferForm, SettlementForm, FeeForm
+    CompensationTemplatePayeeForm, SettlementOfferForm, SettlementForm, FeeForm, AdjustPaymentForm
 from datetime import datetime, timedelta
 from sundog.models import CAMPAIGN_SOURCES_CHOICES, Contact, Stage, STAGE_TYPE_CHOICES, Status, \
     Campaign, Activity, Uploaded, Expenses, Incomes, Creditor, Debt, DebtNote, Enrollment, EnrollmentPlan, \
@@ -40,7 +39,7 @@ from sundog.utils import (
     get_or_404,
     get_payments_data,
     to_int,
-    get_forms, FOUR_PLACES, roundup_places)
+    get_forms, FOUR_PLACES, roundup_places, get_date_from_str)
 
 import copy
 import logging
@@ -1524,7 +1523,6 @@ def contact_schedule_performance_fees(request, contact_id):
                 payee.total_payments += Decimal(amount)
                 payment_form_index += 1
             index += 1
-
     settled_debts = Settlement.objects.prefetch_related('settlement_offer').prefetch_related('settlement_offer__debt') \
         .prefetch_related('settlement_offer__debt__original_creditor') \
         .filter(settlement_offer__enrollment__contact__contact_id=contact_id)
@@ -1561,6 +1559,85 @@ def contact_schedule_performance_fees(request, contact_id):
         }
         template_path = 'contact/schedule_performance_fees.html'
         return _render_response(request, context_info, template_path)
+
+
+def adjust_payments(request, contact_id):
+    contact = Contact.objects.get(contact_id=contact_id)
+    if request.method == 'POST' and request.POST:
+        found = True
+        payment_index = 1
+        payments_data = []
+        while found:
+            prefix = str(payment_index)
+            found = False
+            payment_data = get_data(prefix, request.POST)
+            if payment_data:
+                found = True
+                data = {}
+                active_str = payment_data.get(prefix + '-active')
+                if active_str:
+                    data['active'] = active_str == 'True'
+                date_str = payment_data.get(prefix + '-date')
+                if date_str:
+                    data['date'] = get_date_from_str(date_str)
+                amount_str = payment_data.get(prefix + '-amount')
+                if amount_str:
+                    data['amount'] = Decimal(amount_str)
+                memo = payment_data.get(prefix + '-memo')
+                if memo:
+                    data['memo'] = memo
+                ids_str = payment_data.get(prefix + '-ids')
+                if ids_str:
+                    data['ids'] = ids_str.split(',')
+                else:
+                    data['ids'] = []
+                canceled_str = payment_data.get(prefix + '-cancel_checkbox')
+                canceled = canceled_str.title() == 'True' if canceled_str else None
+                if canceled is not None and canceled:
+                    data['status'] = 'canceled'
+                payments_data.append(data)
+                payment_index += 1
+        with transaction.atomic():
+            for payment_data in payments_data:
+                ids = payment_data.pop('ids')
+                payment_index = 0
+                if ids:
+                    payments = Payment.objects.filter(payment_id__in=ids)
+                    initial_date = payment_data.get('date')
+                    for payment in payments:
+                        if 'active' in payment_data and payment_data['active'] is not None:
+                            payment.active = payment_data['active']
+                        if initial_date:
+                            payment.date = get_next_work_date(add_months(initial_date, payment_index))
+                        if 'amount' in payment_data and payment_data['amount']:
+                            payment.amount = payment_data['amount']
+                        if 'memo' in payment_data and payment_data['memo']:
+                            payment.memo = payment_data['memo']
+                        payment.save()
+                        payment_index += 1
+        response = {'result': 'Ok'}
+        return JsonResponse(response)
+
+    debits = Payment.objects.filter(transaction_type='debit', enrollment__contact=contact)
+    fees = Payment.objects.filter(charge_type='fee', enrollment__contact=contact)
+    settlements = Payment.objects.filter(charge_type='settlement', enrollment__contact=contact)
+    form_debit = AdjustPaymentForm(prefix=1)
+    form_settlement = AdjustPaymentForm(prefix=2)
+    form_fees = AdjustPaymentForm(prefix=3)
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'form_debit': form_debit,
+        'form_settlement': form_settlement,
+        'form_fees': form_fees,
+        'contact': contact,
+        'debits': debits,
+        'fees': fees,
+        'settlements': settlements,
+        'menu_page': 'contacts',
+    }
+    template_path = 'contact/adjust_payments.html'
+    return _render_response(request, context_info, template_path)
 
 
 @login_required

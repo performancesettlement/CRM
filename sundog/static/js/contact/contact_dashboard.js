@@ -215,10 +215,9 @@ $(document).ready(function() {
 
     $('.uploaded-doc-delete').click(function(event){
         event.preventDefault();
-        showConfirmationPopup('You will not be able to recover this file!');
         var button = $(this);
         var url = button.prop('href');
-        showConfirmationPopup(
+        showConfirmationDeletePopup(
             'You will not be able to recover this file!',
             function() {
                 $.ajax({
@@ -249,7 +248,7 @@ $(document).ready(function() {
     $('#delete-contact').click(function(event){
         event.preventDefault();
         var url = $(this).prop('href');
-        showConfirmationPopup(
+        showConfirmationDeletePopup(
             'You will not be able to recover this data!',
             function() {
                 $.ajax({
@@ -268,7 +267,8 @@ $(document).ready(function() {
                         }
                     }
                 });
-            }
+            },
+            false
         );
     });
 

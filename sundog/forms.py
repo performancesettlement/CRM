@@ -645,3 +645,20 @@ class SettlementForm(forms.ModelForm):
             'letter_date': forms.DateInput(**DATE_INPUT_SETTINGS),
         }
         exclude = ['settlement_offer']
+
+ACTIVE_CHOICE = (
+    (True, "Active"),
+    (False, "Inactive"),
+)
+
+
+class AdjustPaymentForm(forms.Form):
+    active_checkbox = forms.NullBooleanField(required=False, widget=forms.CheckboxInput(attrs={'class': 'enable-checkbox'}))
+    active = forms.ChoiceField(required=False, choices=ACTIVE_CHOICE, widget=forms.Select())
+    amount_checkbox = forms.NullBooleanField(required=False, widget=forms.CheckboxInput(attrs={'class': 'enable-checkbox'}))
+    amount = forms.DecimalField(required=False, widget=forms.NumberInput())
+    date_checkbox = forms.NullBooleanField(required=False, widget=forms.CheckboxInput(attrs={'class': 'enable-checkbox'}))
+    date = forms.DateTimeField(required=False, widget=forms.DateInput(**DATE_INPUT_SETTINGS))
+    memo_checkbox = forms.NullBooleanField(required=False, widget=forms.CheckboxInput(attrs={'class': 'enable-checkbox'}))
+    memo = forms.CharField(required=False, widget=forms.TextInput())
+    cancel_checkbox = forms.NullBooleanField(required=False, widget=forms.CheckboxInput(attrs={'class': 'cancel-checkbox'}))
