@@ -9,7 +9,12 @@ from django.template.defaultfilters import date
 from django.urls import reverse
 from django.views.generic.detail import BaseDetailView
 from settings import SHORT_DATETIME_FORMAT
-from sundog.components.documents.models import GeneratedDocument
+from sundog.components.documents.render import view_render_pdf
+
+from sundog.components.contacts.generated_documents.models import (
+    GeneratedDocument,
+)
+
 from sundog.models import Contact
 from sundog.routing import decorate_view, route
 
@@ -201,12 +206,12 @@ class GeneratedDocumentsAddAJAX(
                 pk=self.get_contact().pk,
             ),
             content=ContentFile(
-                content=(
-                    form.instance.template
-                    .render(
-                        contact=self.get_contact(),
-                    )
-                    .write_pdf()
+                content=view_render_pdf(
+                    template=form.instance.template.template_body,
+                    context={
+                        'contact': form.instance.contact,
+                    },
+                    request=self.request,
                 ),
             ),
         )

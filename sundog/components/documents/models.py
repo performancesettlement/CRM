@@ -1,7 +1,6 @@
 from django.contrib.auth.models import User
 
 from django.db.models import (
-    CASCADE,
     DateTimeField,
     ForeignKey,
     Model,
@@ -10,16 +9,12 @@ from django.db.models import (
 
 from django.urls import reverse
 from multiselectfield import MultiSelectField
-from settings import MEDIA_PRIVATE
-from sundog.components.documents.context_resolver import render
 
 from sundog.components.documents.enums import (
     DOCUMENT_TYPE_CHOICES,
     DOCUMENT_STATE_CHOICES,
 )
 
-from sundog.media import S3PrivateFileField
-from sundog.models import Contact
 from sundog.util.models import LongCharField
 from tinymce.models import HTMLField
 
@@ -72,81 +67,8 @@ class Document(Model):
 
     def get_absolute_url(self):
         return reverse(
-            'documents.edit',
-            args=[
-                self.id,
-            ]
-        )
-
-    def render(
-        self,
-        context={},
-    ):
-        return render(
-            template=self.template_body,
-            context=context,
-        )
-
-
-def generated_document_filename(instance, filename):
-    return '{base}generated_documents/{identifier}/{filename}'.format(
-        base=MEDIA_PRIVATE,
-        identifier=instance.contact.contact_id,
-        filename=filename,
-    )
-
-
-class GeneratedDocument(Model):
-
-    created_at = DateTimeField(
-        auto_now_add=True,
-    )
-
-    created_by = ForeignKey(
-        to=User,
-        blank=True,
-        null=True,
-        on_delete=SET_NULL,
-        related_name='generated_documents',
-    )
-
-    contact = ForeignKey(
-        to=Contact,
-        on_delete=CASCADE,
-        related_name='generated_documents',
-    )
-
-    title = LongCharField()
-
-    content = S3PrivateFileField(
-        upload_to=generated_document_filename,
-    )
-
-    template = ForeignKey(
-        to=Document,
-        blank=True,
-        null=True,
-        on_delete=SET_NULL,
-        related_name='generated_documents',
-    )
-
-    class Meta:
-        get_latest_by = 'created_at'
-
-    def __str__(self):
-        return self.title
-
-    def get_absolute_url(self):
-        return self.content.url
-
-    def render(
-        self,
-        context={},
-    ):
-        return render(
-            template=self.template.template_body,
-            context={
-                'contact': self.contact,
-                **context,
+            viewname='documents.edit',
+            kwargs={
+                'pk': self.id,
             },
         )

@@ -3,6 +3,6 @@
 
 <span class="text-nowrap">
   {% action_delete viewname="contacts.generated_documents.delete.ajax" contact_id=contact.pk pk=instance.pk %}
-  {% action label="Download generated document" glyphicon="download" extra_attributes='target="_blank" download' viewname="contacts.generated_documents.view.pdf" contact_id=contact.pk pk=instance.pk %}
-  {% action label="View generated document" glyphicon="eye-open" extra_attributes='target="_blank"' viewname="contacts.generated_documents.view.pdf" contact_id=contact.pk pk=instance.pk %}
+  {% action label="Download generated document" glyphicon="download" extra_attributes='target="_blank" download' viewname="contacts.generated_documents.view" contact_id=contact.pk pk=instance.pk %}
+  {% action label="View generated document" glyphicon="eye-open" extra_attributes='target="_blank"' viewname="contacts.generated_documents.view" contact_id=contact.pk pk=instance.pk %}
 </span>
