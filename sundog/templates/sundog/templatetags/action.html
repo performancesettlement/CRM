@@ -3,7 +3,7 @@
   class="{{ class }} {% if fm %}fm-{{ fm }}{% endif %}"
   {% if fm %}
     data-fm-callback="reload"
-    data-fm-head="{{ label }}?  {{ instance }}"
+    data-fm-head="{{ label }}: {{ instance }}"
   {% endif %}
   href="{{ url }}"
   id="{{ class }}-{{ instance.pk }}"
