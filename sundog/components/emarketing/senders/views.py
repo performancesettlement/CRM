@@ -4,14 +4,16 @@ from django.contrib.auth.decorators import login_required
 from django.forms.models import ModelForm
 from django.template.defaultfilters import date
 from django.urls import reverse
-from django.views.generic.edit import UpdateView
-from fm.views import AjaxCreateView, AjaxDeleteView, AjaxUpdateView
 from settings import SHORT_DATETIME_FORMAT
 from sundog.components.emarketing.senders.models import Sender
 from sundog.routing import decorate_view, route
 
 from sundog.util.views import (
+    SundogAJAXAddView,
+    SundogAJAXDeleteView,
+    SundogAJAXEditView,
     SundogDatatableView,
+    SundogEditView,
     format_column,
     template_column,
 )
@@ -24,6 +26,10 @@ class SendersCRUDViewMixin:
         context = super().get_context_data(**kwargs)
         return {
             **context,
+            'breadcrumbs': [
+                ('E-mail Marketing', reverse('emarketing')),
+                ('Senders', reverse('emarketing.senders')),
+            ],
             'menu_page': 'emarketing',
         }
 
@@ -69,9 +75,8 @@ class SendersList(
         return {
             **context,
             'add_url': reverse('emarketing.senders.add.ajax'),
-            'breadcrumbs': [
-                ('E-mail Marketing', reverse('emarketing')),
-                ('Senders', reverse('emarketing.senders')),
+            'buttons': [
+                ('Templates', reverse('emarketing.templates')),
             ],
         }
 
@@ -115,8 +120,22 @@ class SendersList(
             }
 
 
-class SendersAJAXFormMixin(SendersCRUDViewMixin):
-    template_name = 'sundog/base/fm_form.html'
+@route(
+    regex=r'''
+        ^emarketing
+        /senders
+        /(?P<pk>\d+)
+        (?:/edit)?
+        /?$
+    ''',
+    name='emarketing.senders.edit',
+)
+@decorate_view(login_required)
+class SendersEdit(
+    SendersCRUDViewMixin,
+    SundogEditView,
+):
+    pass
 
 
 @route(
@@ -130,42 +149,14 @@ class SendersAJAXFormMixin(SendersCRUDViewMixin):
     name='emarketing.senders.add.ajax',
 )
 @decorate_view(login_required)
-class SendersAddAJAX(SendersAJAXFormMixin, AjaxCreateView):
+class SendersAddAJAX(
+    SendersCRUDViewMixin,
+    SundogAJAXAddView,
+):
 
     def form_valid(self, form):
         form.instance.created_by = self.request.user
         return super().form_valid(form)
-
-
-@route(
-    regex=r'''
-        ^emarketing
-        /senders
-        /(?P<pk>\d+)
-        (?:/edit)?
-        /?$
-    ''',
-    name='emarketing.senders.edit',
-)
-@decorate_view(login_required)
-class SendersEdit(SendersCRUDViewMixin, UpdateView):
-    template_name = 'sundog/emarketing/senders/edit.html'
-
-
-@route(
-    regex=r'''
-        ^emarketing
-        /senders
-        /(?P<pk>\d+)
-        (?:/edit)?
-        /ajax
-        /?$
-    ''',
-    name='emarketing.senders.edit.ajax',
-)
-@decorate_view(login_required)
-class SendersEditAJAX(SendersAJAXFormMixin, AjaxUpdateView):
-    pass
 
 
 @route(
@@ -180,5 +171,27 @@ class SendersEditAJAX(SendersAJAXFormMixin, AjaxUpdateView):
     name='emarketing.senders.delete.ajax',
 )
 @decorate_view(login_required)
-class SendersDeleteAJAX(SendersAJAXFormMixin, AjaxDeleteView):
+class SendersDeleteAJAX(
+    SendersCRUDViewMixin,
+    SundogAJAXDeleteView,
+):
+    pass
+
+
+@route(
+    regex=r'''
+        ^emarketing
+        /senders
+        /(?P<pk>\d+)
+        (?:/edit)?
+        /ajax
+        /?$
+    ''',
+    name='emarketing.senders.edit.ajax',
+)
+@decorate_view(login_required)
+class SendersEditAJAX(
+    SendersCRUDViewMixin,
+    SundogAJAXEditView,
+):
     pass

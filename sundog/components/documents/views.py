@@ -11,8 +11,6 @@ from django.http import HttpResponse
 from django.template.defaultfilters import date as date_filter
 from django.urls import reverse
 from django.views.generic.detail import BaseDetailView
-from django.views.generic.edit import UpdateView
-from fm.views import AjaxCreateView, AjaxDeleteView, AjaxUpdateView
 from settings import SHORT_DATETIME_FORMAT
 from sundog.components.documents.models import Document
 from sundog.components.files.models import File
@@ -32,7 +30,11 @@ from sundog.models import (
 from sundog.routing import decorate_view, route
 
 from sundog.util.views import (
+    SundogAJAXAddView,
+    SundogAJAXDeleteView,
+    SundogAJAXEditView,
     SundogDatatableView,
+    SundogEditView,
     format_column,
     template_column,
 )
@@ -48,6 +50,9 @@ class DocumentsCRUDViewMixin:
         context = super().get_context_data(**kwargs)
         return {
             **context,
+            'breadcrumbs': [
+                ('Documents', reverse('documents')),
+            ],
             'menu_page': 'documents',
         }
 
@@ -103,9 +108,6 @@ class DocumentsList(
         return {
             **context,
             'add_url': reverse('documents.add.ajax'),
-            'breadcrumbs': [
-                ('Documents', reverse('documents')),
-            ],
         }
 
     class datatable_class(Datatable):
@@ -161,12 +163,11 @@ class DocumentsList(
     name='documents.edit',
 )
 @decorate_view(login_required)
-class DocumentsEdit(DocumentsCRUDViewMixin, UpdateView):
-    template_name = 'sundog/documents/edit.html'
-
-
-class DocumentsAJAXFormMixin(DocumentsCRUDViewMixin):
-    template_name = 'sundog/base/fm_form.html'
+class DocumentsEdit(
+    DocumentsCRUDViewMixin,
+    SundogEditView,
+):
+    pass
 
 
 @route(
@@ -179,26 +180,14 @@ class DocumentsAJAXFormMixin(DocumentsCRUDViewMixin):
     name='documents.add.ajax',
 )
 @decorate_view(login_required)
-class DocumentsAddAJAX(DocumentsAJAXFormMixin, AjaxCreateView):
+class DocumentsAddAJAX(
+    DocumentsCRUDViewMixin,
+    SundogAJAXAddView,
+):
 
     def form_valid(self, form):
         form.instance.created_by = self.request.user
         return super().form_valid(form)
-
-
-@route(
-    regex=r'''
-        ^documents
-        /(?P<pk>\d+)
-        (?:/edit)
-        /ajax
-        /?$
-    ''',
-    name='documents.edit.ajax',
-)
-@decorate_view(login_required)
-class DocumentsEditAJAX(DocumentsAJAXFormMixin, AjaxUpdateView):
-    pass
 
 
 @route(
@@ -212,7 +201,28 @@ class DocumentsEditAJAX(DocumentsAJAXFormMixin, AjaxUpdateView):
     name='documents.delete.ajax',
 )
 @decorate_view(login_required)
-class DocumentsDeleteAJAX(DocumentsAJAXFormMixin, AjaxDeleteView):
+class DocumentsDeleteAJAX(
+    DocumentsCRUDViewMixin,
+    SundogAJAXDeleteView,
+):
+    pass
+
+
+@route(
+    regex=r'''
+        ^documents
+        /(?P<pk>\d+)
+        (?:/edit)
+        /ajax
+        /?$
+    ''',
+    name='documents.edit.ajax',
+)
+@decorate_view(login_required)
+class DocumentsEditAJAX(
+    DocumentsCRUDViewMixin,
+    SundogAJAXEditView,
+):
     pass
 
 

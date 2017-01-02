@@ -1,6 +1,8 @@
 from datatableview.columns import CompoundColumn, DisplayColumn, TextColumn
 from datatableview.views import XEditableDatatableView
 from django.template.loader import render_to_string
+from django.views.generic.edit import UpdateView
+from fm.views import AjaxCreateView, AjaxDeleteView, AjaxUpdateView
 from sundog.util.functional import const
 
 
@@ -105,3 +107,32 @@ class SundogDatatableView(XEditableDatatableView):
                 column.__class__ = SearchColumn
 
         return datatable
+
+
+class SundogEditView(UpdateView):
+    template_name = 'sundog/base/edit.html'
+
+
+class SundogAJAXFormView:
+    template_name = 'sundog/base/fm_form.html'
+
+
+class SundogAJAXAddView(
+    SundogAJAXFormView,
+    AjaxCreateView,
+):
+    pass
+
+
+class SundogAJAXDeleteView(
+    SundogAJAXFormView,
+    AjaxDeleteView,
+):
+    pass
+
+
+class SundogAJAXEditView(
+    SundogAJAXFormView,
+    AjaxUpdateView,
+):
+    pass

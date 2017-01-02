@@ -4,8 +4,6 @@ from django.contrib.auth.decorators import login_required
 from django.forms.models import ModelForm
 from django.template.defaultfilters import date
 from django.urls import reverse
-from django.views.generic.edit import UpdateView
-from fm.views import AjaxCreateView, AjaxDeleteView, AjaxUpdateView
 from settings import SHORT_DATETIME_FORMAT
 
 from sundog.components.contacts.data_sources.replacements.models import (
@@ -16,7 +14,11 @@ from sundog.components.contacts.data_sources.models import DataSource
 from sundog.routing import decorate_view, route
 
 from sundog.util.views import (
+    SundogAJAXAddView,
+    SundogAJAXDeleteView,
+    SundogAJAXEditView,
     SundogDatatableView,
+    SundogEditView,
     format_column,
     template_column,
 )
@@ -28,8 +30,22 @@ class ReplacementsCRUDViewMixin:
     def get_context_data(self, **kwargs):
         return {
             **super().get_context_data(**kwargs),
-            'menu_page': 'contacts',
+            'breadcrumbs': [
+                ('Contacts', reverse('contacts')),
+                ('Data Sources', reverse('contacts.data_sources')),
+                (self.get_data_source(), self.get_data_source()),
+                (
+                    'Replacements',
+                    reverse(
+                        viewname='contacts.data_sources.replacements',
+                        kwargs={
+                            'data_source_id': self.get_data_source().pk,
+                        },
+                    ),
+                ),
+            ],
             'data_source': self.get_data_source(),
+            'menu_page': 'contacts',
         }
 
     def get_data_source(self):
@@ -83,20 +99,6 @@ class ReplacementsList(
                     'data_source_id': self.get_data_source().pk,
                 },
             ),
-            'breadcrumbs': [
-                ('Contacts', reverse('contacts')),
-                ('Data Sources', reverse('contacts.data_sources')),
-                (self.get_data_source(), self.get_data_source()),
-                (
-                    'Replacements',
-                    reverse(
-                        viewname='contacts.data_sources.replacements',
-                        kwargs={
-                            'data_source_id': self.get_data_source().pk,
-                        },
-                    ),
-                ),
-            ],
         }
 
     def get_queryset(self):
@@ -166,12 +168,11 @@ class ReplacementsList(
     name='contacts.data_sources.replacements.edit',
 )
 @decorate_view(login_required)
-class ReplacementsEdit(ReplacementsCRUDViewMixin, UpdateView):
-    template_name = 'sundog/contacts/data_sources/replacements/edit.html'
-
-
-class ReplacementsAJAXFormMixin(ReplacementsCRUDViewMixin):
-    template_name = 'sundog/base/fm_form.html'
+class ReplacementsEdit(
+    ReplacementsCRUDViewMixin,
+    SundogEditView,
+):
+    pass
 
 
 @route(
@@ -188,32 +189,14 @@ class ReplacementsAJAXFormMixin(ReplacementsCRUDViewMixin):
 )
 @decorate_view(login_required)
 class ReplacementsAddAJAX(
-    ReplacementsAJAXFormMixin,
-    AjaxCreateView,
+    ReplacementsCRUDViewMixin,
+    SundogAJAXAddView,
 ):
 
     def form_valid(self, form):
         form.instance.created_by = self.request.user
         form.instance.data_source = self.get_data_source()
         return super().form_valid(form)
-
-
-@route(
-    regex=r'''
-        ^contacts
-        /data_sources
-        /(?P<data_source_id>\d+)
-        /replacements
-        /(?P<pk>\d+)
-        (?:/edit)
-        /ajax
-        /?$
-    ''',
-    name='contacts.data_sources.replacements.edit.ajax',
-)
-@decorate_view(login_required)
-class ReplacementsEditAJAX(ReplacementsAJAXFormMixin, AjaxUpdateView):
-    pass
 
 
 @route(
@@ -231,7 +214,28 @@ class ReplacementsEditAJAX(ReplacementsAJAXFormMixin, AjaxUpdateView):
 )
 @decorate_view(login_required)
 class ReplacementsDeleteAJAX(
-    ReplacementsAJAXFormMixin,
-    AjaxDeleteView,
+    ReplacementsCRUDViewMixin,
+    SundogAJAXDeleteView,
+):
+    pass
+
+
+@route(
+    regex=r'''
+        ^contacts
+        /data_sources
+        /(?P<data_source_id>\d+)
+        /replacements
+        /(?P<pk>\d+)
+        (?:/edit)
+        /ajax
+        /?$
+    ''',
+    name='contacts.data_sources.replacements.edit.ajax',
+)
+@decorate_view(login_required)
+class ReplacementsEditAJAX(
+    ReplacementsCRUDViewMixin,
+    SundogAJAXEditView,
 ):
     pass

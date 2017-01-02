@@ -8,13 +8,14 @@ from django.shortcuts import redirect
 from django.template.defaultfilters import date
 from django.urls import reverse
 from django.views.generic.detail import BaseDetailView
-from fm.views import AjaxCreateView, AjaxDeleteView
 from settings import SHORT_DATETIME_FORMAT
 from sundog.components.documents.models import GeneratedDocument
 from sundog.models import Contact
 from sundog.routing import decorate_view, route
 
 from sundog.util.views import (
+    SundogAJAXAddView,
+    SundogAJAXDeleteView,
     SundogDatatableView,
     format_column,
     template_column,
@@ -27,8 +28,21 @@ class GeneratedDocumentsCRUDViewMixin:
     def get_context_data(self, **kwargs):
         return {
             **super().get_context_data(**kwargs),
-            'menu_page': 'contacts',
+            'breadcrumbs': [
+                ('Contacts', reverse('contacts')),
+                (self.get_contact(), self.get_contact()),
+                (
+                    'Data Sources',
+                    reverse(
+                        'contacts.generated_documents',
+                        kwargs={
+                            'contact_id': self.get_contact().pk,
+                        },
+                    ),
+                ),
+            ],
             'contact': self.get_contact(),
+            'menu_page': 'contacts',
         }
 
     def get_contact(self):
@@ -88,19 +102,6 @@ class GeneratedDocumentsList(
                     'contact_id': self.get_contact().pk,
                 },
             ),
-            'breadcrumbs': [
-                ('Contacts', reverse('contacts')),
-                (self.get_contact(), self.get_contact()),
-                (
-                    'Data Sources',
-                    reverse(
-                        'contacts.generated_documents',
-                        kwargs={
-                            'contact_id': self.get_contact().pk,
-                        },
-                    ),
-                ),
-            ],
         }
 
     def get_queryset(self):
@@ -175,10 +176,6 @@ class GeneratedDocumentsView(
         return redirect(self.object)
 
 
-class GeneratedDocumentsAJAXFormMixin(GeneratedDocumentsCRUDViewMixin):
-    template_name = 'sundog/base/fm_form.html'
-
-
 @route(
     regex=r'''
         ^contacts
@@ -192,8 +189,8 @@ class GeneratedDocumentsAJAXFormMixin(GeneratedDocumentsCRUDViewMixin):
 )
 @decorate_view(login_required)
 class GeneratedDocumentsAddAJAX(
-    GeneratedDocumentsAJAXFormMixin,
-    AjaxCreateView,
+    GeneratedDocumentsCRUDViewMixin,
+    SundogAJAXAddView,
 ):
 
     def form_valid(self, form):
@@ -230,7 +227,7 @@ class GeneratedDocumentsAddAJAX(
 )
 @decorate_view(login_required)
 class GeneratedDocumentsDeleteAJAX(
-    GeneratedDocumentsAJAXFormMixin,
-    AjaxDeleteView,
+    GeneratedDocumentsCRUDViewMixin,
+    SundogAJAXDeleteView,
 ):
     pass

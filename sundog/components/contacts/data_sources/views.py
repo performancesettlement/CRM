@@ -5,14 +5,16 @@ from django.forms.models import ModelForm
 from django.forms.widgets import Select, SelectMultiple
 from django.template.defaultfilters import date as date_filter
 from django.urls import reverse
-from django.views.generic.edit import UpdateView
-from fm.views import AjaxCreateView, AjaxDeleteView, AjaxUpdateView
 from settings import SHORT_DATETIME_FORMAT
 from sundog.components.contacts.data_sources.models import DataSource
 from sundog.routing import decorate_view, route
 
 from sundog.util.views import (
+    SundogAJAXAddView,
+    SundogAJAXDeleteView,
+    SundogAJAXEditView,
     SundogDatatableView,
+    SundogEditView,
     format_column,
     template_column,
 )
@@ -25,6 +27,10 @@ class DataSourcesCRUDViewMixin:
         context = super().get_context_data(**kwargs)
         return {
             **context,
+            'breadcrumbs': [
+                ('Contacts', reverse('contacts')),
+                ('Data Sources', reverse('contacts.data_sources')),
+            ],
             'menu_page': 'contacts',
         }
 
@@ -133,10 +139,6 @@ class DataSourcesList(
         return {
             **context,
             'add_url': reverse('contacts.data_sources.add.ajax'),
-            'breadcrumbs': [
-                ('Contacts', reverse('contacts')),
-                ('Data Sources', reverse('contacts.data_sources')),
-            ],
         }
 
     class datatable_class(Datatable):
@@ -200,12 +202,36 @@ class DataSourcesList(
     name='contacts.data_sources.edit',
 )
 @decorate_view(login_required)
-class DataSourcesEdit(DataSourcesCRUDViewMixin, UpdateView):
-    template_name = 'sundog/contacts/data_sources/edit.html'
+class DataSourcesEdit(
+    DataSourcesCRUDViewMixin,
+    SundogEditView,
+):
 
-
-class DataSourcesAJAXFormMixin(DataSourcesCRUDViewMixin):
-    template_name = 'sundog/base/fm_form.html'
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return {
+            **context,
+            'buttons': [
+                (
+                    'Edit Fields',
+                    reverse(
+                        viewname='contacts.data_sources.fields',
+                        kwargs={
+                            'data_source_id': context['object'].pk,
+                        },
+                    ),
+                ),
+                (
+                    'Edit Replacements',
+                    reverse(
+                        viewname='contacts.data_sources.replacements',
+                        kwargs={
+                            'data_source_id': context['object'].pk,
+                        },
+                    ),
+                ),
+            ],
+        }
 
 
 @route(
@@ -219,27 +245,14 @@ class DataSourcesAJAXFormMixin(DataSourcesCRUDViewMixin):
     name='contacts.data_sources.add.ajax',
 )
 @decorate_view(login_required)
-class DataSourcesAddAJAX(DataSourcesAJAXFormMixin, AjaxCreateView):
+class DataSourcesAddAJAX(
+    DataSourcesCRUDViewMixin,
+    SundogAJAXAddView,
+):
 
     def form_valid(self, form):
         form.instance.created_by = self.request.user
         return super().form_valid(form)
-
-
-@route(
-    regex=r'''
-        ^contacts
-        /data_sources
-        /(?P<pk>\d+)
-        (?:/edit)?
-        /ajax
-        /?$
-    ''',
-    name='contacts.data_sources.edit.ajax',
-)
-@decorate_view(login_required)
-class DataSourcesEditAJAX(DataSourcesAJAXFormMixin, AjaxUpdateView):
-    pass
 
 
 @route(
@@ -254,5 +267,27 @@ class DataSourcesEditAJAX(DataSourcesAJAXFormMixin, AjaxUpdateView):
     name='contacts.data_sources.delete.ajax',
 )
 @decorate_view(login_required)
-class DataSourcesDeleteAJAX(DataSourcesAJAXFormMixin, AjaxDeleteView):
+class DataSourcesDeleteAJAX(
+    DataSourcesCRUDViewMixin,
+    SundogAJAXDeleteView,
+):
+    pass
+
+
+@route(
+    regex=r'''
+        ^contacts
+        /data_sources
+        /(?P<pk>\d+)
+        (?:/edit)?
+        /ajax
+        /?$
+    ''',
+    name='contacts.data_sources.edit.ajax',
+)
+@decorate_view(login_required)
+class DataSourcesEditAJAX(
+    DataSourcesCRUDViewMixin,
+    SundogAJAXEditView,
+):
     pass

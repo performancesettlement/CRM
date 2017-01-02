@@ -5,14 +5,16 @@ from django.forms.models import ModelForm
 from django.forms.widgets import Select
 from django.template.defaultfilters import date
 from django.urls import reverse
-from django.views.generic.edit import UpdateView
-from fm.views import AjaxCreateView, AjaxDeleteView, AjaxUpdateView
 from settings import SHORT_DATETIME_FORMAT
 from sundog.components.contacts.data_sources.fields.models import Field
 from sundog.components.contacts.data_sources.models import DataSource
 from sundog.routing import decorate_view, route
 
 from sundog.util.views import (
+    SundogAJAXAddView,
+    SundogAJAXDeleteView,
+    SundogAJAXEditView,
+    SundogEditView,
     SundogDatatableView,
     format_column,
     template_column,
@@ -25,8 +27,22 @@ class FieldsCRUDViewMixin:
     def get_context_data(self, **kwargs):
         return {
             **super().get_context_data(**kwargs),
-            'menu_page': 'contacts',
+            'breadcrumbs': [
+                ('Contacts', reverse('contacts')),
+                ('Data Sources', reverse('contacts.data_sources')),
+                (self.get_data_source(), self.get_data_source()),
+                (
+                    'Fields',
+                    reverse(
+                        'contacts.data_sources.fields',
+                        kwargs={
+                            'data_source_id': self.get_data_source().pk,
+                        },
+                    ),
+                ),
+            ],
             'data_source': self.get_data_source(),
+            'menu_page': 'contacts',
         }
 
     def get_data_source(self):
@@ -87,20 +103,6 @@ class FieldsList(
                     'data_source_id': self.get_data_source().pk,
                 },
             ),
-            'breadcrumbs': [
-                ('Contacts', reverse('contacts')),
-                ('Data Sources', reverse('contacts.data_sources')),
-                (self.get_data_source(), self.get_data_source()),
-                (
-                    'Fields',
-                    reverse(
-                        'contacts.data_sources.fields',
-                        kwargs={
-                            'data_source_id': self.get_data_source().pk,
-                        },
-                    ),
-                ),
-            ],
         }
 
     def get_queryset(self):
@@ -168,12 +170,11 @@ class FieldsList(
     name='contacts.data_sources.fields.edit',
 )
 @decorate_view(login_required)
-class FieldsEdit(FieldsCRUDViewMixin, UpdateView):
-    template_name = 'sundog/contacts/data_sources/fields/edit.html'
-
-
-class FieldsAJAXFormMixin(FieldsCRUDViewMixin):
-    template_name = 'sundog/base/fm_form.html'
+class FieldsEdit(
+    FieldsCRUDViewMixin,
+    SundogEditView,
+):
+    pass
 
 
 @route(
@@ -190,32 +191,14 @@ class FieldsAJAXFormMixin(FieldsCRUDViewMixin):
 )
 @decorate_view(login_required)
 class FieldsAddAJAX(
-    FieldsAJAXFormMixin,
-    AjaxCreateView,
+    FieldsCRUDViewMixin,
+    SundogAJAXAddView,
 ):
 
     def form_valid(self, form):
         form.instance.created_by = self.request.user
         form.instance.data_source = self.get_data_source()
         return super().form_valid(form)
-
-
-@route(
-    regex=r'''
-        ^contacts
-        /data_sources
-        /(?P<data_source_id>\d+)
-        /fields
-        /(?P<pk>\d+)
-        (?:/edit)
-        /ajax
-        /?$
-    ''',
-    name='contacts.data_sources.fields.edit.ajax',
-)
-@decorate_view(login_required)
-class FieldsEditAJAX(FieldsAJAXFormMixin, AjaxUpdateView):
-    pass
 
 
 @route(
@@ -233,7 +216,28 @@ class FieldsEditAJAX(FieldsAJAXFormMixin, AjaxUpdateView):
 )
 @decorate_view(login_required)
 class FieldsDeleteAJAX(
-    FieldsAJAXFormMixin,
-    AjaxDeleteView,
+    FieldsCRUDViewMixin,
+    SundogAJAXDeleteView,
+):
+    pass
+
+
+@route(
+    regex=r'''
+        ^contacts
+        /data_sources
+        /(?P<data_source_id>\d+)
+        /fields
+        /(?P<pk>\d+)
+        (?:/edit)
+        /ajax
+        /?$
+    ''',
+    name='contacts.data_sources.fields.edit.ajax',
+)
+@decorate_view(login_required)
+class FieldsEditAJAX(
+    FieldsCRUDViewMixin,
+    SundogAJAXEditView,
 ):
     pass

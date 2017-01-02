@@ -8,8 +8,6 @@ from django.shortcuts import redirect
 from django.template.defaultfilters import date as date_filter
 from django.urls import reverse
 from django.views.generic.detail import BaseDetailView
-from django.views.generic.edit import UpdateView
-from fm.views import AjaxCreateView, AjaxDeleteView, AjaxUpdateView
 from os.path import basename
 from settings import SHORT_DATETIME_FORMAT
 from sundog.components.files.models import File
@@ -17,7 +15,11 @@ from sundog.routing import decorate_view, route
 from sundog.util.functional import modify_dict
 
 from sundog.util.views import (
+    SundogAJAXAddView,
+    SundogAJAXDeleteView,
+    SundogAJAXEditView,
     SundogDatatableView,
+    SundogEditView,
     format_column,
     template_column,
 )
@@ -32,6 +34,9 @@ class FilesCRUDViewMixin:
         context = super().get_context_data(**kwargs)
         return {
             **context,
+            'breadcrumbs': [
+                ('Files', reverse('files')),
+            ],
             'menu_page': 'files',
         }
 
@@ -96,9 +101,6 @@ class FilesList(
         return {
             **context,
             'add_url': reverse('files.add.ajax'),
-            'breadcrumbs': [
-                ('Files', reverse('files')),
-            ],
         }
 
     class datatable_class(Datatable):
@@ -154,7 +156,11 @@ class FilesList(
     name='files.view',
 )
 @decorate_view(login_required)
-class FilesView(FilesCRUDViewMixin, BaseDetailView):
+class FilesView(
+    FilesCRUDViewMixin,
+    BaseDetailView,
+):
+
     def render_to_response(self, context):
         return redirect(
             get_or_404(
@@ -162,28 +168,6 @@ class FilesView(FilesCRUDViewMixin, BaseDetailView):
                 pk=self.object.pk,
             )
         )
-
-
-class FilesAJAXFormMixin(FilesCRUDViewMixin):
-    template_name = 'sundog/base/fm_form.html'
-
-
-@route(
-    regex=r'''
-        ^files
-        /add
-        /ajax
-        /?$
-    ''',
-    name='files.add.ajax',
-)
-@decorate_view(login_required)
-class FilesAddAJAX(FilesAJAXFormMixin, AjaxCreateView):
-
-    def form_valid(self, form):
-        form.instance.created_by = self.request.user
-        form.instance.filename = form.instance.content.name
-        return super().form_valid(form)
 
 
 @route(
@@ -196,23 +180,32 @@ class FilesAddAJAX(FilesAJAXFormMixin, AjaxCreateView):
     name='files.edit',
 )
 @decorate_view(login_required)
-class FilesEdit(FilesCRUDViewMixin, UpdateView):
-    template_name = 'sundog/files/edit.html'
+class FilesEdit(
+    FilesCRUDViewMixin,
+    SundogEditView,
+):
+    pass
 
 
 @route(
     regex=r'''
         ^files
-        /(?P<pk>\d+)
-        (?:/edit)?
+        /add
         /ajax
         /?$
     ''',
-    name='files.edit.ajax',
+    name='files.add.ajax',
 )
 @decorate_view(login_required)
-class FilesEditAJAX(FilesAJAXFormMixin, AjaxUpdateView):
-    pass
+class FilesAddAJAX(
+    FilesCRUDViewMixin,
+    SundogAJAXAddView,
+):
+
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        form.instance.filename = form.instance.content.name
+        return super().form_valid(form)
 
 
 @route(
@@ -226,5 +219,26 @@ class FilesEditAJAX(FilesAJAXFormMixin, AjaxUpdateView):
     name='files.delete.ajax',
 )
 @decorate_view(login_required)
-class FilesDeleteAJAX(FilesAJAXFormMixin, AjaxDeleteView):
+class FilesDeleteAJAX(
+    FilesCRUDViewMixin,
+    SundogAJAXDeleteView,
+):
+    pass
+
+
+@route(
+    regex=r'''
+        ^files
+        /(?P<pk>\d+)
+        (?:/edit)?
+        /ajax
+        /?$
+    ''',
+    name='files.edit.ajax',
+)
+@decorate_view(login_required)
+class FilesEditAJAX(
+    FilesCRUDViewMixin,
+    SundogAJAXEditView,
+):
     pass

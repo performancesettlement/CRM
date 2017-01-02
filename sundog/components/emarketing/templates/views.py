@@ -5,14 +5,16 @@ from django.forms.models import ModelForm
 from django.forms.widgets import Select
 from django.template.defaultfilters import date
 from django.urls import reverse
-from django.views.generic.edit import UpdateView
-from fm.views import AjaxCreateView, AjaxDeleteView, AjaxUpdateView
 from settings import SHORT_DATETIME_FORMAT
 from sundog.components.emarketing.templates.models import EmailTemplate
 from sundog.routing import decorate_view, route
 
 from sundog.util.views import (
+    SundogAJAXAddView,
+    SundogAJAXDeleteView,
+    SundogAJAXEditView,
     SundogDatatableView,
+    SundogEditView,
     format_column,
     template_column,
 )
@@ -25,6 +27,10 @@ class EmailTemplatesCRUDViewMixin:
         context = super().get_context_data(**kwargs)
         return {
             **context,
+            'breadcrumbs': [
+                ('E-mail Marketing', reverse('emarketing')),
+                ('Templates', reverse('emarketing.templates')),
+            ],
             'menu_page': 'emarketing',
         }
 
@@ -75,9 +81,8 @@ class EmailTemplatesList(
         return {
             **context,
             'add_url': reverse('emarketing.templates.add.ajax'),
-            'breadcrumbs': [
-                ('E-mail Marketing', reverse('emarketing')),
-                ('Templates', reverse('emarketing.templates')),
+            'buttons': [
+                ('Senders', reverse('emarketing.senders')),
             ],
         }
 
@@ -126,8 +131,22 @@ class EmailTemplatesList(
             }
 
 
-class EmailTemplatesAJAXFormMixin(EmailTemplatesCRUDViewMixin):
-    template_name = 'sundog/base/fm_form.html'
+@route(
+    regex=r'''
+        ^emarketing
+        /templates
+        /(?P<pk>\d+)
+        (?:/edit)?
+        /?$
+    ''',
+    name='emarketing.templates.edit',
+)
+@decorate_view(login_required)
+class EmailTemplatesEdit(
+    EmailTemplatesCRUDViewMixin,
+    SundogEditView,
+):
+    pass
 
 
 @route(
@@ -141,42 +160,14 @@ class EmailTemplatesAJAXFormMixin(EmailTemplatesCRUDViewMixin):
     name='emarketing.templates.add.ajax',
 )
 @decorate_view(login_required)
-class EmailTemplatesAddAJAX(EmailTemplatesAJAXFormMixin, AjaxCreateView):
+class EmailTemplatesAddAJAX(
+    EmailTemplatesCRUDViewMixin,
+    SundogAJAXAddView,
+):
 
     def form_valid(self, form):
         form.instance.created_by = self.request.user
         return super().form_valid(form)
-
-
-@route(
-    regex=r'''
-        ^emarketing
-        /templates
-        /(?P<pk>\d+)
-        (?:/edit)?
-        /?$
-    ''',
-    name='emarketing.templates.edit',
-)
-@decorate_view(login_required)
-class EmailTemplatesEdit(EmailTemplatesCRUDViewMixin, UpdateView):
-    template_name = 'sundog/emarketing/templates/edit.html'
-
-
-@route(
-    regex=r'''
-        ^emarketing
-        /templates
-        /(?P<pk>\d+)
-        (?:/edit)
-        /ajax
-        /?$
-    ''',
-    name='emarketing.templates.edit.ajax',
-)
-@decorate_view(login_required)
-class EmailTemplatesEditAJAX(EmailTemplatesAJAXFormMixin, AjaxUpdateView):
-    pass
 
 
 @route(
@@ -191,5 +182,27 @@ class EmailTemplatesEditAJAX(EmailTemplatesAJAXFormMixin, AjaxUpdateView):
     name='emarketing.templates.delete.ajax',
 )
 @decorate_view(login_required)
-class EmailTemplatesDeleteAJAX(EmailTemplatesAJAXFormMixin, AjaxDeleteView):
+class EmailTemplatesDeleteAJAX(
+    EmailTemplatesCRUDViewMixin,
+    SundogAJAXDeleteView,
+):
+    pass
+
+
+@route(
+    regex=r'''
+        ^emarketing
+        /templates
+        /(?P<pk>\d+)
+        (?:/edit)
+        /ajax
+        /?$
+    ''',
+    name='emarketing.templates.edit.ajax',
+)
+@decorate_view(login_required)
+class EmailTemplatesEditAJAX(
+    EmailTemplatesCRUDViewMixin,
+    SundogAJAXEditView,
+):
     pass
