@@ -351,7 +351,7 @@ class Contact(models.Model):
                 break
 
     def __str__(self):
-        return '%s' % self.first_name
+        return self.full_name
 
     def get_absolute_url(self):
         return reverse(
@@ -1053,6 +1053,7 @@ class Payment(models.Model):
     gateway = models.CharField(max_length=10, choices=CUSTODIAL_ACCOUNT_CHOICES, blank=True, null=True)
 
     class Meta:
+        get_latest_by = 'created_at'
         ordering = ['date']
         get_latest_by = 'created_at'
 

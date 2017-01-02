@@ -60,8 +60,8 @@ class EmailTemplate(Model):
 
     def get_absolute_url(self):
         return reverse(
-            'emarketing.templates.edit',
-            args=[
-                self.id,
-            ]
+            viewname='emarketing.templates.edit',
+            kwargs={
+                'pk': self.id,
+            },
         )

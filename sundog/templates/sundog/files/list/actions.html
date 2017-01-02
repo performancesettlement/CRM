@@ -1,50 +1,9 @@
+{% load actions %}
+
+
 <span class="text-nowrap">
-
-  <a
-    aria-label="Delete File"
-    class="files-delete fm-delete"
-    data-fm-callback="reload"
-    data-fm-head="Delete this file?  {{ instance.title }}"
-    href="{% url "files.delete.ajax" pk=instance.pk %}"
-    id="delete-file-{{ instance.pk }}"
-  >
-    <span
-      aria-hidden="true"
-      class="table-action glyphicon glyphicon-remove"
-      title="Delete file"
-    >
-    </span>
-  </a>
-
-  <a
-    aria-label="View File"
-    class="files-view"
-    href="{% url "files.view" pk=instance.pk %}"
-    id="view-file-{{ instance.pk }}"
-    target="_blank"
-  >
-    <span
-      aria-hidden="true"
-      class="table-action glyphicon glyphicon-eye-open"
-      title="View File"
-    >
-    </span>
-  </a>
-
-  <a
-    aria-label="Edit File"
-    class="files-edit fm-update"
-    data-fm-callback="reload"
-    data-fm-head="Editing file: {{ instance.title }}"
-    href="{% url "files.edit.ajax" pk=instance.pk %}"
-    id="edit-file-{{ instance.pk }}"
-  >
-    <span
-      aria-hidden="true"
-      class="table-action glyphicon glyphicon-arrow-right"
-      title="Edit file"
-    >
-    </span>
-  </a>
-
+  {% action_delete viewname="files.delete.ajax" pk=instance.pk %}
+  {% action label="View File" glyphicon="eye-open" extra_attributes='target="_blank"' viewname="files.view" pk=instance.pk %}
+  {% action_quick_edit viewname="files.edit.ajax" pk=instance.pk %}
+  {% action_edit viewname="files.edit" pk=instance.pk %}
 </span>

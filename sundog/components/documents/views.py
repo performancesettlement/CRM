@@ -9,6 +9,7 @@ from django.forms.models import ModelForm
 from django.forms.widgets import Select, SelectMultiple
 from django.http import HttpResponse
 from django.template.defaultfilters import date as date_filter
+from django.urls import reverse
 from django.views.generic.detail import BaseDetailView
 from django.views.generic.edit import UpdateView
 from fm.views import AjaxCreateView, AjaxDeleteView, AjaxUpdateView
@@ -92,8 +93,20 @@ class DocumentsCRUDViewMixin:
     '''.split(),
 )
 @decorate_view(login_required)
-class DocumentsList(DocumentsCRUDViewMixin, SundogDatatableView):
-    template_name = 'sundog/documents/list.html'
+class DocumentsList(
+    DocumentsCRUDViewMixin,
+    SundogDatatableView,
+):
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return {
+            **context,
+            'add_url': reverse('documents.add.ajax'),
+            'breadcrumbs': [
+                ('Documents', reverse('documents')),
+            ],
+        }
 
     class datatable_class(Datatable):
 

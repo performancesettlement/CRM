@@ -13,4 +13,4 @@ from sundog.routing import decorate_view, route
 @decorate_view(login_required)
 class EmarketingRedirect(RedirectView):
     query_string = True
-    pattern_name = 'emarketing.senders'
+    pattern_name = 'emarketing.templates'

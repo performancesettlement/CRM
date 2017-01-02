@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.forms.models import ModelForm
 from django.forms.widgets import Select, SelectMultiple
 from django.template.defaultfilters import date as date_filter
+from django.urls import reverse
 from django.views.generic.edit import UpdateView
 from fm.views import AjaxCreateView, AjaxDeleteView, AjaxUpdateView
 from settings import SHORT_DATETIME_FORMAT
@@ -122,8 +123,21 @@ class DataSourcesCRUDViewMixin:
     '''.split(),
 )
 @decorate_view(login_required)
-class DataSourcesList(DataSourcesCRUDViewMixin, SundogDatatableView):
-    template_name = 'sundog/contacts/data_sources/list.html'
+class DataSourcesList(
+    DataSourcesCRUDViewMixin,
+    SundogDatatableView,
+):
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return {
+            **context,
+            'add_url': reverse('contacts.data_sources.add.ajax'),
+            'breadcrumbs': [
+                ('Contacts', reverse('contacts')),
+                ('Data Sources', reverse('contacts.data_sources')),
+            ],
+        }
 
     class datatable_class(Datatable):
 

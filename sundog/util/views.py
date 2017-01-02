@@ -62,6 +62,8 @@ def template_column(
 
 
 class SundogDatatableView(XEditableDatatableView):
+    template_name = 'sundog/base/list.html'
+
     # Override this attribute with the list of column names (not labels, just
     # the internal names used in code) for which a per-column search input
     # should be provided.

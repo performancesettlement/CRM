@@ -134,8 +134,8 @@ class DataSource(Model):
 
     def get_absolute_url(self):
         return reverse(
-            'contacts.data_sources.edit',
-            args=[
-                self.id,
-            ]
+            viewname='contacts.data_sources.edit',
+            kwargs={
+                'pk': self.id,
+            },
         )

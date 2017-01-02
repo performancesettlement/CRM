@@ -57,8 +57,9 @@ class Replacement(Model):
 
     def get_absolute_url(self):
         return reverse(
-            'contacts.data_sources.replacements.edit',
-            args=[
-                self.id,
-            ]
+            viewname='contacts.data_sources.replacements.edit',
+            kwargs={
+                'data_source_id': self.data_source.pk,
+                'pk': self.id,
+            }
         )

@@ -85,8 +85,8 @@ class Sender(Model):
 
     def get_absolute_url(self):
         return reverse(
-            'emarketing.senders.edit',
-            args=[
-                self.id,
-            ]
+            viewname='emarketing.senders.edit',
+            kwargs={
+                'pk': self.id,
+            },
         )

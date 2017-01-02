@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.forms.models import ModelForm
 from django.forms.widgets import Select
 from django.template.defaultfilters import date
+from django.urls import reverse
 from django.views.generic.edit import UpdateView
 from fm.views import AjaxCreateView, AjaxDeleteView, AjaxUpdateView
 from settings import SHORT_DATETIME_FORMAT
@@ -61,11 +62,24 @@ class EmailTemplatesCRUDViewMixin:
     name='''
         emarketing.templates
         emarketing.templates.list
-    ''',
+    '''.split(),
 )
 @decorate_view(login_required)
-class EmailTemplatesList(EmailTemplatesCRUDViewMixin, SundogDatatableView):
-    template_name = 'sundog/emarketing/templates/list.html'
+class EmailTemplatesList(
+    EmailTemplatesCRUDViewMixin,
+    SundogDatatableView,
+):
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return {
+            **context,
+            'add_url': reverse('emarketing.templates.add.ajax'),
+            'breadcrumbs': [
+                ('E-mail Marketing', reverse('emarketing')),
+                ('Templates', reverse('emarketing.templates')),
+            ],
+        }
 
     class datatable_class(Datatable):
 

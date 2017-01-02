@@ -1,0 +1,18 @@
+<a
+  aria-label="{{ label }}"
+  class="{{ class }} {% if fm %}fm-{{ fm }}{% endif %}"
+  {% if fm %}
+    data-fm-callback="reload"
+    data-fm-head="{{ label }}?  {{ instance }}"
+  {% endif %}
+  href="{{ url }}"
+  id="{{ class }}-{{ instance.pk }}"
+  {{ extra_attributes|safe }}
+>
+  <span
+    aria-hidden="true"
+    class="table-action glyphicon glyphicon-{{ glyphicon }}"
+    title="{{ label }}"
+  >
+  </span>
+</a>

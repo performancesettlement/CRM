@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.forms.models import ModelForm
 from django.forms.widgets import Select
 from django.template.defaultfilters import date
+from django.urls import reverse
 from django.views.generic.edit import UpdateView
 from fm.views import AjaxCreateView, AjaxDeleteView, AjaxUpdateView
 from settings import SHORT_DATETIME_FORMAT
@@ -75,7 +76,32 @@ class FieldsList(
     FieldsCRUDViewMixin,
     SundogDatatableView,
 ):
-    template_name = 'sundog/contacts/data_sources/fields/list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return {
+            **context,
+            'add_url': reverse(
+                viewname='contacts.data_sources.fields.add.ajax',
+                kwargs={
+                    'data_source_id': self.get_data_source().pk,
+                },
+            ),
+            'breadcrumbs': [
+                ('Contacts', reverse('contacts')),
+                ('Data Sources', reverse('contacts.data_sources')),
+                (self.get_data_source(), self.get_data_source()),
+                (
+                    'Fields',
+                    reverse(
+                        'contacts.data_sources.fields',
+                        kwargs={
+                            'data_source_id': self.get_data_source().pk,
+                        },
+                    ),
+                ),
+            ],
+        }
 
     def get_queryset(self):
         return Field.objects.filter(

@@ -3,6 +3,7 @@ from datatableview.helpers import through_filter
 from django.contrib.auth.decorators import login_required
 from django.forms.models import ModelForm
 from django.template.defaultfilters import date
+from django.urls import reverse
 from django.views.generic.edit import UpdateView
 from fm.views import AjaxCreateView, AjaxDeleteView, AjaxUpdateView
 from settings import SHORT_DATETIME_FORMAT
@@ -58,8 +59,21 @@ class SendersCRUDViewMixin:
     '''.split(),
 )
 @decorate_view(login_required)
-class SendersList(SendersCRUDViewMixin, SundogDatatableView):
-    template_name = 'sundog/emarketing/senders/list.html'
+class SendersList(
+    SendersCRUDViewMixin,
+    SundogDatatableView,
+):
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return {
+            **context,
+            'add_url': reverse('emarketing.senders.add.ajax'),
+            'breadcrumbs': [
+                ('E-mail Marketing', reverse('emarketing')),
+                ('Senders', reverse('emarketing.senders')),
+            ],
+        }
 
     class datatable_class(Datatable):
 

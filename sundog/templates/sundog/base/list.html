@@ -1,5 +1,6 @@
 {% extends "sundog/base/table.html" %}
 
+{% load meta %}
 {% load staticfiles %}
 
 
@@ -7,19 +8,17 @@
 
 {% block breadcrumbs %}
   {{ block.super }}
-  {% breadcrumb "Contacts" "contacts" %}
-  {% breadcrumb "Data Sources" "contacts.data_sources" %}
-  {% breadcrumb data_source.name data_source %}
-  {% breadcrumb "Fields" "contacts.data_sources.fields" data_source_id=data_source.pk %}
+  {% for label, url in breadcrumbs %}
+    {% breadcrumb label url %}
+  {% endfor %}
 {% endblock %}
 
 
 {% block title %}
   {{ block.super }}
-  - Contacts
-  - Data Sources
-  - {{ data_source.name }}
-  - Fields
+  {% for label, url in breadcrumbs %}
+  - {{ label }}
+  {% endfor %}
 {% endblock title %}
 
 
@@ -39,22 +38,28 @@
     crossorigin="anonymous"
   ></script>
 
+  {# TinyMCE #}
+  <script
+    type="text/javascript"
+    src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/4.4.3/tinymce.min.js"
+    integrity="sha256-AuSdEJpOGFPsqPZKZf3Leo0EKuCOyAICY1fwp8jiwwc="
+    crossorigin="anonymous"
+  ></script>
+
 {% endblock table_view_head %}
 
 
 {% block table_view_pre_content %}
-
   <div class="col-xs-12 m-t-md m-b-md">
     <div class="inline">
       <a
+        href="{{ add_url|safe }}"
         class="fm-create btn btn-primary"
+        data-fm-head="Add {% model_verbose_name view.model %}"
         data-fm-callback="reload"
-        data-fm-head="Add Field"
-        href="{% url "contacts.data_sources.fields.add.ajax" data_source_id=data_source.pk %}"
       >
-        Add Field
+        Add {% model_verbose_name view.model %}
       </a>
     </div>
   </div>
-
 {% endblock table_view_pre_content %}

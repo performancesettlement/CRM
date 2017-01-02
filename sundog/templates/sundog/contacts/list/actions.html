@@ -1,45 +1,8 @@
+{% load actions %}
+
+
 <span class="text-nowrap">
-
-  <a
-    aria-label="Edit Status"
-    class="edit-contact-status"
-    href="{% url "edit_contact_status" contact_id=instance.pk %}"
-    id="edit-contact-status-{{ instance.pk }}"
-  >
-    <span
-      aria-hidden="true"
-      title="Edit Status"
-      class="table-action glyphicon glyphicon-th"
-    >
-    </span>
-  </a>
-
-  <a
-    aria-label="Edit Info"
-    class="edit-contact-info"
-    href="{% url "edit_contact" contact_id=instance.pk %}"
-    id="edit-contact-info-{{ instance.pk }}"
-  >
-    <span
-      aria-hidden="true"
-      title="Edit Info"
-      class="table-action glyphicon glyphicon-edit"
-    >
-    </span>
-  </a>
-
-  <a
-    aria-label="Dashboard"
-    class="contact-dashboard"
-    href="{% url "contact_dashboard" contact_id=instance.pk %}"
-    id="contact-dashboard-{{ instance.pk }}"
-  >
-    <span
-      aria-hidden="true"
-      title="Dashboard"
-      class="table-action glyphicon glyphicon-arrow-right"
-    >
-    </span>
-  </a>
-
+  {% action label="Edit Status" glyphicon="th" viewname="edit_contact_status" contact_id=instance.pk %}
+  {% action label="Edit Info" glyphicon="edit" viewname="edit_contact" contact_id=instance.pk %}
+  {% action label="Dashboard" glyphicon="arrow-right" viewname="contact_dashboard" contact_id=instance.pk %}
 </span>

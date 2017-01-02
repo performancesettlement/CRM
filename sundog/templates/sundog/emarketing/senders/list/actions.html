@@ -1,35 +1,8 @@
+{% load actions %}
+
+
 <span class="text-nowrap">
-
-  <a
-    aria-label="Delete Sender"
-    class="senders-delete fm-delete"
-    data-fm-callback="reload"
-    data-fm-head="Delete Sender?  {{ instance.name }}"
-    href="{% url "emarketing.senders.delete.ajax" pk=instance.pk %}"
-    id="delete-sender-{{ instance.pk }}"
-  >
-    <span
-      aria-hidden="true"
-      class="table-action glyphicon glyphicon-remove"
-      title="Delete Sender"
-    >
-    </span>
-  </a>
-
-  <a
-    aria-label="Edit Sender"
-    class="senders-edit fm-update"
-    data-fm-callback="reload"
-    data-fm-head="Editing Sender: {{ instance.name }}"
-    href="{% url "emarketing.senders.edit.ajax" pk=instance.pk %}"
-    id="edit-sender-{{ instance.pk }}"
-  >
-    <span
-      aria-hidden="true"
-      class="table-action glyphicon glyphicon-arrow-right"
-      title="Edit Sender"
-    >
-    </span>
-  </a>
-
+  {% action_delete viewname="emarketing.senders.delete.ajax" pk=instance.pk %}
+  {% action_quick_edit viewname="emarketing.senders.edit.ajax" pk=instance.pk %}
+  {% action_edit viewname="emarketing.senders.edit" pk=instance.pk %}
 </span>

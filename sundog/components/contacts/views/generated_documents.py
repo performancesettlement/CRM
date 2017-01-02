@@ -6,6 +6,7 @@ from django.forms.models import ModelForm
 from django.forms.widgets import Select
 from django.shortcuts import redirect
 from django.template.defaultfilters import date
+from django.urls import reverse
 from django.views.generic.detail import BaseDetailView
 from fm.views import AjaxCreateView, AjaxDeleteView
 from settings import SHORT_DATETIME_FORMAT
@@ -76,7 +77,31 @@ class GeneratedDocumentsList(
     GeneratedDocumentsCRUDViewMixin,
     SundogDatatableView,
 ):
-    template_name = 'sundog/contacts/generated_documents/list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return {
+            **context,
+            'add_url': reverse(
+                viewname='contacts.generated_documents.add.ajax',
+                kwargs={
+                    'contact_id': self.get_contact().pk,
+                },
+            ),
+            'breadcrumbs': [
+                ('Contacts', reverse('contacts')),
+                (self.get_contact(), self.get_contact()),
+                (
+                    'Data Sources',
+                    reverse(
+                        'contacts.generated_documents',
+                        kwargs={
+                            'contact_id': self.get_contact().pk,
+                        },
+                    ),
+                ),
+            ],
+        }
 
     def get_queryset(self):
         return GeneratedDocument.objects.filter(
