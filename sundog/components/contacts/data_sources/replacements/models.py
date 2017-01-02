@@ -28,7 +28,7 @@ class Replacement(Model):
     )
 
     field = ForeignKey(
-        Field,
+        to=Field,
         on_delete=CASCADE,
         related_name='data_sources',
         unique=True,

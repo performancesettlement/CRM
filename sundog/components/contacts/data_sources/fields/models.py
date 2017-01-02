@@ -32,7 +32,7 @@ class Field(Model):
     )
 
     data_source = ForeignKey(
-        DataSource,
+        to=DataSource,
         on_delete=CASCADE,
         related_name='fields',
     )

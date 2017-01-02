@@ -60,14 +60,14 @@ class DataSource(Model):
     )
 
     status = ForeignKey(
-        Stage,
+        to=Stage,
         related_name='data_sources',
         blank=True,
         null=True,
     )
 
     campaign = ForeignKey(
-        Campaign,
+        to=Campaign,
         related_name='data_sources',
         blank=True,
         null=True,
@@ -81,7 +81,7 @@ class DataSource(Model):
     )
 
     notification = ForeignKey(
-        EmailTemplate,
+        to=EmailTemplate,
         related_name='data_sources_notification',
         blank=True,
         null=True,
@@ -97,7 +97,7 @@ class DataSource(Model):
         partner
     '''.split():
         vars()[field] = ForeignKey(
-            Company,
+            to=Company,
             related_name='data_sources_' + field,
             blank=True,
             null=True,
@@ -119,7 +119,7 @@ class DataSource(Model):
         abe
     '''.split():
         vars()[field] = ForeignKey(
-            User,
+            to=User,
             related_name='data_sources_' + field,
             blank=True,
             null=True,
