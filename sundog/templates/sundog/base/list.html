@@ -50,7 +50,9 @@
 
 
 {% block table_view_pre_content %}
+
   <div class="col-xs-12 m-t-md m-b-md">
+
     <div class="inline">
       <a
         href="{{ add_url|safe }}"
@@ -61,5 +63,18 @@
         Add {% model_verbose_name view.model %}
       </a>
     </div>
+
+    {% for label, url in buttons %}
+      <div class="inline">
+        <a
+          class="btn btn-primary"
+          href="{{ url }}"
+        >
+          {{ label }}
+        </a>
+      </div>
+    {% endfor %}
+
   </div>
+
 {% endblock table_view_pre_content %}
