@@ -1,6 +1,7 @@
 import copy
 from itertools import chain
 from django import forms
+from django.contrib.auth.models import Group
 from django.core.validators import validate_email
 from django.db.models import Q
 from django.utils.encoding import force_text
@@ -662,3 +663,18 @@ class AdjustPaymentForm(forms.Form):
     memo_checkbox = forms.NullBooleanField(required=False, widget=forms.CheckboxInput(attrs={'class': 'enable-checkbox'}))
     memo = forms.CharField(required=False, widget=forms.TextInput())
     cancel_checkbox = forms.NullBooleanField(required=False, widget=forms.CheckboxInput(attrs={'class': 'cancel-checkbox'}))
+
+
+class GroupForm(forms.ModelForm):
+    class Meta:
+        model = Group
+        widgets = {
+            'parent': forms.Select(attrs={'class': 'col-xs-6 no-padding'}),
+            'name': forms.TextInput(attrs={'class': 'col-xs-6'}),
+            'assignable': forms.CheckboxInput(attrs={'class': 'no-margins'}),
+        }
+        exclude = ['permissions']
+
+    def __init__(self, *args, **kwargs):
+        super(GroupForm, self).__init__(*args, **kwargs)
+        self.fields['parent'].empty_label = EMPTY_LABEL

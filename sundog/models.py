@@ -1,6 +1,6 @@
 from colorful.fields import RGBColorField
 from decimal import Decimal
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models.signals import post_save
@@ -1553,6 +1553,15 @@ class Campaign(models.Model):
 
     def __str__(self):
         return '%s' % self.title
+
+
+if not hasattr(Group, 'parent'):
+    parent = models.ForeignKey(Group, related_name='children', blank=True, null=True)
+    parent.contribute_to_class(Group, 'parent')
+if not hasattr(Group, 'assignable'):
+    assignable = models.BooleanField(default=False)
+    assignable.contribute_to_class(Group, 'assignable')
+
 
 for model in package_models(sundog.components):
     setattr(sys.modules[__name__], model.__name__, model)

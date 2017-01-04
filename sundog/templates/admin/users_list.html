@@ -1,0 +1,18 @@
+{% extends "app-base.html" %}
+{% load staticfiles my_filters %}
+{% block content %}
+    <div class="row wrapper border-bottom white-bg page-heading">
+        <div class="col-lg-10 m-t-md">
+            <ol class="breadcrumb">
+                <li class="active">
+                    <a href="">Users & Administration</a>
+                </li>
+            </ol>
+        </div>
+    </div>
+    <div class="col-xs-12 m-t-md">
+        <a href="{% url "add_user_roles" %}" type="button" class="btn btn-primary">Roles</a>
+    </div>
+    <script type="text/javascript"></script>
+    <script src="{% static "js/admin/users_list.js" %}"></script>
+{% endblock %}

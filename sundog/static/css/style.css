@@ -8308,3 +8308,7 @@ input {
 .vertical-align {
     vertical-align: middle;
 }
+
+.reset-min-width {
+    min-width: auto !important;
+}

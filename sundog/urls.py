@@ -85,6 +85,10 @@ urlpatterns = module_urls(views) + package_urls(sundog.components) + [
 
     url(r'^company/(?P<company_id>\d+)/compensationTemplate/add/$', views.add_compensation_template, name='add_compensation_template'),
     url(r'^company/(?P<company_id>\d+)/compensationTemplate/(?P<compensation_template_id>\d+)/edit/$', views.edit_compensation_template, name='edit_compensation_template'),
+    url(r'^users/$', views.users_list, name='users_list'),
+    url(r'^users/roles/add/$', views.add_user_role, name='add_user_role'),
+    url(r'^users/role/(?P<role_id>\d+)/edit/$', views.edit_user_role, name='edit_user_role'),
+
 ]
 
 handler404 = 'sundog.views.render404'

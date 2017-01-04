@@ -1,6 +1,7 @@
 from _decimal import ROUND_UP
 from decimal import Decimal
 from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.models import Permission, Group
 from django.core import mail
 from django.core.paginator import Paginator
 from django.db import transaction
@@ -12,7 +13,7 @@ from django.urls import reverse
 from django.utils.timezone import now
 
 from numpy import arange
-import pytz
+
 from sundog.constants import SHORT_DATE_FORMAT, FIXED_VALUES
 from sundog.decorators import bypass_impersonation_login_required
 
@@ -20,8 +21,11 @@ from sundog.forms import ContactForm, StageForm, StatusForm, \
     CampaignForm, SourceForm, ContactStatusForm, BankAccountForm, NoteForm, CallForm, EmailForm, UploadedForm, \
     ExpensesForm, IncomesForm, CreditorForm, DebtForm, DebtNoteForm, EnrollmentPlanForm, FeePlanForm, FeeProfileForm, \
     FeeProfileRuleForm, WorkflowSettingsForm, EnrollmentForm, PaymentForm, CompensationTemplateForm, \
-    CompensationTemplatePayeeForm, SettlementOfferForm, SettlementForm, FeeForm, AdjustPaymentForm
+    CompensationTemplatePayeeForm, SettlementOfferForm, SettlementForm, FeeForm, AdjustPaymentForm, GroupForm
 from datetime import datetime, timedelta
+from sundog.management.commands.generate_base_permissions import CONTACT_BASE_CODENAME, CREDITOR_BASE_CODENAME, \
+    ENROLLMENT_BASE_CODENAME, SETTLEMENT_BASE_CODENAME, DOCS_BASE_CODENAME, FILES_BASE_CODENAME, \
+    E_MARKETING_BASE_CODENAME, ADMIN_BASE_CODENAME
 from sundog.models import CAMPAIGN_SOURCES_CHOICES, Contact, Stage, STAGE_TYPE_CHOICES, Status, \
     Campaign, Activity, Uploaded, Expenses, Incomes, Creditor, Debt, DebtNote, Enrollment, EnrollmentPlan, \
     FeeProfile, FeeProfileRule, WorkflowSettings, DEBT_SETTLEMENT, Payment, Company, CompensationTemplate, \
@@ -2190,6 +2194,93 @@ def contact_settlement(request, contact_id, settlement_offer_id):
     template_path = 'contact/contact_settlement.html'
     return _render_response(request, context_info, template_path)
 
+
+def _generate_permission_sections(checked_permissions=[]):
+    permission_sections = []
+    data = [
+        ('Contacts', CONTACT_BASE_CODENAME), ('Creditors', CREDITOR_BASE_CODENAME),
+        ('Enrollments', ENROLLMENT_BASE_CODENAME), ('Settlements', SETTLEMENT_BASE_CODENAME),
+        ('Docs', DOCS_BASE_CODENAME), ('Files', FILES_BASE_CODENAME),
+        ('E-Marketing', E_MARKETING_BASE_CODENAME), ('Admin', ADMIN_BASE_CODENAME),
+    ]
+    for data_element in data:
+        permissions = list(Permission.objects.filter(codename__startswith=data_element[1] + '.'))
+        permissions.sort(key=lambda x: x.name != 'Access Tab')
+        permission_data = {'name': data_element[0], 'permissions': permissions}
+        if checked_permissions:
+            for permission in permissions:
+                if permission.id in checked_permissions:
+                    permission.checked = True
+        permission_sections.append(permission_data)
+    return permission_sections
+
+
+def add_user_role(request):
+    form = GroupForm(request.POST or None)
+    if request.method == 'POST' and request.POST:
+        if form.is_valid():
+            ids = request.POST['ids'].split(',') if 'ids' in request.POST else []
+            permissions = list(Permission.objects.filter(id__in=ids))
+            role = form.save()
+            role.permissions.set(permissions)
+            role.save()
+            response = {'result': 'Ok', 'id': role.id, 'name': role.name}
+        else:
+            response = {'errors': get_form_errors(form)}
+        return JsonResponse(response)
+    permission_sections = _generate_permission_sections()
+    roles = [('', '--Select--')] + [(str(role.id), role.name) for role in list(Group.objects.all())]
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'form': form,
+        'roles': roles,
+        'permission_sections': permission_sections,
+        'menu_page': 'admin',
+    }
+    template_path = 'admin/add_user_role.html'
+    return _render_response(request, context_info, template_path)
+
+
+def edit_user_role(request, role_id):
+    instance = Group.objects.prefetch_related('permissions').get(pk=role_id)
+    form = GroupForm(request.POST or None, instance=instance)
+    if request.method == 'POST' and request.POST:
+        if form.is_valid():
+            ids = request.POST['ids'].split(',') if 'ids' in request.POST else []
+            permissions = list(Permission.objects.filter(id__in=ids))
+            role = form.save()
+            role.permissions.set(permissions)
+            role.save()
+            response = {'result': 'Ok', 'id': role.id, 'name': role.name}
+        else:
+            response = {'errors': get_form_errors(form)}
+        return JsonResponse(response)
+    permission_sections = _generate_permission_sections(
+        [permission.id for permission in list(instance.permissions.all())]
+    )
+    roles = [('', '--Select--')] + [(str(role.id), role.name) for role in list(Group.objects.all())]
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'form': form,
+        'roles': roles,
+        'role_id': str(instance.id),
+        'permission_sections': permission_sections,
+        'menu_page': 'admin',
+    }
+    template_path = 'admin/edit_user_role.html'
+    return _render_response(request, context_info, template_path)
+
+
+def users_list(request):
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'menu_page': 'admin',
+    }
+    template_path = 'admin/users_list.html'
+    return _render_response(request, context_info, template_path)
 
 #######################################################################
 
