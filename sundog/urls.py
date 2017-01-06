@@ -88,7 +88,8 @@ urlpatterns = module_urls(views) + package_urls(sundog.components) + [
     url(r'^users/$', views.users_list, name='users_list'),
     url(r'^users/roles/add/$', views.add_user_role, name='add_user_role'),
     url(r'^users/role/(?P<role_id>\d+)/edit/$', views.edit_user_role, name='edit_user_role'),
-
+    url(r'^teams/add/$', views.add_team, name='add_team'),
+    url(r'^team/(?P<team_id>\d+)/edit/$', views.edit_team, name='edit_team'),
 ]
 
 handler404 = 'sundog.views.render404'

@@ -21,7 +21,7 @@ from sundog.forms import ContactForm, StageForm, StatusForm, \
     CampaignForm, SourceForm, ContactStatusForm, BankAccountForm, NoteForm, CallForm, EmailForm, UploadedForm, \
     ExpensesForm, IncomesForm, CreditorForm, DebtForm, DebtNoteForm, EnrollmentPlanForm, FeePlanForm, FeeProfileForm, \
     FeeProfileRuleForm, WorkflowSettingsForm, EnrollmentForm, PaymentForm, CompensationTemplateForm, \
-    CompensationTemplatePayeeForm, SettlementOfferForm, SettlementForm, FeeForm, AdjustPaymentForm, GroupForm
+    CompensationTemplatePayeeForm, SettlementOfferForm, SettlementForm, FeeForm, AdjustPaymentForm, GroupForm, TeamForm
 from datetime import datetime, timedelta
 from sundog.management.commands.generate_base_permissions import CONTACT_BASE_CODENAME, CREDITOR_BASE_CODENAME, \
     ENROLLMENT_BASE_CODENAME, SETTLEMENT_BASE_CODENAME, DOCS_BASE_CODENAME, FILES_BASE_CODENAME, \
@@ -29,7 +29,7 @@ from sundog.management.commands.generate_base_permissions import CONTACT_BASE_CO
 from sundog.models import CAMPAIGN_SOURCES_CHOICES, Contact, Stage, STAGE_TYPE_CHOICES, Status, \
     Campaign, Activity, Uploaded, Expenses, Incomes, Creditor, Debt, DebtNote, Enrollment, EnrollmentPlan, \
     FeeProfile, FeeProfileRule, WorkflowSettings, DEBT_SETTLEMENT, Payment, Company, CompensationTemplate, \
-    SettlementOffer, SETTLEMENT_SUB_TYPE_CHOICES, Settlement
+    SettlementOffer, SETTLEMENT_SUB_TYPE_CHOICES, Settlement, Team
 
 from sundog.services import reorder_stages, reorder_status
 from sundog.templatetags.my_filters import currency, percent
@@ -2215,6 +2215,17 @@ def _generate_permission_sections(checked_permissions=[]):
     return permission_sections
 
 
+def users_list(request):
+    # TODO: Implement logic.
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'menu_page': 'admin',
+    }
+    template_path = 'admin/users_list.html'
+    return _render_response(request, context_info, template_path)
+
+
 def add_user_role(request):
     form = GroupForm(request.POST or None)
     if request.method == 'POST' and request.POST:
@@ -2224,7 +2235,7 @@ def add_user_role(request):
             role = form.save()
             role.permissions.set(permissions)
             role.save()
-            response = {'result': 'Ok', 'id': role.id, 'name': role.name}
+            response = {'result': 'Ok', 'id': str(role.id), 'name': role.name}
         else:
             response = {'errors': get_form_errors(form)}
         return JsonResponse(response)
@@ -2252,7 +2263,7 @@ def edit_user_role(request, role_id):
             role = form.save()
             role.permissions.set(permissions)
             role.save()
-            response = {'result': 'Ok', 'id': role.id, 'name': role.name}
+            response = {'result': 'Ok'}
         else:
             response = {'errors': get_form_errors(form)}
         return JsonResponse(response)
@@ -2273,14 +2284,49 @@ def edit_user_role(request, role_id):
     return _render_response(request, context_info, template_path)
 
 
-def users_list(request):
+def add_team(request):
+    form = TeamForm(request.POST or None)
+    if request.method == 'POST' and request.POST:
+        if form.is_valid():
+            team = form.save()
+            response = {'result': 'Ok', 'id': str(team.team_id), 'name': team.name}
+        else:
+            response = {'errors': get_form_errors(form)}
+        return JsonResponse(response)
+    teams = [('', '--Select--')] + [(str(team.team_id), team.name) for team in list(Team.objects.all())]
     context_info = {
         'request': request,
+        'teams': teams,
         'user': request.user,
+        'form': form,
         'menu_page': 'admin',
     }
-    template_path = 'admin/users_list.html'
+    template_path = 'admin/add_team.html'
     return _render_response(request, context_info, template_path)
+
+
+def edit_team(request, team_id):
+    instance = Team.objects.get(team_id=team_id)
+    form = TeamForm(request.POST or None, instance=instance)
+    if request.method == 'POST' and request.POST:
+        if form.is_valid():
+            form.save()
+            response = {'result': 'Ok'}
+        else:
+            response = {'errors': get_form_errors(form)}
+        return JsonResponse(response)
+    teams = [('', '--Select--')] + [(str(team.team_id), team.name) for team in list(Team.objects.all())]
+    context_info = {
+        'request': request,
+        'teams': teams,
+        'team_id': str(instance.team_id),
+        'user': request.user,
+        'form': form,
+        'menu_page': 'admin',
+    }
+    template_path = 'admin/edit_team.html'
+    return _render_response(request, context_info, template_path)
+
 
 #######################################################################
 

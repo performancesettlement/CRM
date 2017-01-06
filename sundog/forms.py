@@ -11,7 +11,7 @@ from sundog.models import Contact, Stage, Status, Campaign, Source, BankAccount,
     Email, DEBT_SETTLEMENT, Uploaded, Incomes, Expenses, Creditor, Debt, DebtNote, EnrollmentPlan, FeePlan, FeeProfile,\
     FeeProfileRule, WorkflowSettings, Enrollment, AMOUNT_CHOICES, Payment, PAYMENT_TYPE_CHOICES, \
     CompensationTemplate, CompensationTemplatePayee, NONE_CHOICE_LABEL, Payee, COMPENSATION_TEMPLATE_PAYEE_TYPE_CHOICES, \
-    AVAILABLE_FOR_CHOICES, COMPENSATION_TEMPLATE_TYPES_CHOICES, SettlementOffer, Settlement, Fee
+    AVAILABLE_FOR_CHOICES, COMPENSATION_TEMPLATE_TYPES_CHOICES, SettlementOffer, Settlement, Fee, Team
 
 from sundog.constants import (
     SHORT_DATE_FORMAT,
@@ -678,3 +678,15 @@ class GroupForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(GroupForm, self).__init__(*args, **kwargs)
         self.fields['parent'].empty_label = EMPTY_LABEL
+
+
+class TeamForm(forms.ModelForm):
+    class Meta:
+        model = Team
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'col-xs-8'}),
+            'users': forms.SelectMultiple(attrs={'class': 'col-xs-8 no-padding', 'size': 6}),
+            'companies': forms.SelectMultiple(attrs={'class': 'col-xs-8 no-padding', 'size': 6}),
+            'roles': forms.SelectMultiple(attrs={'class': 'col-xs-8 no-padding', 'size': 6}),
+        }
+        fields = '__all__'

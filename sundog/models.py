@@ -1555,6 +1555,14 @@ class Campaign(models.Model):
         return '%s' % self.title
 
 
+class Team(models.Model):
+    team_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=100)
+    companies = models.ManyToManyField(Company, related_name='company_teams')
+    users = models.ManyToManyField(User, related_name='user_teams')
+    roles = models.ManyToManyField(Group, related_name='group_teams')
+
+
 if not hasattr(Group, 'parent'):
     parent = models.ForeignKey(Group, related_name='children', blank=True, null=True)
     parent.contribute_to_class(Group, 'parent')

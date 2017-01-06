@@ -1,0 +1,63 @@
+{% extends "app-base.html" %}
+{% load staticfiles my_filters %}
+{% block content %}
+    <div class="row wrapper border-bottom white-bg page-heading">
+        <div class="col-lg-10 m-t-md">
+            <ol class="breadcrumb">
+                <li>
+                    <a href="{% url "users_list" %}">Users & Administration</a>
+                </li>
+                <li class="active">
+                    <a href="">Teams</a>
+                </li>
+            </ol>
+        </div>
+    </div>
+    <h3 class="m-t-md">Edit Team</h3>
+    <div class="col-xs-12 no-padding">
+        <label for="select-team" class="col-xs-1 made-by-option no-padding">Select to Edit:</label>
+        <select id="select-team" class="col-xs-2 no-padding">
+            {% for team in teams %}
+                <option value="{{ team.0 }}" {% if team.0 == team_id %}selected{% endif %}>{{ team.1 }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="well p-xs m-t-md col-xs-12">
+        <form id="edit-team-form" action="{% url "edit_team" team_id=team_id %}">
+            {% csrf_token %}
+            <input id="id_team_id" name="team_id" type="hidden" value="{{ team_id }}">
+            <div class="col-xs-11 no-padding-sides">
+                <div class="col-xs-3">
+                    <label class="col-xs-6 no-padding made-by-option">Name</label>
+                    {{ form.name }}
+                </div>
+                <div class="col-xs-3">
+                    {% with form.fields|get_item:'companies' as companies %}
+                    <label class="col-xs-6 no-padding made-by-option">Companies ({{ companies.queryset|length }})</label>
+                    {% endwith %}
+                    {{ form.companies }}
+                </div>
+                <div class="col-xs-3">
+                    {% with form.fields|get_item:'roles' as roles %}
+                    <label class="col-xs-6 no-padding made-by-option">Roles ({{ roles.queryset|length }})</label>
+                    {% endwith %}
+                    {{ form.roles }}
+                </div>
+                <div class="col-xs-3">
+                    {% with form.fields|get_item:'users' as users %}
+                    <label class="col-xs-6 no-padding made-by-option">Users ({{ users.queryset|length }})</label>
+                    {% endwith %}
+                    {{ form.users }}
+                </div>
+            </div>
+            <div class="col-xs-1">
+                <button id="save-team" type="button" class="pull-right btn btn-primary">Save</button>
+            </div>
+        </form>
+    </div>
+    <script type="text/javascript">
+        var editTeamUrl = '{% url "edit_team" team_id=0 %}';
+        var addTeamUrl = '{% url "add_team" %}';
+    </script>
+    <script src="{% static "js/admin/edit_team.js" %}"></script>
+{% endblock %}
