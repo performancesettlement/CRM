@@ -2,7 +2,7 @@
 
 
 <span class="text-nowrap">
-  {% action_delete viewname="contacts.data_sources.replacements.delete.ajax" pk=instance.pk %}
-  {% action_quick_edit viewname="contacts.data_sources.replacements.edit.ajax" pk=instance.pk %}
-  {% action_edit viewname="contacts.data_sources.replacements.edit" pk=instance.pk %}
+  {% action_delete viewname="contacts.data_sources.replacements.delete.ajax" data_source_id=data_source.pk pk=instance.pk %}
+  {% action_quick_edit viewname="contacts.data_sources.replacements.edit.ajax" data_source_id=data_source.pk pk=instance.pk %}
+  {% action_edit viewname="contacts.data_sources.replacements.edit" data_source_id=data_source.pk pk=instance.pk %}
 </span>

@@ -6,6 +6,7 @@ from django.db.models import (
     FloatField,
     ForeignKey,
     Model,
+    OneToOneField,
     SET_NULL,
 )
 
@@ -27,11 +28,10 @@ class Replacement(Model):
         null=True,
     )
 
-    field = ForeignKey(
+    field = OneToOneField(
         to=Field,
+        related_name='replacement',
         on_delete=CASCADE,
-        related_name='data_sources',
-        unique=True,
     )
 
     min_value = FloatField(
@@ -53,13 +53,13 @@ class Replacement(Model):
         get_latest_by = 'created_at'
 
     def __str__(self):
-        return self.name
+        return f'{self.field} replacement'
 
     def get_absolute_url(self):
         return reverse(
             viewname='contacts.data_sources.replacements.edit',
             kwargs={
-                'data_source_id': self.data_source.pk,
+                'data_source_id': self.field.data_source.pk,
                 'pk': self.id,
             }
         )
