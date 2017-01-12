@@ -83,6 +83,8 @@ urlpatterns = module_urls(views) + package_urls(sundog.components) + [
     url(r'^admin/update_preferences_for_section_collapsed_state/$', ajax.update_preferences_for_section_collapsed_state, name='update_section_collapsed_state'),
     url(r'^admin/get_preferences_for_sections_collapsed_state/$', ajax.get_preferences_for_sections_collapsed_state, name='get_sections_collapsed_state'),
 
+    url(r'^company/add/$', views.add_company, name='add_company'),
+    url(r'^company/(?P<company_id>\d+)/edit/$', views.edit_company, name='edit_company'),
     url(r'^company/(?P<company_id>\d+)/compensationTemplate/add/$', views.add_compensation_template, name='add_compensation_template'),
     url(r'^company/(?P<company_id>\d+)/compensationTemplate/(?P<compensation_template_id>\d+)/edit/$', views.edit_compensation_template, name='edit_compensation_template'),
     url(r'^users/$', views.users_list, name='users_list'),

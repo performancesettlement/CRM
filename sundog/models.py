@@ -144,12 +144,12 @@ TIMEZONE_CHOICES = (
 NONE_CHOICE_LABEL = '--Select--'
 
 ACCOUNT_EXEC_CHOICES = (
-    (None, NONE_CHOICE_LABEL),
+    ('', NONE_CHOICE_LABEL),
     ('user_test', 'User, Test'),
 )
 
 THEME_CHOICES = (
-    (None, NONE_CHOICE_LABEL),
+    ('', NONE_CHOICE_LABEL),
     ('default', 'Default'),
     ('light', 'Light'),
     ('perf_sett', 'PerfSett'),
@@ -161,8 +161,8 @@ THEME_CHOICES = (
 class Company(models.Model):
     company_id = models.AutoField(primary_key=True)
     active = models.BooleanField(default=False)
-    company_type = models.CharField(choices=COMPANY_TYPE_CHOICES, max_length=100, blank=True, null=True)
-    parent_company = models.ForeignKey('self', null=True)
+    type = models.CharField(choices=COMPANY_TYPE_CHOICES, max_length=100, blank=True, null=True)
+    parent_company = models.ForeignKey('self', related_name='children', blank=True, null=True)
     name = models.CharField(max_length=100)
     contact_name = models.CharField(max_length=100, blank=True, null=True)
     company_code = models.CharField(max_length=100, blank=True, null=True)
@@ -178,17 +178,22 @@ class Company(models.Model):
     domain = models.CharField(max_length=100, blank=True, null=True)
     timezone = models.CharField(choices=TIMEZONE_CHOICES, max_length=100, blank=True, null=True)
     account_exec = models.CharField(choices=ACCOUNT_EXEC_CHOICES, max_length=100, blank=True, null=True)
-    theme = models.CharField(choices=THEME_CHOICES, max_length=100, blank=True, null=True)
-    upload_logo = models.FileField(max_length=100, blank=True, null=True)
     userfield_1 = models.CharField(max_length=100, blank=True, null=True)
     userfield_2 = models.CharField(max_length=100, blank=True, null=True)
     userfield_3 = models.CharField(max_length=100, blank=True, null=True)
-    docusign_api_acct = models.CharField(max_length=100, blank=True, null=True)
-    docusign_api_user = models.CharField(max_length=100, blank=True, null=True)
-    docusign_password = models.CharField(max_length=100, blank=True, null=True)
 
     def __str__(self):
         return self.name
+
+    def __init__(self, *args, **kwargs):
+        super(Company, self).__init__(*args, **kwargs)
+        for type_choice in COMPANY_TYPE_CHOICES:
+            if type_choice[0] == self.type:
+                self.type_label = type_choice[1]
+                break
+
+    def get_enrolled(self):
+        return self.contacts.exclude(enrollments__isnull=True)
 
 
 MARITAL_STATUS_CHOICES = (
@@ -315,7 +320,7 @@ class Contact(models.Model):
     assigned_to = models.ForeignKey(User, null=True, blank=True, related_name='assigned_to')
     call_center_representative = models.ForeignKey(User, related_name='call_center_representative')
     lead_source = models.ForeignKey(LeadSource)
-    company = models.ForeignKey(Company, null=True, blank=True)
+    company = models.ForeignKey(Company, related_name='contacts', null=True, blank=True)
     stage = models.ForeignKey(Stage, related_name='contact', blank=True, null=True)
     status = models.ForeignKey(Status, related_name='contact', blank=True, null=True)
     last_status_change = models.DateTimeField(blank=True, null=True)
@@ -1562,6 +1567,10 @@ class Team(models.Model):
     users = models.ManyToManyField(User, related_name='user_teams')
     roles = models.ManyToManyField(Group, related_name='group_teams')
 
+
+if not hasattr(User, 'company'):
+    company = models.ForeignKey(Company, related_name='users', blank=True, null=True)
+    company.contribute_to_class(User, 'company')
 
 if not hasattr(Group, 'parent'):
     parent = models.ForeignKey(Group, related_name='children', blank=True, null=True)

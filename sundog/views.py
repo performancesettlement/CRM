@@ -21,7 +21,8 @@ from sundog.forms import ContactForm, StageForm, StatusForm, \
     CampaignForm, SourceForm, ContactStatusForm, BankAccountForm, NoteForm, CallForm, EmailForm, UploadedForm, \
     ExpensesForm, IncomesForm, CreditorForm, DebtForm, DebtNoteForm, EnrollmentPlanForm, FeePlanForm, FeeProfileForm, \
     FeeProfileRuleForm, WorkflowSettingsForm, EnrollmentForm, PaymentForm, CompensationTemplateForm, \
-    CompensationTemplatePayeeForm, SettlementOfferForm, SettlementForm, FeeForm, AdjustPaymentForm, GroupForm, TeamForm
+    CompensationTemplatePayeeForm, SettlementOfferForm, SettlementForm, FeeForm, AdjustPaymentForm, GroupForm, TeamForm, \
+    CompanyForm
 from datetime import datetime, timedelta
 from sundog.management.commands.generate_base_permissions import CONTACT_BASE_CODENAME, CREDITOR_BASE_CODENAME, \
     ENROLLMENT_BASE_CODENAME, SETTLEMENT_BASE_CODENAME, DOCS_BASE_CODENAME, FILES_BASE_CODENAME, \
@@ -1939,7 +1940,7 @@ def add_compensation_template(request, company_id):
         'compensation_templates_choices': compensation_templates_choices,
         'menu_page': 'companies',
     }
-    template_path = 'company/add_compensation_template.html'
+    template_path = 'admin/add_compensation_template.html'
     return _render_response(request, context_info, template_path)
 
 
@@ -1993,7 +1994,7 @@ def edit_compensation_template(request, company_id, compensation_template_id):
         'compensation_template_id': str(compensation_template_id),
         'menu_page': 'companies',
     }
-    template_path = 'company/edit_compensation_template.html'
+    template_path = 'admin/edit_compensation_template.html'
     return _render_response(request, context_info, template_path)
 
 
@@ -2223,6 +2224,49 @@ def users_list(request):
         'menu_page': 'admin',
     }
     template_path = 'admin/users_list.html'
+    return _render_response(request, context_info, template_path)
+
+
+def add_company(request):
+    form = CompanyForm(request.POST or None)
+    errors = []
+    if request.method == 'POST' and request.POST:
+        if form.is_valid():
+            company = form.save()
+            return redirect('edit_company', company_id=company.company_id)
+        else:
+            errors = get_form_errors(form)
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'errors': errors,
+        'form': form,
+        'menu_page': 'admin',
+    }
+    template_path = 'admin/add_company.html'
+    return _render_response(request, context_info, template_path)
+
+
+def edit_company(request, company_id):
+    instance = Company.objects.prefetch_related('users').prefetch_related('users__userprofile') \
+        .prefetch_related('users__groups').prefetch_related('children').get(company_id=company_id)
+    form = CompanyForm(request.POST or None, instance=instance)
+    if request.method == 'POST' and request.POST:
+        if form.is_valid():
+            form.save()
+            response = {'result': 'Ok'}
+        else:
+            response = {'errors': get_form_errors(form)}
+        return JsonResponse(response)
+
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'company': instance,
+        'form': form,
+        'menu_page': 'admin',
+    }
+    template_path = 'admin/edit_company.html'
     return _render_response(request, context_info, template_path)
 
 

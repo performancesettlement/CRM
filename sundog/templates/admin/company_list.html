@@ -1,0 +1,22 @@
+{% extends "sundog/base/table.html" %}
+
+{% load staticfiles my_filters %}
+{% load django_bootstrap_breadcrumbs %}
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    {% breadcrumb "Users & Administration" "users_list" %}
+    {% breadcrumb "Companies" "company_list" %}
+{% endblock %}
+
+{% block table_view_pre_content %}
+    <div class="col-xs-12 m-t-md m-b-md no-padding-sides">
+        <a class="btn btn-primary" href="{% url 'add_company' %}">Add Company</a>
+    </div>
+{% endblock table_view_pre_content %}
+
+{% block table_view_post_content %}
+    <script type="text/javascript"></script>
+    <script src="{% static "js/datatables_style.js" %}"></script>
+    <script src="{% static "js/admin/company_list.js" %}"></script>
+{% endblock table_view_post_content %}

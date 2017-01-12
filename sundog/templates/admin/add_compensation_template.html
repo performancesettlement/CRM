@@ -5,10 +5,10 @@
         <div class="col-lg-10 m-t-md">
             <ol class="breadcrumb">
                 <li>
-                    <a href="">Admin</a>
+                    <a href="{% url "users_list" %}">Admin</a>
                 </li>
                 <li>
-                    <a href="">Companies</a>
+                    <a href="{% url "company_list" %}">Companies</a>
                 </li>
                 <li class="active">
                     <strong>Compensation Templates</strong>
@@ -19,15 +19,14 @@
     <div class="col-xs-12">
         <select id="comp-temp-chooser" class="col-xs-2 no-padding-sides m-t-md">
             {% for template in compensation_templates_choices %}
-                <option value="{{template.0}}" {% if template.0 == compensation_template_id %}selected="selected"{% endif %}>{{template.1}}</option>
+                <option value="{{template.0}}" >{{template.1}}</option>
             {% endfor %}
         </select>
     </div>
     <div class="col-xs-12 m-t-md">
-        <h3>Edit Compensation Template</h3>
-        <form id="edit-compensation-template-form" class="m-t-md" action="{% url 'edit_compensation_template' company_id=company_id compensation_template_id=compensation_template_id %}" method="post">
+        <h3>Add Compensation Template</h3>
+        <form id="add-compensation-template-form" class="m-t-md" action="{% url 'add_compensation_template' company_id=company_id %}" method="post">
             {% csrf_token %}
-            <input name="compensation_template_id" type="hidden" value="{{ compensation_template_id }}">
             <div class="col-xs-12 no-padding-sides no-padding-top m-b-md border-bottom p-md">
                 <div class="inline m-r-md">
                     <label>Template Name</label>
@@ -45,14 +44,11 @@
             </div>
             <div>
                 <button id="add-fee" class="btn btn-primary m-r-xs" type="button">Add Payee</button>
-                <button id="remove-last-fee" class="btn btn-primary" type="button" {% if forms|length == 1 %}style="display: none;"{% endif %}>Remove Last Payee</button>
+                <button id="remove-last-fee" class="btn btn-primary" type="button" style="display: none;">Remove Last Payee</button>
             </div>
             <div id="fees">
                 {% for form_payee in forms %}
                 <div id="fee-{{ form_payee.prefix }}" class="col-xs-4 no-padding-sides m-t-md">
-                    {% if form_payee.instance.compensation_template_payee_id %}
-                    <input name="{{ form_payee.prefix }}-compensation_template_payee_id" type="hidden" value="{{ form_payee.instance.compensation_template_payee_id }}">
-                    {% endif %}
                     <div class="col-xs-3 no-padding-sides">
                         <label>Payee <span>{{ form_payee.prefix }}</span></label>
                         {{ form_payee.type }}
@@ -76,5 +72,5 @@
         var addCompensationTemplateUrl = '{% url 'add_compensation_template' company_id=company_id %}';
         var editCompensationTemplateUrl = '{% url 'edit_compensation_template' company_id=company_id compensation_template_id=0 %}';
     </script>
-    <script src="{% static "js/company/edit_compensation_template.js" %}"></script>
+    <script src="{% static "js/company/add_compensation_template.js" %}"></script>
 {% endblock %}

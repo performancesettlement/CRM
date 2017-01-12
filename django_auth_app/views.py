@@ -3,6 +3,7 @@ from django.template.context import RequestContext
 from django.http import HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, logout
+from django.utils.timezone import now, pytz
 from django_auth_app.forms import RegistrationForm, LoginForm, RecoverForm, ConfirmRecoverForm, ProfileForm
 from django_auth_app.models import UserProfile
 from django.utils.html import strip_tags
@@ -75,6 +76,11 @@ def login_user(request):
             if user:
                 login(request, user)
                 user_tz = services.get_user_timezone(user.id)
+                now_date = now()
+                now_date.replace(tzinfo=pytz.utc)
+                profile = user.userprofile
+                profile.last_login = now_date
+                profile.save()
                 if user_tz:
                     request.session['django_timezone'] = user_tz
                 else:

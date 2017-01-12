@@ -17,7 +17,7 @@ from sundog.cache.user.info import store_cache_user
 
 
 class UserProfile(models.Model):
-    related_user = models.OneToOneField(User, related_name='related_user')
+    related_user = models.OneToOneField(User)
     birthday = models.DateField(blank=True, null=True)
     gender = models.CharField(max_length=1, choices=enums.GENDER_CHOICES, blank=True, null=True)
     phone_number = models.CharField(max_length=50, blank=True, null=True)
@@ -42,6 +42,7 @@ class UserProfile(models.Model):
     first_name = models.CharField(max_length=100, blank=True, null=True)
     last_name = models.CharField(max_length=100, blank=True, null=True)
     timezone = models.CharField(max_length=100, null=True, blank=True, choices=enums.FORMATTED_TIMEZONES)
+    last_login = models.DateTimeField(blank=True, null=True)
 
     def __unicode__(self):
         return '%s' % self.related_user.username

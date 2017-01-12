@@ -1,0 +1,115 @@
+{% extends "app-base.html" %}
+{% load staticfiles my_filters django_bootstrap_breadcrumbs %}
+{% block content %}
+    <div class="row wrapper border-bottom white-bg page-heading">
+        <div class="col-lg-10 m-t-md">
+            <ol class="breadcrumb">
+                <li>
+                    <a href="{% url "users_list" %}">Users & Administration</a>
+                </li>
+                <li>
+                    <a href="{% url "company_list" %}">Companies</a>
+                </li>
+                <li class="active">
+                    <a href="{% url "add_company" %}">Add Company</a>
+                </li>
+            </ol>
+        </div>
+    </div>
+    <div class="m-t-md col-xs-6 padding-for-footer">
+        <form id="add-company-form" action="{% url "add_company" %}" class="col-xs-6" method="post">
+            {% csrf_token %}
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Active</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.active }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Company Type</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.type }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Parent Company</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.parent_company }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Name</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.name }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Contact Name</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.contact_name }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Company Code</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.company_code }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">EIN</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.ein }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Address</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.address }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Address 2</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.address_2 }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">City</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.city }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">State</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.state }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Zip</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.zip }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Phone</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.phone }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Fax</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.fax }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Email</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.email }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Domain</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.domain }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Timezone</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.timezone }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Account Exec</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.account_exec }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Userfield 1</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.userfield_1 }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Userfield 2</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.userfield_2 }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Userfield 3</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.userfield_3 }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <button class="btn btn-primary" type="submit">Save</button>
+            </div>
+        </form>
+    </div>
+    <script type="text/javascript">
+        var errors = {{ errors|jsonify }};
+    </script>
+    <script src="{% static "js/admin/add_company.js" %}"></script>
+{% endblock %}

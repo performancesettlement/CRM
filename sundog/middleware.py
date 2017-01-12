@@ -1,3 +1,4 @@
+from django.utils.timezone import now
 import pytz
 from django.utils import timezone
 from settings import TIME_ZONE

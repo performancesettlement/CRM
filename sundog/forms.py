@@ -11,7 +11,7 @@ from sundog.models import Contact, Stage, Status, Campaign, Source, BankAccount,
     Email, DEBT_SETTLEMENT, Uploaded, Incomes, Expenses, Creditor, Debt, DebtNote, EnrollmentPlan, FeePlan, FeeProfile,\
     FeeProfileRule, WorkflowSettings, Enrollment, AMOUNT_CHOICES, Payment, PAYMENT_TYPE_CHOICES, \
     CompensationTemplate, CompensationTemplatePayee, NONE_CHOICE_LABEL, Payee, COMPENSATION_TEMPLATE_PAYEE_TYPE_CHOICES, \
-    AVAILABLE_FOR_CHOICES, COMPENSATION_TEMPLATE_TYPES_CHOICES, SettlementOffer, Settlement, Fee, Team
+    AVAILABLE_FOR_CHOICES, COMPENSATION_TEMPLATE_TYPES_CHOICES, SettlementOffer, Settlement, Fee, Team, Company
 
 from sundog.constants import (
     SHORT_DATE_FORMAT,
@@ -552,9 +552,6 @@ class CompensationTemplateForm(forms.ModelForm):
         }
         exclude = ['company']
 
-    def __init__(self, *args, **kwargs):
-        super(CompensationTemplateForm, self).__init__(*args, **kwargs)
-
 
 class CompensationTemplatePayeeForm(forms.ModelForm):
 
@@ -690,3 +687,35 @@ class TeamForm(forms.ModelForm):
             'roles': forms.SelectMultiple(attrs={'class': 'col-xs-8 no-padding', 'size': 6}),
         }
         fields = '__all__'
+
+
+class CompanyForm(forms.ModelForm):
+    class Meta:
+        model = Company
+        widgets = {
+            'active': forms.CheckboxInput(attrs={'class': 'vertical-align no-margins'}),
+            'type': forms.Select(attrs={'class': 'col-xs-6 no-padding-sides'}),
+            'parent_company': forms.Select(attrs={'class': 'col-xs-6 no-padding-sides'}),
+            'name': forms.TextInput(attrs={'class': 'col-xs-6'}),
+            'contact_name': forms.TextInput(attrs={'class': 'col-xs-6'}),
+            'company_code': forms.TextInput(attrs={'class': 'col-xs-6'}),
+            'ein': forms.TextInput(attrs={'class': 'col-xs-6'}),
+            'address': forms.TextInput(attrs={'class': 'col-xs-6'}),
+            'address_2': forms.TextInput(attrs={'class': 'col-xs-6'}),
+            'city': forms.TextInput(attrs={'class': 'col-xs-6'}),
+            'state': forms.Select(attrs={'class': 'col-xs-6 no-padding-sides'}),
+            'zip': forms.TextInput(attrs={'class': 'col-xs-6'}),
+            'phone': forms.TextInput(attrs={'class': 'col-xs-6'}),
+            'fax': forms.TextInput(attrs={'class': 'col-xs-6'}),
+            'email': forms.TextInput(attrs={'class': 'col-xs-6'}),
+            'domain': forms.TextInput(attrs={'class': 'col-xs-6'}),
+            'timezone': forms.Select(attrs={'class': 'col-xs-6 no-padding-sides'}),
+            'account_exec': forms.Select(attrs={'class': 'col-xs-6 no-padding-sides'}),
+            'userfield_1': forms.TextInput(attrs={'class': 'col-xs-6'}),
+            'userfield_2': forms.TextInput(attrs={'class': 'col-xs-6'}),
+            'userfield_3': forms.TextInput(attrs={'class': 'col-xs-6'}),
+        }
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super(CompanyForm, self).__init__(*args, **kwargs)

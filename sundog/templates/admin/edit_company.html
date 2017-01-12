@@ -1,0 +1,208 @@
+{% extends "app-base.html" %}
+{% load staticfiles my_filters django_bootstrap_breadcrumbs %}
+{% block content %}
+    <div class="row wrapper border-bottom white-bg page-heading">
+        <div class="col-lg-10 m-t-md">
+            <ol class="breadcrumb">
+                <li>
+                    <a href="{% url "users_list" %}">Users & Administration</a>
+                </li>
+                <li>
+                    <a href="{% url "company_list" %}">Companies</a>
+                </li>
+                <li class="active">
+                    <a href="{% url "edit_company" company_id=company.company_id %}">Edit Company</a>
+                </li>
+            </ol>
+        </div>
+    </div>
+    <div class="col-xs-12 m-t-md">
+        <a href="" class="btn btn-primary m-r-xs">Payees</a> {# TODO: add payees url #}
+        <a href="{% url "add_compensation_template" company_id=company.company_id %}" class="btn btn-primary">Compensation Templates</a>
+    </div>
+    <div class="m-t-md col-xs-4 padding-for-footer">
+        <form id="edit-company-form" action="{% url "edit_company" company_id=company.company_id %}" class="col-xs-12 no-padding-sides" method="post">
+            {% csrf_token %}
+            <input type="hidden" id="id_company_id" name="company_id" value="{{ company.company_id }}">
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Active</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.active }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Company Type</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.type }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Parent Company</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.parent_company }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Name</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.name }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Contact Name</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.contact_name }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Company Code</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.company_code }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">EIN</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.ein }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Address</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.address }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Address 2</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.address_2 }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">City</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.city }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">State</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.state }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Zip</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.zip }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Phone</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.phone }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Fax</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.fax }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Email</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.email }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Domain</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.domain }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Timezone</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.timezone }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Account Exec</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.account_exec }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Userfield 1</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.userfield_1 }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Userfield 2</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.userfield_2 }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <label class="col-xs-4 no-padding">Userfield 3</label>
+                <div class="col-xs-8 no-padding-sides">{{ form.userfield_3 }}</div>
+            </div>
+            <div class="col-xs-12 form-group m-b-xs">
+                <button class="btn btn-primary" type="submit">Save</button>
+            </div>
+        </form>
+    </div>
+    <div class="m-t-md col-xs-8 padding-for-footer">
+        <div class="col-xs-12 no-padding">
+            <label>Users in this company</label>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Username</th>
+                        <th>Full Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Last Login</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% if company.users.all %}
+                {% for user in company.users.all %}
+                    <tr>
+                        <td><span class="glyphicon glyphicon-user {% if user.is_active %}green{% else %}red{% endif %}"></span></td>
+                        <td>{{ user.username|default:'' }}</td>
+                        <td>{{ user.get_full_name|default:'' }}</td>
+                        <td>{{ user.email|default:'' }}</td>
+                        <td>{% if user.groups.first %}{{ user.groups.first.name }}{% endif %}</td>
+                        <td>{{ user.userprofile.last_login|date:'SHORT_DATETIME_FORMAT' }}</td>
+                        <td>
+                            <a href="">  {# TODO: add edit user link #}
+                                <span title="View" class="view-settlement glyphicon glyphicon-arrow-right"></span>
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+                {% else %}
+                    <tr>
+                        <td class="text-center" colspan="12">No Results</td>
+                    </tr>
+                {% endif %}
+                </tbody>
+            </table>
+        </div>
+        <div class="col-xs-12 no-padding">
+            <label>Sub Companies</label>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Active</th>
+                        <th>ID</th>
+                        <th>Company Name</th>
+                        <th>City</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Company Type</th>
+                        <th>Users</th>
+                        <th>Contacts</th>
+                        <th>Enrolled</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% if company.children.all %}
+                {% for child in company.children.all %}
+                    <tr>
+                        <td>
+                            <span class="glyphicon glyphicon-asterisk {% if child.active %}green{% else %}red{% endif %}"></span>
+                        </td>
+                        <td>{{ child.company_id }}</td>
+                        <td>{{ child.name }}</td>
+                        <td>{{ child.city|default:'' }}</td>
+                        <td>{{ child.email|default:'' }}</td>
+                        <td>{{ child.phone|default:'' }}</td>
+                        <td>{% if child.type %}{{ child.type_label }}{% endif %}</td>
+                        <td>{{ child.users.all|length }}</td>
+                        <td>{{ child.contacts.all|length }}</td>
+                        <td>{{ child.get_enrolled|length }}</td>
+                        <td>
+                            <a href="{% url "edit_company" company_id=child.company_id %}">
+                                <span title="View" class="view-settlement glyphicon glyphicon-arrow-right"></span>
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                    <td class="text-center" colspan="12">No Results</td>
+                </tr>
+                {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script type="text/javascript"></script>
+    <script src="{% static "js/admin/edit_company.js" %}"></script>
+{% endblock %}

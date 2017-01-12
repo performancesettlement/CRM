@@ -24,6 +24,7 @@ ADMIN_MEDIA_PREFIX = '/static/admin/'
 
 SITE_ID = 2
 
+AUTH_PROFILE_MODULE = 'django_auth_app.UserProfile'
 
 INSTALLED_APPS = (
     'django.contrib.admin',

@@ -339,37 +339,6 @@ def format_column(label, template, fields):
     )
 
 
-def template_column(
-    label,
-    template_name,
-    context={},
-    context_builder=const({}),
-):
-    return DisplayColumn(
-        label=label,
-        processor=(
-            lambda instance, *args, **kwargs:
-                render_to_string(
-                    template_name=template_name,
-                    context={
-                        'instance': instance,
-                        'args': args,
-                        'kwargs': kwargs,
-                        **context,
-                        **context_builder(
-                            instance=instance,
-                            context=context,
-                            label=label,
-                            template_name=template_name,
-                            *args,
-                            **kwargs,
-                        ),
-                    },
-                )
-        ),
-    )
-
-
 class SundogDatatableView(XEditableDatatableView):
     # Override this attribute with the list of column names (not labels, just
     # the internal names used in code) for which a per-column search input
@@ -412,3 +381,34 @@ class SundogDatatableView(XEditableDatatableView):
                 column.__class__ = SearchColumn
 
         return datatable
+
+
+def template_column(
+    label,
+    template_name,
+    context={},
+    context_builder=const({}),
+):
+    return DisplayColumn(
+        label=label,
+        processor=(
+            lambda instance, *args, **kwargs:
+                render_to_string(
+                    template_name=template_name,
+                    context={
+                        'instance': instance,
+                        'args': args,
+                        'kwargs': kwargs,
+                        **context,
+                        **context_builder(
+                            instance=instance,
+                            context=context,
+                            label=label,
+                            template_name=template_name,
+                            *args,
+                            **kwargs,
+                        ),
+                    },
+                )
+        ),
+    )
