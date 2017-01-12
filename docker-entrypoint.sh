@@ -7,7 +7,8 @@ yes yes | python manage.py migrate
 
 case "${1}" in
   ('development')
-    echo "from django.contrib.auth.models import User; User.objects.create_superuser('admin', 'admin@example.com', 'admin', first_name='Admin', last_name='McAdmin')" | python manage.py shell || true
+    # Development profile setup goes here:
+    true
   ;;
   ('production')
     python manage.py collectstatic --noinput || true
