@@ -576,14 +576,25 @@ class Payee(models.Model):
     account_number = models.CharField(max_length=30)
     account_type = models.CharField(max_length=8, choices=ACCOUNT_TYPE_CHOICES)
     name_on_account = models.CharField(max_length=100)
-    company = models.ForeignKey(Company, blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
+    company = models.ForeignKey(Company, related_name='payees', blank=True, null=True)
 
     def __init__(self, *args, **kwargs):
         super(Payee, self).__init__(*args, **kwargs)
         self.str = str(self.payee_id) + '-' + self.name + ' ***' + self.account_number[-4:]
+        for type_choice in ACCOUNT_TYPE_CHOICES:
+            if type_choice[0] == self.account_type:
+                self.account_type_label = type_choice[1]
+                break
 
     def __str__(self):
         return self.str
+
+    def get_all_payments(self):
+        return list(self.payments_received.all())
+
+    def get_all_cleared_payments(self):
+        return list(self.payments_received.filter(cleared_date__isnull=False))
 
 
 COMPENSATION_TEMPLATE_TYPES_CHOICES = (

@@ -17,7 +17,7 @@
         </div>
     </div>
     <div class="col-xs-12 m-t-md">
-        <a href="" class="btn btn-primary m-r-xs">Payees</a> {# TODO: add payees url #}
+        <a href="{% url "add_payee" company_id=company.company_id %}" class="btn btn-primary m-r-xs">Payees</a>
         <a href="{% url "add_compensation_template" company_id=company.company_id %}" class="btn btn-primary">Compensation Templates</a>
     </div>
     <div class="m-t-md col-xs-4 padding-for-footer">

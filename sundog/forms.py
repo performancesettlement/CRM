@@ -719,3 +719,18 @@ class CompanyForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(CompanyForm, self).__init__(*args, **kwargs)
+
+
+class PayeeForm(forms.ModelForm):
+    class Meta:
+        model = Payee
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'col-xs-11'}),
+            'bank_name': forms.TextInput(attrs={'class': 'col-xs-11'}),
+            'routing_number': forms.TextInput(attrs={'class': 'col-xs-11'}),
+            'account_number': forms.TextInput(attrs={'class': 'col-xs-11'}),
+            'account_type': forms.Select(attrs={'class': 'col-xs-11 no-padding-sides'}),
+            'name_on_account': forms.TextInput(attrs={'class': 'col-xs-11'}),
+            'email': forms.EmailInput(attrs={'class': 'col-xs-11'}),
+        }
+        exclude = ['company']

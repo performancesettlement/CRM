@@ -1,0 +1,119 @@
+{% extends "app-base.html" %}
+{% load staticfiles my_filters %}
+{% block content %}
+    <div class="row wrapper border-bottom white-bg page-heading">
+        <div class="col-lg-10 m-t-md">
+            <ol class="breadcrumb">
+                <li>
+                    <a href="{% url "users_list" %}">Admin</a>
+                </li>
+                <li>
+                    <a href="{% url "company_list" %}">Companies</a>
+                </li>
+                <li class="active">
+                    <strong>Payees</strong>
+                </li>
+            </ol>
+        </div>
+    </div>
+    <div class="col-xs-12 m-t-md">
+        <h3>Edit Compensation Template</h3>
+        <form id="edit-payee-form" class="m-t-md" action="{% url 'edit_payee' company_id=company_id payee_id=payee_id %}" method="post">
+            {% csrf_token %}
+            <input type="hidden" id="id_payee_id" name="payee_id" value="{{ payee_id }}">
+            <div class="col-xs-3 no-padding">
+                <div class="col-xs-6 no-padding">
+                    <label>Default for Company</label>
+                    <div>{{ form.default_for_company }}</div>
+                </div>
+                <div class="col-xs-6 no-padding">
+                    <label>Name</label>
+                    <div>{{ form.name }}</div>
+                </div>
+            </div>
+            <div class="col-xs-3 no-padding">
+                <div class="col-xs-6 no-padding">
+                    <label>Routing #</label>
+                    <div>{{ form.routing_number }}</div>
+                </div>
+                <div class="col-xs-6 no-padding">
+                    <label>Bank Name</label>
+                    <div>{{ form.bank_name }}</div>
+                </div>
+            </div>
+            <div class="col-xs-3 no-padding">
+                <div class="col-xs-6 no-padding">
+                    <label>Account Type</label>
+                    <div>{{ form.account_type }}</div>
+                </div>
+                <div class="col-xs-6 no-padding">
+                    <label>Account #</label>
+                    <div>{{ form.account_number }}</div>
+                </div>
+            </div>
+            <div class="col-xs-3 no-padding">
+                <div class="col-xs-6 no-padding">
+                    <label>Name on Account</label>
+                    <div>{{ form.name_on_account }}</div>
+                </div>
+                <div class="col-xs-6 no-padding">
+                    <label>Email</label>
+                    <div>{{ form.email }}</div>
+                </div>
+            </div>
+            <div class="col-xs-12 no-padding m-t-xs">
+                <button class="btn btn-sm btn-primary" type="submit">Save</button>
+            </div>
+        </form>
+    </div>
+    <div class="col-xs-12 m-t-md border-top">
+        <a class="btn btn-primary m-t-xs" href="{% url "add_payee" company_id=company_id %}">Add Payee</a>
+    </div>
+    <div class="col-xs-12 m-t-xs padding-for-footer border-top">
+        <label class="m-t-md">Existing Payees</label>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Default</th>
+                    <th>Payee Name</th>
+                    <th>Bank Name</th>
+                    <th>Routing #</th>
+                    <th>Account #</th>
+                    <th>Account Type</th>
+                    <th>Name On Account</th>
+                    <th>Payments</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% if payees %}
+                {% for payee in payees %}
+                    <tr id="payee-{{ payee.payee_id }}">
+                        <td>
+                            <span class="default-for-company glyphicon glyphicon-asterisk {% if payee.default_for_company %}green{% else %}red{% endif %}"></span>
+                        </td>
+                        <td class="name">{{ payee.name }}</td>
+                        <td class="bank-name">{{ payee.bank_name|default:'' }}</td>
+                        <td class="routing-number">{{ payee.routing_number|default:'' }}</td>
+                        <td class="account-number">{{ payee.account_number|default:'' }}</td>
+                        <td>{% if payee.account_type %}{{ payee.account_type_label|default:'' }}{% endif %}</td>
+                        <td class="name-on-account">{{ payee.name_on_account|default:'' }}</td>
+                        <td>{{ payee.get_all_cleared_payments|length }}/{{ payee.get_all_payments|length }}</td>
+                        <td>
+                            <a href="{% url "edit_payee" company_id=company_id payee_id=payee.payee_id %}">
+                                <span title="Edit" class="glyphicon glyphicon-edit"></span>
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td class="text-center" colspan="12">No Results</td>
+                </tr>
+            {% endif %}
+            </tbody>
+        </table>
+    </div>
+    <script type="text/javascript"></script>
+    <script src="{% static "js/admin/edit_payee.js" %}"></script>
+{% endblock %}

@@ -22,7 +22,7 @@ from sundog.forms import ContactForm, StageForm, StatusForm, \
     ExpensesForm, IncomesForm, CreditorForm, DebtForm, DebtNoteForm, EnrollmentPlanForm, FeePlanForm, FeeProfileForm, \
     FeeProfileRuleForm, WorkflowSettingsForm, EnrollmentForm, PaymentForm, CompensationTemplateForm, \
     CompensationTemplatePayeeForm, SettlementOfferForm, SettlementForm, FeeForm, AdjustPaymentForm, GroupForm, TeamForm, \
-    CompanyForm
+    CompanyForm, PayeeForm
 from datetime import datetime, timedelta
 from sundog.management.commands.generate_base_permissions import CONTACT_BASE_CODENAME, CREDITOR_BASE_CODENAME, \
     ENROLLMENT_BASE_CODENAME, SETTLEMENT_BASE_CODENAME, DOCS_BASE_CODENAME, FILES_BASE_CODENAME, \
@@ -30,7 +30,7 @@ from sundog.management.commands.generate_base_permissions import CONTACT_BASE_CO
 from sundog.models import CAMPAIGN_SOURCES_CHOICES, Contact, Stage, STAGE_TYPE_CHOICES, Status, \
     Campaign, Activity, Uploaded, Expenses, Incomes, Creditor, Debt, DebtNote, Enrollment, EnrollmentPlan, \
     FeeProfile, FeeProfileRule, WorkflowSettings, DEBT_SETTLEMENT, Payment, Company, CompensationTemplate, \
-    SettlementOffer, SETTLEMENT_SUB_TYPE_CHOICES, Settlement, Team
+    SettlementOffer, SETTLEMENT_SUB_TYPE_CHOICES, Settlement, Team, Payee
 
 from sundog.services import reorder_stages, reorder_status
 from sundog.templatetags.my_filters import currency, percent
@@ -2369,6 +2369,60 @@ def edit_team(request, team_id):
         'menu_page': 'admin',
     }
     template_path = 'admin/edit_team.html'
+    return _render_response(request, context_info, template_path)
+
+
+def add_payee(request, company_id):
+    company = Company.objects.prefetch_related('payees').get(company_id=company_id)
+    form = PayeeForm(request.POST or None)
+    errors = []
+    if request.method == 'POST' and request.POST:
+        if form.is_valid():
+            payee = form.save(commit=False)
+            payee.company_id = company_id
+            payee.save()
+            return redirect('add_payee', company_id=company_id)
+        else:
+            errors = get_form_errors(form)
+    payees = list(company.payees.all())
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'company_id': str(company_id),
+        'payees': payees,
+        'form': form,
+        'errors': errors,
+        'menu_page': 'admin',
+    }
+    template_path = 'admin/add_payee.html'
+    return _render_response(request, context_info, template_path)
+
+
+def edit_payee(request, company_id, payee_id):
+    company = Company.objects.prefetch_related('payees').get(company_id=company_id)
+    instance = Payee.objects.get(payee_id=payee_id)
+    form = PayeeForm(request.POST or None, instance=instance)
+    if request.method == 'POST' and request.POST:
+        if form.is_valid():
+            payee = form.save()
+            response = {'result': 'Ok', 'default_for_company': payee.default_for_company, 'name': payee.name,
+                        'bank_name': payee.bank_name, 'routing_number': payee.routing_number,
+                        'account_number': payee.account_number, 'account_type': payee.account_type,
+                        'name_on_account': payee.name_on_account, 'payee_id': payee.payee_id}
+        else:
+            response = {'errors': get_form_errors(form)}
+        return JsonResponse(response)
+    payees = list(company.payees.all())
+    context_info = {
+        'request': request,
+        'payees': payees,
+        'payee_id': str(payee_id),
+        'company_id': str(company_id),
+        'user': request.user,
+        'form': form,
+        'menu_page': 'admin',
+    }
+    template_path = 'admin/edit_payee.html'
     return _render_response(request, context_info, template_path)
 
 
