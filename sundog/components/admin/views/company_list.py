@@ -8,7 +8,7 @@ from sundog.utils import SundogDatatableView
 
 @route(r'^companies/?$', name='company_list')
 @decorate_view(login_required)
-class SettlementsList(SundogDatatableView):
+class CompanyList(SundogDatatableView):
     template_name = 'admin/company_list.html'
 
     model = Company

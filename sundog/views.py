@@ -1,7 +1,7 @@
 from _decimal import ROUND_UP
 from decimal import Decimal
 from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib.auth.models import Permission, Group
+from django.contrib.auth.models import Permission, Group, User
 from django.core import mail
 from django.core.paginator import Paginator
 from django.db import transaction
@@ -22,7 +22,7 @@ from sundog.forms import ContactForm, StageForm, StatusForm, \
     ExpensesForm, IncomesForm, CreditorForm, DebtForm, DebtNoteForm, EnrollmentPlanForm, FeePlanForm, FeeProfileForm, \
     FeeProfileRuleForm, WorkflowSettingsForm, EnrollmentForm, PaymentForm, CompensationTemplateForm, \
     CompensationTemplatePayeeForm, SettlementOfferForm, SettlementForm, FeeForm, AdjustPaymentForm, GroupForm, TeamForm, \
-    CompanyForm, PayeeForm
+    CompanyForm, PayeeForm, CreateUserForm, EditUserForm
 from datetime import datetime, timedelta
 from sundog.management.commands.generate_base_permissions import CONTACT_BASE_CODENAME, CREDITOR_BASE_CODENAME, \
     ENROLLMENT_BASE_CODENAME, SETTLEMENT_BASE_CODENAME, DOCS_BASE_CODENAME, FILES_BASE_CODENAME, \
@@ -2196,6 +2196,7 @@ def contact_settlement(request, contact_id, settlement_offer_id):
     return _render_response(request, context_info, template_path)
 
 
+@login_required
 def _generate_permission_sections(checked_permissions=[]):
     permission_sections = []
     data = [
@@ -2216,17 +2217,7 @@ def _generate_permission_sections(checked_permissions=[]):
     return permission_sections
 
 
-def users_list(request):
-    # TODO: Implement logic.
-    context_info = {
-        'request': request,
-        'user': request.user,
-        'menu_page': 'admin',
-    }
-    template_path = 'admin/users_list.html'
-    return _render_response(request, context_info, template_path)
-
-
+@login_required
 def add_company(request):
     form = CompanyForm(request.POST or None)
     errors = []
@@ -2247,6 +2238,7 @@ def add_company(request):
     return _render_response(request, context_info, template_path)
 
 
+@login_required
 def edit_company(request, company_id):
     instance = Company.objects.prefetch_related('users').prefetch_related('users__userprofile') \
         .prefetch_related('users__groups').prefetch_related('children').get(company_id=company_id)
@@ -2270,6 +2262,7 @@ def edit_company(request, company_id):
     return _render_response(request, context_info, template_path)
 
 
+@login_required
 def add_user_role(request):
     form = GroupForm(request.POST or None)
     if request.method == 'POST' and request.POST:
@@ -2297,6 +2290,7 @@ def add_user_role(request):
     return _render_response(request, context_info, template_path)
 
 
+@login_required
 def edit_user_role(request, role_id):
     instance = Group.objects.prefetch_related('permissions').get(pk=role_id)
     form = GroupForm(request.POST or None, instance=instance)
@@ -2328,6 +2322,7 @@ def edit_user_role(request, role_id):
     return _render_response(request, context_info, template_path)
 
 
+@login_required
 def add_team(request):
     form = TeamForm(request.POST or None)
     if request.method == 'POST' and request.POST:
@@ -2349,6 +2344,7 @@ def add_team(request):
     return _render_response(request, context_info, template_path)
 
 
+@login_required
 def edit_team(request, team_id):
     instance = Team.objects.get(team_id=team_id)
     form = TeamForm(request.POST or None, instance=instance)
@@ -2372,6 +2368,7 @@ def edit_team(request, team_id):
     return _render_response(request, context_info, template_path)
 
 
+@login_required
 def add_payee(request, company_id):
     company = Company.objects.prefetch_related('payees').get(company_id=company_id)
     form = PayeeForm(request.POST or None)
@@ -2398,6 +2395,7 @@ def add_payee(request, company_id):
     return _render_response(request, context_info, template_path)
 
 
+@login_required
 def edit_payee(request, company_id, payee_id):
     company = Company.objects.prefetch_related('payees').get(company_id=company_id)
     instance = Payee.objects.get(payee_id=payee_id)
@@ -2424,6 +2422,70 @@ def edit_payee(request, company_id, payee_id):
     }
     template_path = 'admin/edit_payee.html'
     return _render_response(request, context_info, template_path)
+
+
+@login_required
+def add_user(request):
+    form = CreateUserForm(request.POST or None)
+    errors = []
+    if request.method == 'POST' and request.POST:
+        if form.is_valid():
+            user = form.save()
+            return redirect('edit_user', user_id=user.id)
+        else:
+            errors = get_form_errors(form)
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'errors': errors,
+        'form': form,
+        'menu_page': 'admin',
+    }
+    template_path = 'admin/add_user.html'
+    return _render_response(request, context_info, template_path)
+
+
+@login_required
+def edit_user(request, user_id):
+    instance = User.objects.prefetch_related('groups').get(id=user_id)
+    post_data = request.POST.copy()
+    if post_data and 'groups' in post_data and post_data['groups']:
+        post_data['groups'] = [post_data['groups']]
+    form = EditUserForm(post_data or None, instance=instance)
+    if request.method == 'POST' and request.POST:
+        if form.is_valid():
+            form.save()
+            form.save_m2m()
+            #  TODO: Implement send email login details.
+            response = {'result': 'Ok'}
+        else:
+            response = {'errors': get_form_errors(form)}
+        return JsonResponse(response)
+    role_id = instance.groups.all().first().id if instance.groups.all().first() else ''
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'edited_user': instance,
+        'role_id': role_id,
+        'form': form,
+        'menu_page': 'admin',
+    }
+    template_path = 'admin/edit_user.html'
+    return _render_response(request, context_info, template_path)
+
+
+@login_required
+def suspend_user(request, user_id):
+    if request.is_ajax() and request.method == 'POST':
+        User.objects.filter(id=user_id).update(is_active=False)
+        return JsonResponse({'result': 'Ok'})
+
+
+@login_required
+def activate_user(request, user_id):
+    if request.is_ajax() and request.method == 'POST':
+        User.objects.filter(id=user_id).update(is_active=True)
+        return JsonResponse({'result': 'Ok'})
 
 
 #######################################################################

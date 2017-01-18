@@ -1,0 +1,49 @@
+{% extends "app-base.html" %}
+{% load staticfiles my_filters %}
+{% block content %}
+    <div class="row wrapper border-bottom white-bg page-heading">
+        <div class="col-xs-12 m-t-md">
+            <ol class="breadcrumb">
+                <li>
+                    <a href="{% url "users_list" %}">Users & Administration</a>
+                </li>
+                <li class="active">
+                    <a href="{% url "add_user" %}">Add User</a>
+                </li>
+            </ol>
+        </div>
+    </div>
+    <div class="m-t-md col-xs-12 padding-for-footer">
+        <form id="add-user-form" action="{% url "add_user" %}" class="col-xs-4 col-xs-offset-4 well" method="post">
+            <input type="text" style="display: none">
+            <input type="password" style="display: none">
+            {% csrf_token %}
+            <h3 class="text-center">Add A New User</h3>
+            <div class="col-xs-12 no-padding">
+                <div class="col-xs-4 no-padding">
+                    <label>Username</label>
+                    <div>{{ form.username }}</div>
+                </div>
+                <div class="col-xs-4 no-padding">
+                    <label>Password</label>
+                    <div>{{ form.password }}</div>
+                </div>
+                <div class="col-xs-4 no-padding">
+                    <label>Confirm Password</label>
+                    <div>{{ form.confirm_password }}</div>
+                </div>
+            </div>
+            <div class="col-xs-12 no-padding m-t-xs">
+                <label>Company</label>
+                <div>{{ form.company }}</div>
+            </div>
+            <div class="col-xs-12 m-t-md text-center">
+                <button class="btn btn-primary">Save User</button>
+            </div>
+        </form>
+    </div>
+    <script type="text/javascript">
+        var errors = {{ errors|jsonify }};
+    </script>
+    <script src="{% static "js/admin/add_user.js" %}"></script>
+{% endblock %}

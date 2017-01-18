@@ -1,20 +1,24 @@
-{% extends "app-base.html" %}
+{% extends "sundog/base/table.html" %}
+
 {% load staticfiles my_filters %}
-{% block content %}
-    <div class="row wrapper border-bottom white-bg page-heading">
-        <div class="col-lg-10 m-t-md">
-            <ol class="breadcrumb">
-                <li class="active">
-                    <a href="">Users & Administration</a>
-                </li>
-            </ol>
-        </div>
-    </div>
-    <div class="col-xs-12 m-t-md">
-        <a href="{% url "company_list" %}" type="button" class="btn btn-primary">Companies</a>
-        <a href="{% url "add_user_role" %}" type="button" class="btn btn-primary">Roles</a>
-        <a href="{% url "add_team" %}" type="button" class="btn btn-primary">Teams</a>
-    </div>
-    <script type="text/javascript"></script>
-    <script src="{% static "js/admin/users_list.js" %}"></script>
+{% load django_bootstrap_breadcrumbs %}
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    {% breadcrumb "Users & Administration" "users_list" %}
 {% endblock %}
+
+{% block table_view_pre_content %}
+    <div class="col-xs-12 m-t-md m-b-md no-padding-sides">
+        <a href="{% url "add_user" %}" type="button" class="btn btn-primary m-r-xs">Add User</a>
+        <a href="{% url "company_list" %}" type="button" class="btn btn-primary m-r-xs">Companies</a>
+        <a href="{% url "add_user_role" %}" type="button" class="btn btn-primary m-r-xs">Roles</a>
+        <a href="{% url "add_team" %}" type="button" class="btn btn-primary m-r-xs">Teams</a>
+    </div>
+{% endblock table_view_pre_content %}
+
+{% block table_view_post_content %}
+    <script type="text/javascript"></script>
+    <script src="{% static "js/datatables_style.js" %}"></script>
+    <script src="{% static "js/admin/users_list.js" %}"></script>
+{% endblock table_view_post_content %}

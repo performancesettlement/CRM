@@ -1582,6 +1582,17 @@ class Team(models.Model):
 if not hasattr(User, 'company'):
     company = models.ForeignKey(Company, related_name='users', blank=True, null=True)
     company.contribute_to_class(User, 'company')
+if not hasattr(User, 'reports_to'):
+    reports_to = models.ForeignKey(User, related_name='reports_to_me', blank=True, null=True)
+    reports_to.contribute_to_class(User, 'reports_to')
+if not hasattr(User, 'shared_user_data'):
+    shared_user_data = models.ManyToManyField(User, related_name='sharing_data_with', blank=True)
+    shared_user_data.contribute_to_class(User, 'shared_user_data')
+if not hasattr(User, 'shared_with_all'):
+    shared_with_all = models.BooleanField(default=False)
+    shared_with_all.contribute_to_class(User, 'shared_with_all')
+
+User.add_to_class('__str__', User.get_full_name)
 
 if not hasattr(Group, 'parent'):
     parent = models.ForeignKey(Group, related_name='children', blank=True, null=True)

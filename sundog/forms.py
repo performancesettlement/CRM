@@ -1,11 +1,12 @@
 import copy
 from itertools import chain
 from django import forms
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, User
 from django.core.validators import validate_email
 from django.db.models import Q
 from django.utils.encoding import force_text
 import pytz
+import re
 from django_auth_app import enums
 from sundog.models import Contact, Stage, Status, Campaign, Source, BankAccount, Note, Call,\
     Email, DEBT_SETTLEMENT, Uploaded, Incomes, Expenses, Creditor, Debt, DebtNote, EnrollmentPlan, FeePlan, FeeProfile,\
@@ -734,3 +735,129 @@ class PayeeForm(forms.ModelForm):
             'email': forms.EmailInput(attrs={'class': 'col-xs-11'}),
         }
         exclude = ['company']
+
+
+class CreateUserForm(forms.ModelForm):
+    confirm_password = forms.CharField(required=True, widget=forms.PasswordInput(attrs={'class': 'col-xs-11'}))
+    company = forms.ModelChoiceField(empty_label=EMPTY_LABEL, queryset=Company.objects.all(),
+                                     widget=forms.Select(attrs={'class': 'col-xs-6 no-padding-sides'}))
+
+    class Meta:
+        model = User
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'col-xs-11'}),
+            'password': forms.PasswordInput(attrs={'class': 'col-xs-11'}),
+        }
+        fields = ['username', 'password', 'company']
+
+    def _password_matches(self):
+        password = self.cleaned_data.get('password')
+        confirm_password = self.cleaned_data.get('confirm_password')
+        if password != confirm_password:
+            self.add_error('password', 'Passwords do not match.')
+
+    def _password_complexity(self):
+        password = self.cleaned_data.get('password')
+        if len(password) < 8:
+            self.add_error('password', 'Passwords must have at least 8 characters.')
+        if not re.search('[a-z]+', password):
+            self.add_error('password', 'Passwords must have at least 1 lower case character.')
+        if not re.search('[A-Z]+', password):
+            self.add_error('password', 'Passwords must have at least 1 upper case character.')
+        if not re.search('\d+', password):
+            self.add_error('password', 'Passwords must have at least 1 number.')
+
+    def full_clean(self):
+        super(CreateUserForm, self).full_clean()
+        self._password_matches()
+        self._password_complexity()
+
+    def save(self, commit=True):
+        user = super(CreateUserForm, self).save(commit=False)
+        if commit:
+            user.set_password(user.password)
+            user.save()
+        return user
+
+
+AT_LEAST_1_LOWER_CASE_RE = '[a-z]+'
+AT_LEAST_1_UPPER_CASE_RE = '[A-Z]+'
+AT_LEAST_1_NUMBER_RE = '\d+'
+
+
+class EditUserForm(forms.ModelForm):
+    confirm_password = forms.CharField(required=False, widget=forms.PasswordInput(attrs={'class': 'col-xs-11'}))
+    email_login_info = forms.BooleanField(required=False, widget=forms.CheckboxInput())
+    password = forms.CharField(required=False, widget=forms.PasswordInput(attrs={'class': 'col-xs-11', 'value': ''}))
+    first_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'col-xs-11'}))
+    last_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'col-xs-11'}))
+    email = forms.EmailField(widget=forms.TextInput(attrs={'class': 'col-xs-11'}))
+    company = forms.ModelChoiceField(empty_label=EMPTY_LABEL, queryset=Company.objects.all(),
+                                     widget=forms.Select(attrs={'class': 'col-xs-11 no-padding-sides'}))
+
+    class Meta:
+        model = User
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'col-xs-11', 'value': ''}),
+            'groups': forms.Select(attrs={'class': 'col-xs-11 no-padding-sides'}),
+            'reports_to': forms.Select(attrs={'class': 'col-xs-11 no-padding-sides'}),
+            'first_name': forms.TextInput(attrs={'class': 'col-xs-11'}),
+            'last_name': forms.TextInput(attrs={'class': 'col-xs-11'}),
+            'email': forms.TextInput(attrs={'class': 'col-xs-11'}),
+            'company': forms.Select(attrs={'class': 'col-xs-11 no-padding-sides'}),
+            'shared_user_data': forms.SelectMultiple(attrs={'class': 'col-lg-2 no-padding-sides'}),
+            'shared_with_all': forms.CheckboxInput(attrs={'class': 'no-margins'}),
+        }
+        fields = ['username', 'password', 'company', 'groups', 'reports_to', 'first_name', 'last_name', 'email',
+                  'company', 'shared_user_data', 'shared_with_all']
+
+    def __init__(self, *args, **kwargs):
+        super(EditUserForm, self).__init__(*args, **kwargs)
+        self.fields['groups'].empty_label = EMPTY_LABEL
+        self.fields['reports_to'].empty_label = EMPTY_LABEL
+        if self.instance.shared_with_all:
+            self.fields['shared_user_data'].widget.attrs.update({'style': 'display: none;'})
+        self.invalid_password = False
+        self.changing_password = False
+
+    def _password_present(self):
+        password = self.cleaned_data.get('password')
+        confirm_password = self.cleaned_data.get('confirm_password')
+        if not password and confirm_password or password and not confirm_password:
+            self.add_error('password', 'Password and confirm password should be both present or blank.')
+            self.invalid_password = True
+        if password and confirm_password:
+            self.changing_password = True
+
+    def _password_matches(self):
+        password = self.cleaned_data.get('password')
+        confirm_password = self.cleaned_data.get('confirm_password')
+        if not self.invalid_password and self.changing_password:
+            if password != confirm_password:
+                self.add_error('password', 'Passwords do not match.')
+
+    def _password_complexity(self):
+        password = self.cleaned_data.get('password')
+        if not self.invalid_password and self.changing_password:
+            if len(password) < 8:
+                self.add_error('password', 'Passwords must have at least 8 characters.')
+            if not re.search(AT_LEAST_1_LOWER_CASE_RE, password):
+                self.add_error('password', 'Passwords must have at least 1 lower case character.')
+            if not re.search(AT_LEAST_1_UPPER_CASE_RE, password):
+                self.add_error('password', 'Passwords must have at least 1 upper case character.')
+            if not re.search(AT_LEAST_1_NUMBER_RE, password):
+                self.add_error('password', 'Passwords must have at least 1 number.')
+
+    def full_clean(self):
+        super(EditUserForm, self).full_clean()
+        self._password_present()
+        self._password_matches()
+        self._password_complexity()
+
+    def save(self, commit=True):
+        user = super(EditUserForm, self).save(commit=False)
+        if commit:
+            if self.changing_password:
+                user.set_password(user.password)
+            user.save()
+        return user

@@ -89,10 +89,13 @@ urlpatterns = module_urls(views) + package_urls(sundog.components) + [
     url(r'^company/(?P<company_id>\d+)/compensationTemplate/(?P<compensation_template_id>\d+)/edit/$', views.edit_compensation_template, name='edit_compensation_template'),
     url(r'^company/(?P<company_id>\d+)/payee/add/$', views.add_payee, name='add_payee'),
     url(r'^company/(?P<company_id>\d+)/payee/(?P<payee_id>\d+)/edit/$', views.edit_payee, name='edit_payee'),
-    url(r'^users/$', views.users_list, name='users_list'),
-    url(r'^users/roles/add/$', views.add_user_role, name='add_user_role'),
-    url(r'^users/role/(?P<role_id>\d+)/edit/$', views.edit_user_role, name='edit_user_role'),
-    url(r'^teams/add/$', views.add_team, name='add_team'),
+    url(r'^user/add/$', views.add_user, name='add_user'),
+    url(r'^user/(?P<user_id>\d+)/edit/$', views.edit_user, name='edit_user'),
+    url(r'^user/(?P<user_id>\d+)/suspend/$', views.suspend_user, name='suspend_user'),
+    url(r'^user/(?P<user_id>\d+)/activate/$', views.activate_user, name='activate_user'),
+    url(r'^user/role/add/$', views.add_user_role, name='add_user_role'),
+    url(r'^user/role/(?P<role_id>\d+)/edit/$', views.edit_user_role, name='edit_user_role'),
+    url(r'^team/add/$', views.add_team, name='add_team'),
     url(r'^team/(?P<team_id>\d+)/edit/$', views.edit_team, name='edit_team'),
 ]
 
