@@ -1,6 +1,5 @@
 from datatableview import Datatable
 from datatableview.helpers import through_filter
-from django.contrib.auth.decorators import login_required
 from django.forms.models import ModelForm
 from django.forms.widgets import Select
 from django.template.defaultfilters import date
@@ -8,7 +7,7 @@ from django.urls import reverse
 from settings import SHORT_DATETIME_FORMAT
 from sundog.components.contacts.data_sources.fields.models import Field
 from sundog.components.contacts.data_sources.models import DataSource
-from sundog.routing import decorate_view, route
+from sundog.routing import route
 
 from sundog.util.views import (
     SundogAJAXAddView,
@@ -87,7 +86,6 @@ class FieldsCRUDViewMixin:
         contacts.data_sources.fields.list
     '''.split(),
 )
-@decorate_view(login_required)
 class FieldsList(
     FieldsCRUDViewMixin,
     SundogDatatableView,
@@ -169,7 +167,6 @@ class FieldsList(
     ''',
     name='contacts.data_sources.fields.edit',
 )
-@decorate_view(login_required)
 class FieldsEdit(
     FieldsCRUDViewMixin,
     SundogEditView,
@@ -189,7 +186,6 @@ class FieldsEdit(
     ''',
     name='contacts.data_sources.fields.add.ajax'
 )
-@decorate_view(login_required)
 class FieldsAddAJAX(
     FieldsCRUDViewMixin,
     SundogAJAXAddView,
@@ -214,7 +210,6 @@ class FieldsAddAJAX(
     ''',
     name='contacts.data_sources.fields.delete.ajax',
 )
-@decorate_view(login_required)
 class FieldsDeleteAJAX(
     FieldsCRUDViewMixin,
     SundogAJAXDeleteView,
@@ -235,7 +230,6 @@ class FieldsDeleteAJAX(
     ''',
     name='contacts.data_sources.fields.edit.ajax',
 )
-@decorate_view(login_required)
 class FieldsEditAJAX(
     FieldsCRUDViewMixin,
     SundogAJAXEditView,

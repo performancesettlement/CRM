@@ -128,7 +128,6 @@ class DataSourcesCRUDViewMixin:
         contacts.data_sources.list
     '''.split(),
 )
-@decorate_view(login_required)
 class DataSourcesList(
     DataSourcesCRUDViewMixin,
     SundogDatatableView,
@@ -201,7 +200,6 @@ class DataSourcesList(
     ''',
     name='contacts.data_sources.edit',
 )
-@decorate_view(login_required)
 class DataSourcesEdit(
     DataSourcesCRUDViewMixin,
     SundogEditView,
@@ -244,7 +242,6 @@ class DataSourcesEdit(
     ''',
     name='contacts.data_sources.add.ajax',
 )
-@decorate_view(login_required)
 class DataSourcesAddAJAX(
     DataSourcesCRUDViewMixin,
     SundogAJAXAddView,
@@ -266,7 +263,6 @@ class DataSourcesAddAJAX(
     ''',
     name='contacts.data_sources.delete.ajax',
 )
-@decorate_view(login_required)
 class DataSourcesDeleteAJAX(
     DataSourcesCRUDViewMixin,
     SundogAJAXDeleteView,
@@ -285,7 +281,6 @@ class DataSourcesDeleteAJAX(
     ''',
     name='contacts.data_sources.edit.ajax',
 )
-@decorate_view(login_required)
 class DataSourcesEditAJAX(
     DataSourcesCRUDViewMixin,
     SundogAJAXEditView,

@@ -1,13 +1,12 @@
 from datatableview import Datatable
 from datatableview.helpers import make_processor, through_filter
-from django.contrib.auth.decorators import login_required
 from django.forms.models import ModelForm
 from django.forms.widgets import Select
 from django.template.defaultfilters import date
 from django.urls import reverse
 from settings import SHORT_DATETIME_FORMAT
 from sundog.components.emarketing.templates.models import EmailTemplate
-from sundog.routing import decorate_view, route
+from sundog.routing import route
 
 from sundog.util.views import (
     SundogAJAXAddView,
@@ -70,7 +69,6 @@ class EmailTemplatesCRUDViewMixin:
         emarketing.templates.list
     '''.split(),
 )
-@decorate_view(login_required)
 class EmailTemplatesList(
     EmailTemplatesCRUDViewMixin,
     SundogDatatableView,
@@ -141,7 +139,6 @@ class EmailTemplatesList(
     ''',
     name='emarketing.templates.edit',
 )
-@decorate_view(login_required)
 class EmailTemplatesEdit(
     EmailTemplatesCRUDViewMixin,
     SundogEditView,
@@ -159,7 +156,6 @@ class EmailTemplatesEdit(
     ''',
     name='emarketing.templates.add.ajax',
 )
-@decorate_view(login_required)
 class EmailTemplatesAddAJAX(
     EmailTemplatesCRUDViewMixin,
     SundogAJAXAddView,
@@ -181,7 +177,6 @@ class EmailTemplatesAddAJAX(
     ''',
     name='emarketing.templates.delete.ajax',
 )
-@decorate_view(login_required)
 class EmailTemplatesDeleteAJAX(
     EmailTemplatesCRUDViewMixin,
     SundogAJAXDeleteView,
@@ -200,7 +195,6 @@ class EmailTemplatesDeleteAJAX(
     ''',
     name='emarketing.templates.edit.ajax',
 )
-@decorate_view(login_required)
 class EmailTemplatesEditAJAX(
     EmailTemplatesCRUDViewMixin,
     SundogAJAXEditView,

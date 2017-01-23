@@ -1,7 +1,6 @@
 from datatableview import Datatable
 from datatableview.columns import DateColumn, DisplayColumn
 from datatableview.helpers import through_filter
-from django.contrib.auth.decorators import login_required
 from django.http import Http404
 from django.shortcuts import redirect
 from django.template.defaultfilters import date, timesince
@@ -9,7 +8,7 @@ from furl import furl
 from settings import SHORT_DATETIME_FORMAT
 from sundog.middleware import Responder
 from sundog.models import Contact
-from sundog.routing import decorate_view, route
+from sundog.routing import route
 from sundog.util.functional import const
 
 from sundog.util.views import (
@@ -20,8 +19,11 @@ from sundog.util.views import (
 
 
 @route(
-    regex=r'^contacts/?$',
-    # FIXME: Replace list_contacts view name usages with contacts.list
+    regex=r'''
+        ^contacts
+        /?$
+    ''',
+    # FIXME: Replace list_contacts view name usages with «contacts»
     name='''
         contacts
         contacts.list
@@ -29,7 +31,6 @@ from sundog.util.views import (
     '''.split(),
 )
 @route(r'^contacts/lists/$', name='new_list')  # FIXME: Create proper view
-@decorate_view(login_required)
 class ContactsList(SundogDatatableView):
     template_name = 'sundog/contacts/list.html'
 

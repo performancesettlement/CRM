@@ -3,7 +3,6 @@ from datetime import date, timedelta
 from datatableview import Datatable
 from datatableview.helpers import make_processor, through_filter
 from django.apps.registry import Apps
-from django.contrib.auth.decorators import login_required
 from django.forms.models import ModelForm
 from django.forms.widgets import Select, SelectMultiple
 from django.http import HttpResponse
@@ -26,7 +25,7 @@ from sundog.models import (
     Status,
 )
 
-from sundog.routing import decorate_view, route
+from sundog.routing import route
 
 from sundog.util.views import (
     SundogAJAXAddView,
@@ -93,7 +92,6 @@ class DocumentsCRUDViewMixin:
         documents.list
     '''.split(),
 )
-@decorate_view(login_required)
 class DocumentsList(
     DocumentsCRUDViewMixin,
     SundogDatatableView,
@@ -158,7 +156,6 @@ class DocumentsList(
     ''',
     name='documents.edit',
 )
-@decorate_view(login_required)
 class DocumentsEdit(
     DocumentsCRUDViewMixin,
     SundogEditView,
@@ -175,7 +172,6 @@ class DocumentsEdit(
     ''',
     name='documents.add.ajax',
 )
-@decorate_view(login_required)
 class DocumentsAddAJAX(
     DocumentsCRUDViewMixin,
     SundogAJAXAddView,
@@ -196,7 +192,6 @@ class DocumentsAddAJAX(
     ''',
     name='documents.delete.ajax',
 )
-@decorate_view(login_required)
 class DocumentsDeleteAJAX(
     DocumentsCRUDViewMixin,
     SundogAJAXDeleteView,
@@ -214,7 +209,6 @@ class DocumentsDeleteAJAX(
     ''',
     name='documents.edit.ajax',
 )
-@decorate_view(login_required)
 class DocumentsEditAJAX(
     DocumentsCRUDViewMixin,
     SundogAJAXEditView,
@@ -232,8 +226,10 @@ class DocumentsEditAJAX(
     ''',
     name='documents.preview.pdf',
 )
-@decorate_view(login_required)
-class DocumentsPreviewPDF(DocumentsCRUDViewMixin, BaseDetailView):
+class DocumentsPreviewPDF(
+    DocumentsCRUDViewMixin,
+    BaseDetailView,
+):
 
     # Render the document template into a PDF:
     def render_to_response(self, context):

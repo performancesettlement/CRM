@@ -1,6 +1,5 @@
 from datatableview import Datatable
 from datatableview.helpers import make_processor, through_filter
-from django.contrib.auth.decorators import login_required
 from django.forms import ClearableFileInput
 from django.forms.models import ModelForm
 from django.forms.widgets import Select
@@ -11,7 +10,7 @@ from django.views.generic.detail import BaseDetailView
 from os.path import basename
 from settings import SHORT_DATETIME_FORMAT
 from sundog.components.files.models import File
-from sundog.routing import decorate_view, route
+from sundog.routing import route
 from sundog.util.functional import modify_dict
 
 from sundog.util.views import (
@@ -90,7 +89,6 @@ class FilesCRUDViewMixin:
         files.list
     '''.split()
 )
-@decorate_view(login_required)
 class FilesList(
     FilesCRUDViewMixin,
     SundogDatatableView,
@@ -155,7 +153,6 @@ class FilesList(
     ''',
     name='files.view',
 )
-@decorate_view(login_required)
 class FilesView(
     FilesCRUDViewMixin,
     BaseDetailView,
@@ -179,7 +176,6 @@ class FilesView(
     ''',
     name='files.edit',
 )
-@decorate_view(login_required)
 class FilesEdit(
     FilesCRUDViewMixin,
     SundogEditView,
@@ -196,7 +192,6 @@ class FilesEdit(
     ''',
     name='files.add.ajax',
 )
-@decorate_view(login_required)
 class FilesAddAJAX(
     FilesCRUDViewMixin,
     SundogAJAXAddView,
@@ -218,7 +213,6 @@ class FilesAddAJAX(
     ''',
     name='files.delete.ajax',
 )
-@decorate_view(login_required)
 class FilesDeleteAJAX(
     FilesCRUDViewMixin,
     SundogAJAXDeleteView,
@@ -236,7 +230,6 @@ class FilesDeleteAJAX(
     ''',
     name='files.edit.ajax',
 )
-@decorate_view(login_required)
 class FilesEditAJAX(
     FilesCRUDViewMixin,
     SundogAJAXEditView,

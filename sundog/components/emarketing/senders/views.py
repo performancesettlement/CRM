@@ -1,12 +1,11 @@
 from datatableview import Datatable
 from datatableview.helpers import through_filter
-from django.contrib.auth.decorators import login_required
 from django.forms.models import ModelForm
 from django.template.defaultfilters import date
 from django.urls import reverse
 from settings import SHORT_DATETIME_FORMAT
 from sundog.components.emarketing.senders.models import Sender
-from sundog.routing import decorate_view, route
+from sundog.routing import route
 
 from sundog.util.views import (
     SundogAJAXAddView,
@@ -64,7 +63,6 @@ class SendersCRUDViewMixin:
         emarketing.senders.list
     '''.split(),
 )
-@decorate_view(login_required)
 class SendersList(
     SendersCRUDViewMixin,
     SundogDatatableView,
@@ -130,7 +128,6 @@ class SendersList(
     ''',
     name='emarketing.senders.edit',
 )
-@decorate_view(login_required)
 class SendersEdit(
     SendersCRUDViewMixin,
     SundogEditView,
@@ -148,7 +145,6 @@ class SendersEdit(
     ''',
     name='emarketing.senders.add.ajax',
 )
-@decorate_view(login_required)
 class SendersAddAJAX(
     SendersCRUDViewMixin,
     SundogAJAXAddView,
@@ -170,7 +166,6 @@ class SendersAddAJAX(
     ''',
     name='emarketing.senders.delete.ajax',
 )
-@decorate_view(login_required)
 class SendersDeleteAJAX(
     SendersCRUDViewMixin,
     SundogAJAXDeleteView,
@@ -189,7 +184,6 @@ class SendersDeleteAJAX(
     ''',
     name='emarketing.senders.edit.ajax',
 )
-@decorate_view(login_required)
 class SendersEditAJAX(
     SendersCRUDViewMixin,
     SundogAJAXEditView,

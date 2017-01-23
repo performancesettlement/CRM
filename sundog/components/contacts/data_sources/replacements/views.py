@@ -1,6 +1,5 @@
 from datatableview import Datatable
 from datatableview.helpers import through_filter
-from django.contrib.auth.decorators import login_required
 from django.forms.models import ModelForm
 from django.template.defaultfilters import date
 from django.urls import reverse
@@ -11,7 +10,7 @@ from sundog.components.contacts.data_sources.replacements.models import (
 )
 
 from sundog.components.contacts.data_sources.models import DataSource
-from sundog.routing import decorate_view, route
+from sundog.routing import route
 
 from sundog.util.views import (
     SundogAJAXAddView,
@@ -83,7 +82,6 @@ class ReplacementsCRUDViewMixin:
         contacts.data_sources.replacements.list
     '''.split(),
 )
-@decorate_view(login_required)
 class ReplacementsList(
     ReplacementsCRUDViewMixin,
     SundogDatatableView,
@@ -167,7 +165,6 @@ class ReplacementsList(
     ''',
     name='contacts.data_sources.replacements.edit',
 )
-@decorate_view(login_required)
 class ReplacementsEdit(
     ReplacementsCRUDViewMixin,
     SundogEditView,
@@ -187,7 +184,6 @@ class ReplacementsEdit(
     ''',
     name='contacts.data_sources.replacements.add.ajax'
 )
-@decorate_view(login_required)
 class ReplacementsAddAJAX(
     ReplacementsCRUDViewMixin,
     SundogAJAXAddView,
@@ -212,7 +208,6 @@ class ReplacementsAddAJAX(
     ''',
     name='contacts.data_sources.replacements.delete.ajax',
 )
-@decorate_view(login_required)
 class ReplacementsDeleteAJAX(
     ReplacementsCRUDViewMixin,
     SundogAJAXDeleteView,
@@ -233,7 +228,6 @@ class ReplacementsDeleteAJAX(
     ''',
     name='contacts.data_sources.replacements.edit.ajax',
 )
-@decorate_view(login_required)
 class ReplacementsEditAJAX(
     ReplacementsCRUDViewMixin,
     SundogAJAXEditView,

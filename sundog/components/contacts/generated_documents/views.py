@@ -1,6 +1,5 @@
 from datatableview import Datatable
 from datatableview.helpers import through_filter
-from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
 from django.forms.models import ModelForm
 from django.forms.widgets import Select
@@ -16,7 +15,7 @@ from sundog.components.contacts.generated_documents.models import (
 )
 
 from sundog.models import Contact
-from sundog.routing import decorate_view, route
+from sundog.routing import route
 
 from sundog.util.views import (
     SundogAJAXAddView,
@@ -91,7 +90,6 @@ class GeneratedDocumentsCRUDViewMixin:
         contacts.generated_documents.list
     '''.split(),
 )
-@decorate_view(login_required)
 class GeneratedDocumentsList(
     GeneratedDocumentsCRUDViewMixin,
     SundogDatatableView,
@@ -171,7 +169,6 @@ class GeneratedDocumentsList(
     ''',
     name='contacts.generated_documents.view'
 )
-@decorate_view(login_required)
 class GeneratedDocumentsView(
     GeneratedDocumentsCRUDViewMixin,
     BaseDetailView,
@@ -192,7 +189,6 @@ class GeneratedDocumentsView(
     ''',
     name='contacts.generated_documents.add.ajax'
 )
-@decorate_view(login_required)
 class GeneratedDocumentsAddAJAX(
     GeneratedDocumentsCRUDViewMixin,
     SundogAJAXAddView,
@@ -230,7 +226,6 @@ class GeneratedDocumentsAddAJAX(
     ''',
     name='contacts.generated_documents.delete.ajax',
 )
-@decorate_view(login_required)
 class GeneratedDocumentsDeleteAJAX(
     GeneratedDocumentsCRUDViewMixin,
     SundogAJAXDeleteView,
