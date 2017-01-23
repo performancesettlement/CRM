@@ -6,7 +6,7 @@ services:
   web:
     build:
       args:
-        # FIXME: These should be the args used, but until Docker 1.13 is released with the enhancement at <https://github.com/docker/docker/pull/27702>, the build container cannot talk to the local-services IPs, as it won’t be on the same network.  Once that enhancement gets released, there should be a way to specify the network used for the build container here in Compose, perhaps with a `network` key within the `build` section.  For now, wire the Docker host IP address, as the port is published there anyway.
+        # FIXME: These should be the args used, but until Docker 1.13 is released with the enhancement at <https://github.com/docker/docker/pull/27702>, the build container cannot talk to the local-services IPs, as it won’t be on the same network.  Once that enhancement gets released, there should be a way to specify the network used for the build container here in Compose, perhaps with a `network` key within the `build` section — the feature request for this is being tracked at <https://github.com/docker/compose/issues/4095>.  For now, wire the Docker host IP address, as the port is published there anyway.
         PIP_INDEX_URL: "http://172.17.0.1:3141/root/pypi/+simple/"
         PIP_TRUSTED_HOST: "172.17.0.1"
         # PIP_INDEX_URL: "http://devpi-local-3141.service.consul.test:3141/simple/"
