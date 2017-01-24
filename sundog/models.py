@@ -318,14 +318,50 @@ class Contact(models.Model):
 
     active = models.BooleanField(default=True)
     assigned_to = models.ForeignKey(User, null=True, blank=True, related_name='assigned_to')
-    call_center_representative = models.ForeignKey(User, related_name='call_center_representative')
-    lead_source = models.ForeignKey(LeadSource)
+    call_center_representative = models.ForeignKey(User, related_name='call_center_representative', blank=True, null=True)
+    lead_source = models.ForeignKey(LeadSource, blank=True, null=True)
     company = models.ForeignKey(Company, related_name='contacts', null=True, blank=True)
     stage = models.ForeignKey(Stage, related_name='contact', blank=True, null=True)
     status = models.ForeignKey(Status, related_name='contact', blank=True, null=True)
     last_status_change = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+
+    for field in '''
+        marketing_company
+        servicing_company
+        law_firm
+        lead_vendor
+        partner
+    '''.split():
+        vars()[field] = models.ForeignKey(
+            to=Company,
+            related_name=field + '_contacts',
+            blank=True,
+            null=True,
+        )
+    del field
+
+    for field in '''
+        negotiator
+        sales_manager
+        client_services_representative
+        sales
+        processor
+        sales_lns
+        supervisor
+        attorney
+        lendstreet
+        manager
+        abe
+    '''.split():
+        vars()[field] = models.ForeignKey(
+            to=User,
+            related_name=field + '_contacts',
+            blank=True,
+            null=True,
+        )
+    del field
 
     class Meta:
         verbose_name = 'Contact'

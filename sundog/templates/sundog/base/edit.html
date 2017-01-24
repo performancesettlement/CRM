@@ -46,10 +46,16 @@
     crossorigin="anonymous"
   ></script>
 
+  {% block edit_view_head %}
+  {% endblock edit_view_head %}
+
 {% endblock app_view_head %}
 
 
 {% block app_view_pre_content %}
+
+  {% block edit_view_pre_buttons %}
+  {% endblock edit_view_pre_buttons %}
 
   {% for label, url in buttons %}
     <div class="inline">
@@ -62,10 +68,16 @@
     </div>
   {% endfor %}
 
+  {% block edit_view_post_buttons %}
+  {% endblock edit_view_post_buttons %}
+
 {% endblock app_view_pre_content %}
 
 
 {% block app_view_content %}
+
+  {% block edit_view_pre_form %}
+  {% endblock edit_view_pre_form %}
 
   <div class="col-xs-12 no-padding-sides m-t-md">
     <h3>Edit {% model_verbose_name object %}</h3>
@@ -76,5 +88,8 @@
       <input type="submit" value="Save">
     </form>
   </div>
+
+  {% block edit_view_post_form %}
+  {% endblock edit_view_post_form %}
 
 {% endblock app_view_content %}

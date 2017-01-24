@@ -89,7 +89,8 @@ class SundogDatatableView(XEditableDatatableView):
                 # dynamically.  See http://stackoverflow.com/a/31591589/1392731
                 attributes_ = column.attributes
 
-                class SearchColumn(type(column)):
+                base = type(column)
+                class SearchColumn(base):
                     attributes = attributes_ + ' data-config-searchable="true"'
 
                     # Subclassing the original column class without resetting
@@ -103,6 +104,12 @@ class SundogDatatableView(XEditableDatatableView):
                     # Details in datatableview.columns.ColumnMetaclass.__new__
                     model_field_class = None
                     handles_field_classes = []
+
+                # Once the class has been created, it's safe to reset the
+                # cleared attributes to their original values inherited from
+                # their superclasses.
+                SearchColumn.model_field_class = base.model_field_class
+                SearchColumn.handles_field_classes = base.handles_field_classes
 
                 column.__class__ = SearchColumn
 

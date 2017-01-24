@@ -7,9 +7,11 @@ from django.db.models import (
     ManyToManyField,
     Model,
     SET_NULL,
+    UUIDField,
 )
 
 from django.urls import reverse
+from random import choice
 
 from sundog.components.contacts.data_sources.enums import (
     DATA_SOURCE_FILE_TYPE_CHOICES,
@@ -21,11 +23,13 @@ from sundog.components.emarketing.templates.models import EmailTemplate
 from sundog.models import (
     Campaign,
     Company,
+    Contact,
     DEBT_SETTLEMENT,
     Stage,
 )
 
 from sundog.util.models import LongCharField
+from uuid import uuid4
 
 
 class DataSource(Model):
@@ -73,8 +77,9 @@ class DataSource(Model):
         null=True,
     )
 
-    enabled = BooleanField(default=True)
+    assignment_enabled = BooleanField(default=True)
     public = BooleanField(default=False)
+
     assigned_to = ManyToManyField(
         User,
         related_name='assigned_data_sources',
@@ -83,6 +88,21 @@ class DataSource(Model):
     notification = ForeignKey(
         to=EmailTemplate,
         related_name='data_sources_notification',
+        blank=True,
+        null=True,
+    )
+
+    key = UUIDField(
+        default=uuid4,
+        editable=False,
+    )
+
+    username = LongCharField(
+        blank=True,
+        null=True,
+    )
+
+    password = LongCharField(
         blank=True,
         null=True,
     )
@@ -139,3 +159,60 @@ class DataSource(Model):
                 'pk': self.id,
             },
         )
+
+    def post_url(self):
+        return reverse(
+            viewname='contacts.data_sources.post',
+            kwargs={
+                'pk': self.id,
+                'key': self.key.hex,
+            },
+        )
+
+    def import_contact(self, data):
+        # FIXME: this works even if the request is missing form fields
+
+        contact = Contact(
+            **{
+                field.maps_to: value
+                for field in self.fields.all()
+                for value in [data.get(field.name)]
+                if value
+            },
+        )
+
+        if self.assignment_enabled:
+            choices = self.assigned_to.all()
+            if choices:
+                contact.assigned_to = choice(choices)
+
+            for field in '''
+                company
+                marketing_company
+                servicing_company
+                law_firm
+                lead_vendor
+                partner
+            '''.split():
+                assigned_company = getattr(self, field, None)
+                if assigned_company:
+                    setattr(contact, field, assigned_company)
+
+            for field in '''
+                negotiator
+                sales_manager
+                client_services_representative
+                sales
+                processor
+                sales_lns
+                supervisor
+                attorney
+                lendstreet
+                manager
+                abe
+            '''.split():
+                assigned_user = getattr(self, field, None)
+                if assigned_user:
+                    setattr(contact, field, assigned_user)
+
+        contact.save()

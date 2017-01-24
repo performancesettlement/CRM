@@ -40,11 +40,7 @@ class Field(Model):
     name = LongCharField()
 
     MAPS_TO_CHOICES = FIELD_MAPS_TO_CHOICES
-    MAPS_TO_CHOICES_DICT = {
-        key: value
-        for group, choices in FIELD_MAPS_TO_CHOICES
-        for key, value in choices
-    }
+    MAPS_TO_CHOICES_DICT = dict(FIELD_MAPS_TO_CHOICES)
     maps_to = LongCharField(
         choices=MAPS_TO_CHOICES,
     )

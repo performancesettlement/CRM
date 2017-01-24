@@ -1,5 +1,5 @@
 from datatableview import Datatable
-from datatableview.columns import DateColumn, DisplayColumn
+from datatableview.columns import DateColumn, DisplayColumn, TextColumn
 from datatableview.helpers import through_filter
 from django.http import Http404
 from django.shortcuts import redirect
@@ -53,7 +53,7 @@ class ContactsList(SundogDatatableView):
         email
         stage
         status
-        data_source
+        lead_source
         last_call_activity
         time_in_status
     '''.split()
@@ -106,6 +106,11 @@ class ContactsList(SundogDatatableView):
 
     class datatable_class(Datatable):
 
+        company = TextColumn(
+            label="Company",
+            sources=['company__name'],
+        )
+
         type_ = DisplayColumn(
             label='Type',
             processor=const('Debt Settlement'),  # TODO
@@ -121,8 +126,8 @@ class ContactsList(SundogDatatableView):
             '''.split(),
         )
 
-        data_source = DisplayColumn(
-            label='Data source',
+        lead_source = DisplayColumn(
+            label='Lead source',
             processor=const(''),  # TODO
         )
 
@@ -160,7 +165,7 @@ class ContactsList(SundogDatatableView):
                 email
                 stage
                 status
-                data_source
+                lead_source
                 last_call_activity
                 time_in_status
                 actions

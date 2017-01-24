@@ -46,10 +46,16 @@
     crossorigin="anonymous"
   ></script>
 
+  {% block list_view_head %}
+  {% endblock list_view_head %}
+
 {% endblock table_view_head %}
 
 
 {% block table_view_pre_content %}
+
+  {% block list_view_pre_buttons %}
+  {% endblock list_view_pre_buttons %}
 
   <div class="col-xs-12 m-t-md m-b-md">
 
@@ -77,4 +83,15 @@
 
   </div>
 
+  {% block list_view_post_buttons %}
+  {% endblock list_view_post_buttons %}
+
 {% endblock table_view_pre_content %}
+
+
+{% block table_view_post_content %}
+
+  {% block list_view_post_content %}
+  {% endblock list_view_post_content %}
+
+{% endblock table_view_post_content %}

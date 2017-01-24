@@ -1,10 +1,17 @@
+from codecs import iterdecode
+from csv import DictReader
 from datatableview import Datatable
 from datatableview.helpers import make_processor, through_filter
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.core.exceptions import PermissionDenied
 from django.forms.models import ModelForm
 from django.forms.widgets import Select, SelectMultiple
-from django.template.defaultfilters import date as date_filter
+from django.http import Http404, HttpResponse
+from django.template.defaultfilters import date
 from django.urls import reverse
+from django.views import View
+from django.views.decorators.csrf import csrf_exempt
+from django.views.generic.detail import SingleObjectMixin
 from settings import SHORT_DATETIME_FORMAT
 from sundog.components.contacts.data_sources.models import DataSource
 from sundog.routing import decorate_view, route
@@ -44,7 +51,7 @@ class DataSourcesCRUDViewMixin:
                 file_type
                 status
                 campaign
-                enabled
+                assignment_enabled
                 public
                 assigned_to
                 notification
@@ -176,7 +183,7 @@ class DataSourcesList(
 
             processors = {
                 'created_at': through_filter(
-                    date_filter,
+                    date,
                     arg=SHORT_DATETIME_FORMAT,
                 ),
                 'file_type': make_processor(
@@ -204,6 +211,7 @@ class DataSourcesEdit(
     DataSourcesCRUDViewMixin,
     SundogEditView,
 ):
+    template_name = 'sundog/contacts/data_sources/edit.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -229,6 +237,9 @@ class DataSourcesEdit(
                     ),
                 ),
             ],
+            'post_url': self.request.build_absolute_uri(
+                self.object.post_url(),
+            ),
         }
 
 
@@ -249,6 +260,12 @@ class DataSourcesAddAJAX(
 
     def form_valid(self, form):
         form.instance.created_by = self.request.user
+
+        if form.instance.password:
+            u = User()
+            u.set_password(form.instance.password)
+            form.instance.password = u.password
+
         return super().form_valid(form)
 
 
@@ -286,3 +303,80 @@ class DataSourcesEditAJAX(
     SundogAJAXEditView,
 ):
     pass
+
+
+@route(
+    regex=r'''
+        ^contacts
+        /data_sources
+        /(?P<pk>\d+)
+        /post
+        /(?P<key>[a-z0-9-]+)
+        /?$
+    ''',
+    name='contacts.data_sources.post',
+    public=True,
+)
+@decorate_view(csrf_exempt)
+class DataSourcesPost(
+    DataSourcesCRUDViewMixin,
+    SingleObjectMixin,
+    View,
+):
+
+    def post(self, request, *args, **kwargs):
+        data_source = self.object = self.get_object()
+
+        if kwargs['key'] != self.object.key.hex:
+            raise Http404
+
+        if self.object.username and self.object.password:
+            authenticate_response = HttpResponse()
+            authenticate_response.status_code = 401
+            authenticate_response['WWW-Authenticate'] = 'Basic'
+
+            user = User(
+                username=self.object.username,
+                password=self.object.password,
+            )
+
+            authorization = request.META.get('HTTP_AUTHORIZATION', None)
+            if not authorization:
+                return authenticate_response
+
+            method, credentials = authorization.split(' ', 1)
+            if method.lower() != 'basic':
+                return authenticate_response
+
+            username, password = (
+                credentials
+                .strip()
+                .decode('base64')
+                .split(':', 1)
+            )
+            if not (
+                username == user.username and
+                user.check_password(password)
+            ):
+                raise PermissionDenied
+
+        if data_source.type == 'web_form':
+            data_source.import_contact(request.POST)
+            return HttpResponse(status=201)  # FIXME: add Location header
+
+        elif data_source.type == 'import':
+
+            if 'csv' not in request.FILES:
+                return HttpResponse('Missing file argument', status=422)
+
+            for row in DictReader(
+                iterdecode(
+                    request.FILES['csv'],
+                    'utf-8',
+                )
+            ):
+                data_source.import_contact(row),
+
+            # TODO: Send notification e-mails
+
+            return HttpResponse(status=200)
