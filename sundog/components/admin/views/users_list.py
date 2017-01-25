@@ -5,7 +5,7 @@ from django.template.defaultfilters import date
 from django.template.loader import render_to_string
 from sundog.models import Company
 from sundog.routing import route, decorate_view
-from sundog.utils import SundogDatatableView
+from sundog.util.views import SundogDatatableView
 
 
 @route(r'^user/?$', name='users_list')
