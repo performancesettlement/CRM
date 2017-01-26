@@ -1,0 +1,8 @@
+{% load actions %}
+
+
+<span class="text-nowrap">
+  {% action_delete viewname="contacts.data_sources.fields.delete.ajax" data_source_id=data_source.pk pk=instance.pk %}
+  {% action_quick_edit viewname="contacts.data_sources.fields.edit.ajax" data_source_id=data_source.pk pk=instance.pk %}
+  {% action_edit viewname="contacts.data_sources.fields.edit" data_source_id=data_source.pk pk=instance.pk %}
+</span>

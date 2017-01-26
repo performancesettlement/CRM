@@ -1,0 +1,8 @@
+{% load actions %}
+
+
+<span class="text-nowrap">
+  {% action_delete viewname="emarketing.templates.delete.ajax" pk=instance.pk %}
+  {% action_quick_edit viewname="emarketing.templates.edit.ajax" pk=instance.pk %}
+  {% action_edit viewname="emarketing.templates.edit" pk=instance.pk %}
+</span>

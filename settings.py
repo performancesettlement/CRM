@@ -48,6 +48,7 @@ INSTALLED_APPS = (
     'allauth.socialaccount',
     'crispy_forms',
     'datatableview',
+    'debug_toolbar',
     'django_bootstrap_breadcrumbs',
     'django_cleanup',
     'django_s3_storage',
@@ -60,6 +61,7 @@ INSTALLED_APPS = (
 MIDDLEWARE_CLASSES = (
     'htmlmin.middleware.HtmlMinifyMiddleware',
     'htmlmin.middleware.MarkRequestMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -464,3 +466,14 @@ TINYMCE_DEFAULT_CONFIG = {
         ]
     ],
 }
+
+
+# Disable the Django debug toolbar's IP whitelist as internal IPs are not easy
+# to predict for a Docker deployment.  We want debugging always if the DEBUG
+# flag is True, and never if it isn't.  Production is not deployed with DEBUG
+# set to True anyway, and if it were, we would have bigger problems than just
+# the debug toolbar.
+class Universe:
+    def __contains__(self, key):
+        return True
+INTERNAL_IPS = Universe()

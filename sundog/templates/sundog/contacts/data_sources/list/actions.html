@@ -1,0 +1,10 @@
+{% load actions %}
+
+
+<span class="text-nowrap">
+  {% action_delete viewname="contacts.data_sources.delete.ajax" pk=instance.pk %}
+  {% action label="Fields" glyphicon="th-list" viewname="contacts.data_sources.fields" data_source_id=instance.pk %}
+  {% action label="Replacements" glyphicon="cog" viewname="contacts.data_sources.replacements" data_source_id=instance.pk %}
+  {% action_quick_edit viewname="contacts.data_sources.edit.ajax" pk=instance.pk %}
+  {% action_edit viewname="contacts.data_sources.edit" pk=instance.pk %}
+</span>
