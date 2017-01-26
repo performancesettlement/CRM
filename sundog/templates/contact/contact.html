@@ -41,17 +41,20 @@
             {% endif %}
             <div class="col-xs-12 m-t-md m-b-md">
                 {{ form.contact_id }}
-                <div class="m-r-xs inline">
-                    Active: {{ form.active }}
+                <div class="m-r-md inline">
+                    <label class="reset-min-width">Active:</label>
+                    <div class="inline vertical-align no-margins">{{ form.active }}</div>
                 </div>
-                <div class="m-r-xs inline">
-                    Company: {{ form.company }}
+                <div class="m-r-md inline">
+                    <label class="reset-min-width">Company:</label>
+                    <div class="inline vertical-align no-margins">{{ form.company }}</div>
                 </div>
-                <div class="m-r-xs inline">
-                    Assigned To: {{ form.assigned_to }}
+                <div class="m-r-md inline">
+                    <label class="reset-min-width">Assigned To:</label>
+                    <div class="inline vertical-align no-margins">{{ form.assigned_to }}</div>
                 </div>
             </div>
-            <div class="tab-content col-xs-12">
+            <div class="tab-content col-xs-12 no-padding-sides">
                 <div class="tab-pane active" id="tab-1">
                     {% include "contact/partials/contact/lead_tracker.html" %}
                 </div>
@@ -79,7 +82,11 @@
             </div>
         </form>
     </div>
-
+    <script type="text/javascript">
+        var usersByCompany = {{ users_by_company|jsonify }};
+        var errors = {{ form_errors|jsonify }};
+        var isEdit = {% if label == 'Edit' %}true{% else %}false{% endif %};
+    </script>
     <script src="{% static "js/contact/contact.js" %}"></script>
 
 {% endblock content %}

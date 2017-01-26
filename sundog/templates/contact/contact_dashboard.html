@@ -21,13 +21,27 @@
         </div>
     </div>
     <div class="col-xs-12 m-t-md m-b-md">
-        <div class="inline"><a class="btn btn-primary" href="{% url "edit_contact" contact_id=contact.contact_id %}">Edit</a></div>
-        <div class="inline"><a id="delete-contact" class="btn btn-primary" href="{% url "delete_contact" contact_id=contact.contact_id %}">Delete</a></div>
-        <div class="inline"><a class="btn btn-primary" href="{% url "budget_analysis" contact_id=contact.contact_id %}">Budget Analysis</a></div>
-        <div class="inline"><a class="btn btn-primary" href="{% url "contact_debts" contact_id=contact.contact_id %}">Creditors</a></div>
-        <div class="inline"><a class="btn btn-primary" href="{% url "add_contact_enrollment" contact_id=contact.contact_id %}">Enrollment</a></div>
+        <div class="inline">
+            <a class="btn btn-primary m-r-xs" href="{% url "edit_contact" contact_id=contact.contact_id %}">Edit</a>
+        </div>
+        <div class="inline">
+            <a id="delete-contact" class="btn btn-primary m-r-xs" href="{% url "delete_contact" contact_id=contact.contact_id %}">Delete</a>
+        </div>
+        <div class="inline">
+            <a class="btn btn-primary m-r-xs" href="{% url "budget_analysis" contact_id=contact.contact_id %}">Budget Analysis</a>
+        </div>
+        <div class="inline">
+            <a class="btn btn-primary m-r-xs" href="{% url "contact_debts" contact_id=contact.contact_id %}">Creditors</a>
+        </div>
+        {% if contact.bank_account %}
+        <div class="inline">
+            <a class="btn btn-primary m-r-xs" href="{% url "add_contact_enrollment" contact_id=contact.contact_id %}">Enrollment</a>
+        </div>
+        {% endif %}
         {% if contact.enrollments.first %}
-        <div class="inline"><a class="btn btn-primary" href="{% url "contact_settlement_offer" contact_id=contact.contact_id %}">Settlement</a></div>
+        <div class="inline">
+            <a class="btn btn-primary m-r-xs" href="{% url "contact_settlement_offer" contact_id=contact.contact_id %}">Settlement</a>
+        </div>
         {% endif %}
     </div>
     <div class="col-xs-4">
@@ -84,10 +98,10 @@
     </div>
     <div class="col-xs-8 m-t-md m-b-md">
         <div id="buttons" class="m-b-md">
-            <a id="activity-btn" class="btn btn-primary inline dashboard-button" href="">Activity</a>
-            <a id="docs-btn" class="btn btn-default inline dashboard-button" href="">Documents</a>
-            <a id="bank-account-btn" class="btn btn-default inline dashboard-button" href="">Bank Account</a>
-            <a id="debts-btn" class="btn btn-default inline dashboard-button" href="">Debts</a>
+            <a id="activity-btn" class="btn btn-{% if section == 'activity' %}primary{% else %}default{% endif %} inline dashboard-button m-r-xs" href="">Activity</a>
+            <a id="docs-btn" class="btn btn-{% if section == 'docs' %}primary{% else %}default{% endif %} inline dashboard-button m-r-xs" href="">Documents</a>
+            <a id="bank-account-btn" class="btn btn-{% if section == 'bank-account' %}primary{% else %}default{% endif %} inline dashboard-button m-r-xs" href="">Bank Account</a>
+            <a id="debts-btn" class="btn btn-{% if section == 'debts' %}primary{% else %}default{% endif %} inline dashboard-button m-r-xs" href="">Debts</a>
         </div>
         <div id="contents" class="col-xs-12 no-padding-sides border padding-for-footer">
             <div id="activity" style="display: none;">
@@ -113,6 +127,7 @@
     </div>
     <script type="text/javascript">
         var csrfToken = '{{ csrf_token }}';
+        var contactDashboardUrl = '{% url "contact_dashboard" contact_id=contact.contact_id %}';
     </script>
     <script src="{% static "js/contact/contact_dashboard.js" %}"></script>
 

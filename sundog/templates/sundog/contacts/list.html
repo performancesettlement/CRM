@@ -15,7 +15,7 @@
 
 
 {% block table_view_pre_content %}
-  <div class="col-xs-12 m-t-md m-b-md">
+  <div class="col-xs-12 m-t-md m-b-md no-padding-sides">
     <div class="inline m-r-lg">
       <select id="list-chooser" style="width: 200px;">
         {% for list, label in list_labels %}
@@ -28,12 +28,11 @@
         {% endfor %}
       </select>
     </div>
-
-    <div class="inline"><a class="btn btn-primary" href="{% url 'new_list' %}">New List</a></div>
-    <div class="inline"><a class="btn btn-primary" href="{% url 'add_contact' %}">Add a Contact</a></div>
-    <div class="inline"><a class="btn btn-primary" href="{% url 'workflows' %}">Workflow</a></div>
-    <div class="inline"><a class="btn btn-primary" href="{% url 'campaigns' %}">Campaigns</a></div>
-    <div class="inline"><a class="btn btn-primary" href="{% url 'data_sources' %}">Data Sources</a></div>
+    <div class="inline"><a class="btn btn-primary m-r-xs" href="{% url 'new_list' %}">New List</a></div>
+    <div class="inline"><a class="btn btn-primary m-r-xs" href="{% url 'add_contact' %}">Add a Contact</a></div>
+    <div class="inline"><a class="btn btn-primary m-r-xs" href="{% url 'workflows' %}">Workflow</a></div>
+    <div class="inline"><a class="btn btn-primary m-r-xs" href="{% url 'campaigns' %}">Campaigns</a></div>
+    <div class="inline"><a class="btn btn-primary m-r-xs" href="{% url 'data_sources' %}">Data Sources</a></div>
   </div>
 {% endblock table_view_pre_content %}
 
@@ -42,5 +41,6 @@
   <script type="text/javascript">
     var contacts_list_url = '{% url 'list_contacts' %}';
   </script>
+  <script src="{% static "js/datatables_style.js" %}"></script>
   <script src="{% static "js/contact/contact_list.js" %}"></script>
 {% endblock table_view_post_content %}

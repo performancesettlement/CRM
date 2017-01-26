@@ -7,10 +7,13 @@ $(document).ready(function() {
     function showContents() {
         $('.dashboard-button').each(function() {
             var elem = $(this);
-            var content = $('#' + elem.attr('id').replace('-btn', ''));
+            var section = elem.attr('id').replace('-btn', '');
+            var content = $('#' + section);
             if (elem.hasClass('btn-primary')) {
                 content.show();
-            } else if (elem.hasClass('btn-default')) {
+                window.history.pushState(null, null, contactDashboardUrl + '?section=' + section);
+            }
+            else if (elem.hasClass('btn-default')) {
                 content.hide();
             }
         });

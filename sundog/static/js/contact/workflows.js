@@ -21,9 +21,7 @@ $(document).ready(function() {
         var forms = $('#forms');
         forms.children().each(function(index) {
             var form = $(this);
-            form.find('input').val('');
-            form.find('#id_color').val('#FFFFFF');
-            form.find('select').val('');
+            form.find('.reset').click();
         });
     }
 
@@ -46,7 +44,7 @@ $(document).ready(function() {
     }
 
     function sendToTypeScreen() {
-        window.location.replace(workflow_url + '?type=' + getStageType());
+        window.location.replace(workflowUrl + '?type=' + getStageType());
     }
 
     hideForms();
@@ -139,7 +137,7 @@ $(document).ready(function() {
                 for (var i in stagesOrder) {
                     formData[i] = stagesOrder[i];
                 }
-                $.post(update_stage_order_url, formData, function(response) {});
+                $.post(updateStageOrderUrl, formData, function(response) {});
             }
             stagesChanged = false;
         }
@@ -167,9 +165,66 @@ $(document).ready(function() {
                 for (var i in statusesOrder) {
                     formData[i] = statusesOrder[i];
                 }
-                $.post(update_status_order_url, formData, function(response) {});
+                $.post(updateStatusOrderUrl, formData, function(response) {});
             }
             statusesChanged = false;
         }
+    });
+
+    $('#delete-stage').click(function() {
+        showConfirmationDeletePopup(
+            'There might be related statuses that will be deleted. You will not be able to recover this data!',
+            function() {
+                var stageId = $('#edit-stage-form').find('#id_stage_id').val();
+                $.ajax({
+                    url: deleteStageUrl.replace('0', stageId),
+                    beforeSend: function(xhr) {
+                        xhr.setRequestHeader('X-CSRFToken', csrfToken);
+                    },
+                    type: 'DELETE',
+                    success: function(response) {
+                        if (response && response.result === 'Ok') {
+                            $('#stage-' + stageId).remove();
+                            $('#edit-status-form, #add-status-form').find('#id_stage').find("option[value='" + stageId + "']").remove();
+                            showSuccessPopup('Stage successfully deleted!');
+                            cleanForms();
+                            hideForms();
+                        }
+                        else {
+                            showErrorPopup('An error occurred deleting the stage.');
+                        }
+                    }
+                });
+            },
+            false
+        );
+    });
+
+    $('#delete-status').click(function() {
+        showConfirmationDeletePopup(
+            'You will not be able to recover this data!',
+            function() {
+                var statusId = $('#edit-status-form').find('#id_status_id').val();
+                $.ajax({
+                    url: deleteStatusUrl.replace('0', statusId),
+                    beforeSend: function(xhr) {
+                        xhr.setRequestHeader('X-CSRFToken', csrfToken);
+                    },
+                    type: 'DELETE',
+                    success: function(response) {
+                        if (response && response.result === 'Ok') {
+                            $('#status-' + statusId).remove();
+                            showSuccessPopup('Status successfully deleted!');
+                            cleanForms();
+                            hideForms();
+                        }
+                        else {
+                            showErrorPopup('An error occurred deleting the status.');
+                        }
+                    }
+                });
+            },
+            false
+        );
     });
 });

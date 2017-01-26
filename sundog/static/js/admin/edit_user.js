@@ -28,7 +28,7 @@ $(document).ready(function() {
                     showErrorPopup(response.errors);
                 }
                 if (response.result === 'Ok') {
-                    $('#id_password').val('');
+                    $('#id_new_password').val('');
                     $('#id_confirm_password').val('');
                     showSuccessPopup('User successfully updated!');
                 }

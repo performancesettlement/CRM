@@ -68,6 +68,7 @@ def index(request):
 
 @login_required
 def contact_dashboard(request, contact_id):
+    section = request.GET.get('section', 'activity')
     contact = (
         Contact
         .objects
@@ -78,7 +79,7 @@ def contact_dashboard(request, contact_id):
     )
     form_bank_account = BankAccountForm(
         instance=(
-            contact.bank_account
+            contact.get_bank_account()
             if hasattr(contact, 'bank_account')
             else None
         ),
@@ -101,6 +102,7 @@ def contact_dashboard(request, contact_id):
         'request': request,
         'user': request.user,
         'contact': contact,
+        'section': section,
         'form_bank_account': form_bank_account,
         'form_note': form_note,
         'form_call': form_call,
@@ -339,6 +341,7 @@ def add_stage(request):
             stage = form.save(commit=False)
             stage.order = previous_last_order + 1
             stage.save()
+            form.save_m2m()
             response = {'result': 'Ok'}
         else:
             response = {'errors': get_form_errors(form)}
@@ -355,10 +358,23 @@ def edit_stage(request):
         form = StageForm(post_data, instance=instance)
         if form.is_valid():
             form.save()
+            form.save_m2m()
             response = {'result': 'Ok'}
         else:
             response = {'errors': get_form_errors(form)}
         return JsonResponse(response)
+
+
+@login_required
+def delete_stage(request, stage_id):
+    try:
+        stage = Stage.objects.get(stage_id=stage_id)
+        stage.delete()
+    except Stage.DoesNotExist:
+        pass
+    except Exception:
+        return JsonResponse({'result': 'error'})
+    return JsonResponse({'result': 'Ok'})
 
 
 @login_required
@@ -374,6 +390,7 @@ def add_status(request):
             status = form.save(commit=False)
             status.order = previous_last_order + 1
             status.save()
+            form.save_m2m()
             response = {'result': 'Ok'}
         else:
             response = {'errors': get_form_errors(form)}
@@ -390,10 +407,33 @@ def edit_status(request):
         form = StatusForm(type, post_data, instance=instance)
         if form.is_valid():
             form.save()
+            form.save_m2m()
             response = {'result': 'Ok'}
         else:
             response = {'errors': get_form_errors(form)}
         return JsonResponse(response)
+
+
+@login_required
+def delete_status(request, status_id):
+    try:
+        status_to_delete = Status.objects.get(status_id=status_id)
+        status_id = int(status_id)
+        statuses = Status.objects.filter(stage=status_to_delete.stage)
+        status_deleted = False
+        with transaction.atomic():
+            for status in statuses:
+                if status_deleted:
+                    status.order -= 1
+                    status.save()
+                if status.status_id == status_id:
+                    status_to_delete.delete()
+                    status_deleted = True
+    except Status.DoesNotExist:
+        pass
+    except Exception:
+        return JsonResponse({'result': 'error'})
+    return JsonResponse({'result': 'Ok'})
 
 
 @login_required
@@ -518,12 +558,25 @@ def add_source(request):
         return JsonResponse(response)
 
 
+def _get_users_by_company():
+    users_by_company = {}
+    for user in list(User.objects.prefetch_related('company').all()):
+        if user.company.company_id not in users_by_company:
+            users_by_company[user.company.company_id] = []
+            users_by_company[user.company.company_id].append({'id': str(user.id), 'name': user.get_full_name()})
+    return users_by_company
+
+
 @login_required
 def add_contact(request):
-    form = ContactForm(request.POST or None)
+    post_data = request.POST.copy()
+    if post_data:
+        post_data['created_by'] = request.user.id
+    form = ContactForm(post_data or None)
     if request.method == 'POST' and request.POST and form.is_valid():
         form.save()
         return redirect('list_contacts')
+    users_by_company = _get_users_by_company()
     context_info = {
         'request': request,
         'user': request.user,
@@ -531,6 +584,7 @@ def add_contact(request):
         'form_errors': get_form_errors(form) or None,
         'templates': [('Add a Client', 'add_a_client')],
         'label': 'Add',
+        'users_by_company': users_by_company,
         'menu_page': 'contacts',
     }
     template_path = 'contact/contact.html'
@@ -540,10 +594,18 @@ def add_contact(request):
 @login_required
 def edit_contact(request, contact_id):
     instance = Contact.objects.get(contact_id=contact_id)
-    form = ContactForm(request.POST or None, instance=instance)
-    if request.method == 'POST' and request.POST and form.is_valid():
-        form.save()
-        return redirect('list_contacts')
+    post_data = request.POST.copy()
+    if post_data:
+        post_data['created_by'] = request.user.id
+    form = ContactForm(post_data or None, instance=instance)
+    if request.method == 'POST' and request.POST:
+        if form.is_valid():
+            form.save()
+            response = {'result': 'Ok'}
+        else:
+            response = {'errors': get_form_errors(form)}
+        return JsonResponse(response)
+    users_by_company = _get_users_by_company()
     context_info = {
         'request': request,
         'user': request.user,
@@ -552,6 +614,7 @@ def edit_contact(request, contact_id):
         'form_errors': get_form_errors(form) or None,
         'templates': [('Add a Client', 'add_a_client')],
         'label': 'Edit',
+        'users_by_company': users_by_company,
         'menu_page': 'contacts'
     }
     template_path = 'contact/contact.html'
@@ -587,7 +650,7 @@ def edit_bank_account(request, contact_id):
         form = BankAccountForm(
             request.POST,
             instance=(
-                contact.bank_account
+                contact.get_bank_account()
                 if hasattr(contact, 'bank_account')
                 else None
             ),
@@ -621,7 +684,10 @@ def edit_contact_status(request, contact_id):
 
 @login_required
 def add_lead_source(request):
-    form = ContactForm(request.POST or None)
+    post_data = request.POST.copy()
+    if post_data:
+        post_data['created_by'] = request.user.id
+    form = ContactForm(post_data or None)
     if request.method == 'POST' and request.POST and form.is_valid():
         lead_source = form.save()  # TODO: redirect to lead sources list? # noqa
         return redirect('home')
@@ -1270,7 +1336,9 @@ def workflow_settings_save(request):
 def add_contact_enrollment(request, contact_id):
     contact = Contact.objects.prefetch_related('contact_debts').prefetch_related('incomes').prefetch_related(
         'expenses').prefetch_related('bank_account').get(contact_id=contact_id)
-    bank_account = contact.bank_account
+    bank_account = contact.get_bank_account()
+    if not bank_account:
+        return redirect('contact_dashboard', contact_id=contact_id)
     try:
         enrollment = Enrollment.objects.get(contact=contact)
     except Enrollment.DoesNotExist:
@@ -1288,8 +1356,8 @@ def add_contact_enrollment(request, contact_id):
         form_2_data = get_data('2', post_data)
         if form_2_data:
             form_fee_2 = FeeForm(form_2_data, prefix='2')
-        if bank_account.info_complete() and form.is_valid() and form_fee_1.is_valid() and (
-            not form_fee_2 or (form_fee_2 and form_fee_2.is_valid())):
+        if bank_account and bank_account.info_complete() and form.is_valid() and form_fee_1.is_valid() and (
+           not form_fee_2 or (form_fee_2 and form_fee_2.is_valid())):
             with transaction.atomic():
                 enrollment = form.save()
                 fee_1 = form_fee_1.save(commit=False)
@@ -1342,7 +1410,7 @@ def add_contact_enrollment(request, contact_id):
 def edit_contact_enrollment(request, contact_id):
     contact = Contact.objects.prefetch_related('contact_debts').prefetch_related('incomes') \
         .prefetch_related('expenses').prefetch_related('bank_account').get(contact_id=contact_id)
-    bank_account = contact.bank_account
+    bank_account = contact.get_bank_account()
     try:
         instance = Enrollment.objects.get(contact=contact)
     except Enrollment.DoesNotExist:
@@ -1829,7 +1897,7 @@ def add_payment(request, contact_id):
     response = {'result': None}
     if request.method == 'POST' and request.POST:
         contact = Contact.objects.get(contact_id=contact_id)
-        bank_account = contact.bank_account
+        bank_account = contact.get_bank_account()
         try:
             enrollment = Enrollment.objects.get(contact__contact_id=contact_id)
         except Enrollment.DoesNotExist:
@@ -2085,7 +2153,7 @@ def get_debt_offer(request, debt_id):
 @login_required
 def contact_settlement(request, contact_id, settlement_offer_id):
     contact = Contact.objects.prefetch_related('bank_account').get(contact_id=contact_id)
-    bank_account = contact.bank_account
+    bank_account = contact.get_bank_account()
     number_of_payments = int(request.GET.get('payments', '1'))
     start_date_str = request.GET.get('start_date', now().strftime(SHORT_DATE_FORMAT))
     date = get_next_work_date(datetime.strptime(start_date_str, SHORT_DATE_FORMAT))
@@ -2196,7 +2264,6 @@ def contact_settlement(request, contact_id, settlement_offer_id):
     return _render_response(request, context_info, template_path)
 
 
-@login_required
 def _generate_permission_sections(checked_permissions=[]):
     permission_sections = []
     data = [
@@ -2267,7 +2334,7 @@ def add_user_role(request):
     form = GroupForm(request.POST or None)
     if request.method == 'POST' and request.POST:
         if form.is_valid():
-            ids = request.POST['ids'].split(',') if 'ids' in request.POST else []
+            ids = request.POST['ids'].split(',') if 'ids' in request.POST and request.POST['ids'] else []
             permissions = list(Permission.objects.filter(id__in=ids))
             role = form.save()
             role.permissions.set(permissions)
@@ -2452,7 +2519,7 @@ def edit_user(request, user_id):
     if post_data and 'groups' in post_data and post_data['groups']:
         post_data['groups'] = [post_data['groups']]
     form = EditUserForm(post_data or None, instance=instance)
-    if request.method == 'POST' and request.POST:
+    if request.method == 'POST' and post_data:
         if form.is_valid():
             form.save()
             form.save_m2m()
@@ -2521,7 +2588,8 @@ def add_client_ajax(request):
         new_client = None
         instance = None
         try:
-            data = request.POST
+            data = request.POST.copy()
+            data['created_by'] = request.user
             if "client_id" in data:
                 instance = Contact.objects.filter(client_id=data["client_id"])
             if instance and len(instance) > 0:

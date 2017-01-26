@@ -30,17 +30,17 @@
             {% endfor %}
         </select>
     </div>
-    <ul id="stages" class="col-xs-12 col-lg-6 m-t-md border-right">
+    <ul id="stages" class="col-xs-12 col-lg-6 m-t-md border-right padding-for-footer">
         <h3> Stages/Status </h3>
         {% for stage in stages %}
             <li id="stage-{{ stage.stage_id }}" class="col-xs-12 m-b-md m-l-md {{ stage.type }}" style="min-height: 30px;">
                 <a id="{{ stage.stage_id }}" href="" name="{{ stage.name }}" class="edit-stage">
                     <span style="text-decoration: underline;">{{ stage.name }}</span>
                 </a>
-                <ul id="stage-{{ stage.stage_id }}-statuses" class="statuses">
+                <ul id="stage-{{ stage.stage_id }}-statuses" class="statuses col-xs-12 no-padding-sides">
                 {% for status in stage.statuses.all %}
-                    <li id="status-{{ status.status_id }}" class="status-row">
-                        <div class="col-xs-2 inline m-r-md">
+                    <li id="status-{{ status.status_id }}" class="status-row col-xs-12 no-padding-sides">
+                        <div class="col-xs-6 inline m-r-md">
                             <a id="{{ status.status_id }}" name="{{ status.name }}" stage="{{ stage.stage_id }}" color="{{ status.color }}" class="edit-status" href="">
                                 <span style="text-decoration: underline;">{{ status.name }}</span>
                             </a>
@@ -52,7 +52,7 @@
             </li>
         {% endfor %}
     </ul>
-    <div id="actions" class="col-xs-12 col-lg-6">
+    <div id="actions" class="col-xs-12 col-lg-6 padding-for-footer">
         <div class="col-xs-12 m-t-md border-bottom" style="padding-bottom: 15px;">
             <h3> Actions </h3>
             <button id="add-stage-button" type="button" class="btn btn-primary">Add Stage</button>
@@ -69,12 +69,15 @@
         </div>
     </div>
     <script src="{% static "js/contact/workflows.js" %}"></script>
-    <script type="text/javascript" >
-        var workflow_url = "{% url 'workflows' %}";
-        var update_stage_order_url = "{% url 'update_stage_order' %}";
-        var update_status_order_url = "{% url 'update_status_order' %}";
+    <script type="text/javascript">
+        var csrfToken = '{{ csrf_token }}';
+        var workflowUrl = '{% url 'workflows' %}';
+        var updateStageOrderUrl = '{% url 'update_stage_order' %}';
+        var updateStatusOrderUrl = '{% url 'update_status_order' %}';
+        var deleteStageUrl = '{% url "delete_stage" stage_id=0 %}';
+        var deleteStatusUrl = '{% url "delete_status" status_id=0 %}';
         $.ajaxSetup({
-            data: {csrfmiddlewaretoken: '{{ csrf_token }}' }
+            data: {csrfmiddlewaretoken: csrfToken}
         });
     </script>
 {% endblock content %}

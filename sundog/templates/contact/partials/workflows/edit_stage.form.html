@@ -6,12 +6,24 @@
         {{ form_stage.type }}
         <div class="col-xs-12 m-t-md m-b-md">
             <div class="m-r-xs inline">
-                Name: {{ form_stage.name }}
+                Name: {{ edit_form_stage.name }}
+            </div>
+        </div>
+        <div class="col-xs-12">
+            <h3>Access Restriction</h3>
+            <div class="col-xs-12 no-padding">
+                <div class="col-xs-12 no-padding">
+                    <div class="inline vertical-align">{{ edit_form_stage.shared_with_all }}</div>
+                    <label for="shared_with_all">Share with all Teams</label>
+                </div>
+                <div class="col-xs-12 no-padding">{{ edit_form_stage.teams }}</div>
             </div>
         </div>
         <div class="col-xs-12 m-t-md">
             <button class="btn btn-primary" type="submit">Save</button>
             <button class="btn btn-primary cancel" type="button">Cancel</button>
+            <button id="delete-stage" class="btn btn-danger" type="button">Delete</button>
+            <input class="reset hidden" type="reset" value="Reset">
         </div>
     </form>
 </div>

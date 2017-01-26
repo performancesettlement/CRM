@@ -1,5 +1,6 @@
 import copy
 from itertools import chain
+from colorful.widgets import ColorFieldWidget
 from django import forms
 from django.contrib.auth.models import Group, User
 from django.core.validators import validate_email
@@ -37,6 +38,8 @@ EMPTY_LABEL = '--Select--'
 
 
 class ContactForm(forms.ModelForm):
+    company = forms.ModelChoiceField(empty_label=EMPTY_LABEL, queryset=Company.objects.filter(active=True),
+                                     widget=forms.Select())
 
     class Meta:
         widgets = {
@@ -47,6 +50,13 @@ class ContactForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ContactForm, self).__init__(*args, **kwargs)
+        if args and args[0] and 'company' in args[0]:
+            assigned_to_query = User.objects.filter(company__company_id=args[0]['company'])
+        elif self.instance:
+            assigned_to_query = User.objects.filter(company=self.instance.company)
+        else:
+            assigned_to_query = User.objects.none()
+        self.fields['assigned_to'].queryset = assigned_to_query
         self.fields['assigned_to'].empty_label = EMPTY_LABEL
         self.fields['lead_source'].empty_label = EMPTY_LABEL
         self.fields['company'].empty_label = EMPTY_LABEL
@@ -89,10 +99,11 @@ class StageForm(forms.ModelForm):
 
     class Meta:
         model = Stage
-        fields = ['name', 'stage_id', 'type']
+        fields = ['name', 'stage_id', 'type', 'teams', 'shared_with_all']
         widgets = {
             'stage_id': forms.HiddenInput(),
             'type': forms.HiddenInput(),
+            'teams': forms.SelectMultiple(attrs={'class': 'col-xs-3 no-padding-sides'}),
         }
 
 
@@ -100,15 +111,17 @@ class StatusForm(forms.ModelForm):
 
     class Meta:
         model = Status
-        fields = ['name', 'stage', 'color', 'status_id']
+        fields = ['name', 'stage', 'color', 'status_id', 'teams', 'shared_with_all']
         widgets = {
             'status_id': forms.HiddenInput(),
+            'teams': forms.SelectMultiple(attrs={'class': 'col-xs-3 no-padding-sides'}),
         }
 
     def __init__(self, type=DEBT_SETTLEMENT, *args, **kwargs):
         super(StatusForm, self).__init__(*args, **kwargs)
         self.fields['stage'].queryset = self.fields['stage'].queryset.filter(type=type)
         self.fields['stage'].empty_label = EMPTY_LABEL
+        self.fields['color'].widget.attrs = {'class': 'vertical-align'}
 
 
 class WorkflowSettingsForm(forms.ModelForm):
@@ -304,7 +317,7 @@ class UploadedForm(forms.ModelForm):
             'mime_type': forms.HiddenInput(),
             'description': forms.Textarea(attrs={'class': 'col-xs-12 no-padding',
                                                  'style': 'max-width: 566px;min-height: 200px'}),
-            'content': forms.FileInput(attrs={'style': 'padding-left: 3px;'}),
+            'content': forms.FileInput(attrs={'class': 'reset-height'}),
         }
         exclude = ['created_at']
 
@@ -739,7 +752,7 @@ class PayeeForm(forms.ModelForm):
 
 class CreateUserForm(forms.ModelForm):
     confirm_password = forms.CharField(required=True, widget=forms.PasswordInput(attrs={'class': 'col-xs-11'}))
-    company = forms.ModelChoiceField(empty_label=EMPTY_LABEL, queryset=Company.objects.all(),
+    company = forms.ModelChoiceField(empty_label=EMPTY_LABEL, queryset=Company.objects.filter(active=True),
                                      widget=forms.Select(attrs={'class': 'col-xs-6 no-padding-sides'}))
 
     class Meta:
@@ -786,13 +799,13 @@ AT_LEAST_1_NUMBER_RE = '\d+'
 
 
 class EditUserForm(forms.ModelForm):
+    new_password = forms.CharField(required=False, widget=forms.PasswordInput(attrs={'class': 'col-xs-11', 'value': ''}))
     confirm_password = forms.CharField(required=False, widget=forms.PasswordInput(attrs={'class': 'col-xs-11'}))
     email_login_info = forms.BooleanField(required=False, widget=forms.CheckboxInput())
-    password = forms.CharField(required=False, widget=forms.PasswordInput(attrs={'class': 'col-xs-11', 'value': ''}))
     first_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'col-xs-11'}))
     last_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'col-xs-11'}))
     email = forms.EmailField(widget=forms.TextInput(attrs={'class': 'col-xs-11'}))
-    company = forms.ModelChoiceField(empty_label=EMPTY_LABEL, queryset=Company.objects.all(),
+    company = forms.ModelChoiceField(empty_label=EMPTY_LABEL, queryset=Company.objects.filter(active=True),
                                      widget=forms.Select(attrs={'class': 'col-xs-11 no-padding-sides'}))
 
     class Meta:
@@ -808,7 +821,7 @@ class EditUserForm(forms.ModelForm):
             'shared_user_data': forms.SelectMultiple(attrs={'class': 'col-lg-2 no-padding-sides'}),
             'shared_with_all': forms.CheckboxInput(attrs={'class': 'no-margins'}),
         }
-        fields = ['username', 'password', 'company', 'groups', 'reports_to', 'first_name', 'last_name', 'email',
+        fields = ['username', 'company', 'groups', 'reports_to', 'first_name', 'last_name', 'email',
                   'company', 'shared_user_data', 'shared_with_all']
 
     def __init__(self, *args, **kwargs):
@@ -821,32 +834,32 @@ class EditUserForm(forms.ModelForm):
         self.changing_password = False
 
     def _password_present(self):
-        password = self.cleaned_data.get('password')
+        password = self.cleaned_data.get('new_password')
         confirm_password = self.cleaned_data.get('confirm_password')
         if not password and confirm_password or password and not confirm_password:
-            self.add_error('password', 'Password and confirm password should be both present or blank.')
+            self.add_error('new_password', 'Password and confirm password should be both present or blank.')
             self.invalid_password = True
         if password and confirm_password:
             self.changing_password = True
 
     def _password_matches(self):
-        password = self.cleaned_data.get('password')
+        password = self.cleaned_data.get('new_password')
         confirm_password = self.cleaned_data.get('confirm_password')
         if not self.invalid_password and self.changing_password:
             if password != confirm_password:
-                self.add_error('password', 'Passwords do not match.')
+                self.add_error('new_password', 'Passwords do not match.')
 
     def _password_complexity(self):
-        password = self.cleaned_data.get('password')
+        password = self.cleaned_data.get('new_password')
         if not self.invalid_password and self.changing_password:
             if len(password) < 8:
-                self.add_error('password', 'Passwords must have at least 8 characters.')
+                self.add_error('new_password', 'Passwords must have at least 8 characters.')
             if not re.search(AT_LEAST_1_LOWER_CASE_RE, password):
-                self.add_error('password', 'Passwords must have at least 1 lower case character.')
+                self.add_error('new_password', 'Passwords must have at least 1 lower case character.')
             if not re.search(AT_LEAST_1_UPPER_CASE_RE, password):
-                self.add_error('password', 'Passwords must have at least 1 upper case character.')
+                self.add_error('new_password', 'Passwords must have at least 1 upper case character.')
             if not re.search(AT_LEAST_1_NUMBER_RE, password):
-                self.add_error('password', 'Passwords must have at least 1 number.')
+                self.add_error('new_password', 'Passwords must have at least 1 number.')
 
     def full_clean(self):
         super(EditUserForm, self).full_clean()
@@ -858,6 +871,6 @@ class EditUserForm(forms.ModelForm):
         user = super(EditUserForm, self).save(commit=False)
         if commit:
             if self.changing_password:
-                user.set_password(user.password)
+                user.set_password(self.cleaned_data.get('new_password'))
             user.save()
         return user

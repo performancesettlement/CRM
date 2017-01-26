@@ -42,12 +42,7 @@ $(document).ready(function() {
                 }
                 if (response.result === 'Ok') {
                     $('#select-role').append('<option value="' + response.id + '">' + response.name + '</option>');
-                    $('select').val('');
-                    var name = $('#id_name');
-                    var nameContainer = name.parent();
-                    name.remove();
-                    nameContainer.append('<input class="col-xs-6" id="id_name" maxlength="80" name="name" required="" type="text">');
-                    $('input[type="checkbox"]').prop('checked', false);
+                    form.find('.reset').click();
                     showSuccessPopup('User Role successfully created!');
                 }
             }

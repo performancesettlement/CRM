@@ -1,6 +1,7 @@
 from colorful.fields import RGBColorField
 from decimal import Decimal
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User, Group, Permission
+from django.contrib.contenttypes.models import ContentType
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models.signals import post_save
@@ -51,6 +52,80 @@ class LeadSource(models.Model):
         return self.name
 
 
+COMPANY_TYPE_CHOICES = (
+    ('law_firm', 'Law Firm'),
+    ('lead_vendor', 'Lead Vendor'),
+    ('marketing_company', 'Marketing Company'),
+    ('partner', 'Partner'),
+    ('servicing_company', 'Servicing Company'),
+)
+
+NONE_CHOICE_LABEL = '--Select--'
+
+ACCOUNT_EXEC_CHOICES = (
+    ('', NONE_CHOICE_LABEL),
+    ('user_test', 'User, Test'),
+)
+
+THEME_CHOICES = (
+    ('', NONE_CHOICE_LABEL),
+    ('default', 'Default'),
+    ('light', 'Light'),
+    ('perf_sett', 'PerfSett'),
+    ('red_black', 'Red/Black'),
+    ('red_gray', 'Red/Gray'),
+)
+
+
+class Company(models.Model):
+    company_id = models.AutoField(primary_key=True)
+    active = models.BooleanField(default=False)
+    type = models.CharField(choices=COMPANY_TYPE_CHOICES, max_length=100, blank=True, null=True)
+    parent_company = models.ForeignKey('self', related_name='children', blank=True, null=True)
+    name = models.CharField(max_length=100)
+    contact_name = models.CharField(max_length=100, blank=True, null=True)
+    company_code = models.CharField(max_length=100, blank=True, null=True)
+    ein = models.CharField(max_length=100, blank=True, null=True)
+    address = models.CharField(max_length=1000, blank=True, null=True)
+    address_2 = models.CharField(max_length=1000, blank=True, null=True)
+    city = models.CharField(max_length=100, blank=True, null=True)
+    state = models.CharField(max_length=4, choices=enums.US_STATES, blank=True, null=True)
+    zip = models.CharField(max_length=100, blank=True, null=True)
+    phone = models.CharField(max_length=10, blank=True, null=True)
+    fax = models.CharField(max_length=10, blank=True, null=True)
+    email = models.CharField(max_length=100, blank=True, null=True)
+    domain = models.CharField(max_length=100, blank=True, null=True)
+    account_exec = models.CharField(choices=ACCOUNT_EXEC_CHOICES, max_length=100, blank=True, null=True)
+    userfield_1 = models.CharField(max_length=100, blank=True, null=True)
+    userfield_2 = models.CharField(max_length=100, blank=True, null=True)
+    userfield_3 = models.CharField(max_length=100, blank=True, null=True)
+
+    def __str__(self):
+        return self.name
+
+    def __init__(self, *args, **kwargs):
+        super(Company, self).__init__(*args, **kwargs)
+        for type_choice in COMPANY_TYPE_CHOICES:
+            if type_choice[0] == self.type:
+                self.type_label = type_choice[1]
+                break
+
+    def get_enrolled(self):
+        return self.contacts.exclude(enrollments__isnull=True)
+
+
+class Team(models.Model):
+    team_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=100)
+    companies = models.ManyToManyField(Company, related_name='company_teams')
+    users = models.ManyToManyField(User, related_name='user_teams')
+    roles = models.ManyToManyField(Group, related_name='group_teams')
+    permissions = models.ManyToManyField(Permission, related_name='used_in_teams')
+
+    def __str__(self):
+        return self.name
+
+
 DEBT_SETTLEMENT = 'debt_settlement'
 STUDENT_LOANS = 'student_loans'
 
@@ -65,6 +140,8 @@ class Stage(models.Model):
     stage_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
     order = models.IntegerField(blank=True, null=True)
+    teams = models.ManyToManyField(Team, related_name='stages_associated', blank=True)
+    shared_with_all = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['order']
@@ -79,6 +156,8 @@ class Status(models.Model):
     color = RGBColorField(default='#FFFFFF')
     stage = models.ForeignKey(Stage, related_name='statuses', blank=True, null=True)
     order = models.IntegerField(blank=True, null=True)
+    teams = models.ManyToManyField(Team, related_name='statuses_associated', blank=True)
+    shared_with_all = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['order']
@@ -124,76 +203,6 @@ class WorkflowSettings(models.Model):
     on_pause = models.ForeignKey(Status, related_name='on_pause', blank=True, null=True)
     on_resume = models.ForeignKey(Status, related_name='on_resume', blank=True, null=True)
     on_returned_payment = models.ForeignKey(Status, related_name='on_returned_payment', blank=True, null=True)
-
-
-COMPANY_TYPE_CHOICES = (
-    ('law_firm', 'Law Firm'),
-    ('lead_vendor', 'Lead Vendor'),
-    ('marketing_company', 'Marketing Company'),
-    ('partner', 'Partner'),
-    ('servicing_company', 'Servicing Company'),
-)
-
-TIMEZONE_CHOICES = (
-    ('eastern', 'Eastern'),
-    ('central', 'Central'),
-    ('mountain', 'Mountain'),
-    ('pacific', 'Pacific')
-)
-
-NONE_CHOICE_LABEL = '--Select--'
-
-ACCOUNT_EXEC_CHOICES = (
-    ('', NONE_CHOICE_LABEL),
-    ('user_test', 'User, Test'),
-)
-
-THEME_CHOICES = (
-    ('', NONE_CHOICE_LABEL),
-    ('default', 'Default'),
-    ('light', 'Light'),
-    ('perf_sett', 'PerfSett'),
-    ('red_black', 'Red/Black'),
-    ('red_gray', 'Red/Gray'),
-)
-
-
-class Company(models.Model):
-    company_id = models.AutoField(primary_key=True)
-    active = models.BooleanField(default=False)
-    type = models.CharField(choices=COMPANY_TYPE_CHOICES, max_length=100, blank=True, null=True)
-    parent_company = models.ForeignKey('self', related_name='children', blank=True, null=True)
-    name = models.CharField(max_length=100)
-    contact_name = models.CharField(max_length=100, blank=True, null=True)
-    company_code = models.CharField(max_length=100, blank=True, null=True)
-    ein = models.CharField(max_length=100, blank=True, null=True)
-    address = models.CharField(max_length=1000, blank=True, null=True)
-    address_2 = models.CharField(max_length=1000, blank=True, null=True)
-    city = models.CharField(max_length=100, blank=True, null=True)
-    state = models.CharField(max_length=4, choices=enums.US_STATES, blank=True, null=True)
-    zip = models.CharField(max_length=100, blank=True, null=True)
-    phone = models.CharField(max_length=10, blank=True, null=True)
-    fax = models.CharField(max_length=10, blank=True, null=True)
-    email = models.CharField(max_length=100, blank=True, null=True)
-    domain = models.CharField(max_length=100, blank=True, null=True)
-    timezone = models.CharField(choices=TIMEZONE_CHOICES, max_length=100, blank=True, null=True)
-    account_exec = models.CharField(choices=ACCOUNT_EXEC_CHOICES, max_length=100, blank=True, null=True)
-    userfield_1 = models.CharField(max_length=100, blank=True, null=True)
-    userfield_2 = models.CharField(max_length=100, blank=True, null=True)
-    userfield_3 = models.CharField(max_length=100, blank=True, null=True)
-
-    def __str__(self):
-        return self.name
-
-    def __init__(self, *args, **kwargs):
-        super(Company, self).__init__(*args, **kwargs)
-        for type_choice in COMPANY_TYPE_CHOICES:
-            if type_choice[0] == self.type:
-                self.type_label = type_choice[1]
-                break
-
-    def get_enrolled(self):
-        return self.contacts.exclude(enrollments__isnull=True)
 
 
 MARITAL_STATUS_CHOICES = (
@@ -326,6 +335,7 @@ class Contact(models.Model):
     last_status_change = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
+    created_by = models.ForeignKey(User, related_name='contact_created', blank=True, null=True)
 
     class Meta:
         verbose_name = 'Contact'
@@ -352,6 +362,12 @@ class Contact(models.Model):
 
     def __str__(self):
         return '%s' % self.first_name
+
+    def get_bank_account(self):
+        try:
+            return self.bank_account
+        except:
+            return None
 
     def get_absolute_url(self):
         return reverse(
@@ -467,6 +483,20 @@ class Contact(models.Model):
         if self.co_applicant_identification == '':
             self.co_applicant_identification = None
         super(Contact, self).save(*args, **kwargs)
+
+
+CONTACT_PERMISSION_FORMAT = 'access_contact_{id}'
+
+
+@receiver(post_save, sender=Contact)
+def add_contact_permission(sender, instance, created, **kwargs):
+    if created:
+        permission = Permission(name='Can access contact id={id}'.format(id=instance.contact_id),
+                                codename=CONTACT_PERMISSION_FORMAT.format(id=instance.contact_id),
+                                content_type=ContentType.objects.get_for_model(instance))
+        permission.save()
+        if instance.created_by:
+            instance.created_by.user_permissions.add(permission)
 
 
 class FeeProfile(models.Model):
@@ -1227,8 +1257,8 @@ class Note(models.Model):
     note_id = models.AutoField(primary_key=True)
     contact = models.ForeignKey(Contact, related_name='notes', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
-    description = models.CharField(max_length=300, blank=True, null=True)
-    type = models.CharField(max_length=20, choices=NOTE_TYPE_CHOICES)
+    description = models.TextField(blank=True, null=True)
+    type = models.CharField(max_length=30, choices=NOTE_TYPE_CHOICES)
     cc = models.CharField(max_length=1000, blank=True, null=True)
     created_by = models.ForeignKey(User, blank=True, null=True)
 
@@ -1331,7 +1361,7 @@ class Uploaded(models.Model):
     uploaded_id = models.AutoField(primary_key=True)
     contact = models.ForeignKey(Contact, related_name='uploaded_docs', blank=True, null=True)
     name = models.CharField(max_length=300)
-    description = models.CharField(max_length=2000)
+    description = models.CharField(max_length=2000, blank=True, null=True)
     type = models.CharField(max_length=50, choices=UPLOADED_DOCUMENT_TYPE_CHOICES, blank=True, null=True)
     content = S3PrivateFileField(upload_to=uploaded_content_filename)
     mime_type = models.CharField(max_length=100, blank=True, null=True)
@@ -1569,14 +1599,6 @@ class Campaign(models.Model):
 
     def __str__(self):
         return '%s' % self.title
-
-
-class Team(models.Model):
-    team_id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=100)
-    companies = models.ManyToManyField(Company, related_name='company_teams')
-    users = models.ManyToManyField(User, related_name='user_teams')
-    roles = models.ManyToManyField(Group, related_name='group_teams')
 
 
 if not hasattr(User, 'company'):
