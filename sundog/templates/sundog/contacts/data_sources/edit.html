@@ -1,0 +1,31 @@
+{% extends "sundog/base/edit.html" %}
+
+
+{% block edit_view_pre_form %}
+
+  <div class="col-xs-12 no-padding-sides m-t-md">
+
+    {% if object.type == 'web_form' %}
+      Web form <code>POST</code> URL: <code>{{ post_url }}</code>
+    {% elif object.type == 'import' %}
+      Upload CSV file:
+      <form
+        action="{{ post_url }}"
+        method="post"
+        enctype="multipart/form-data"
+      >
+        <input
+          type="file"
+          id="import-file-input"
+          name="csv"
+        >
+        <input
+          type="submit"
+          id="import-submit-input"
+        >
+      </form>
+    {% endif %}
+
+  </div>
+
+{% endblock edit_view_pre_form %}

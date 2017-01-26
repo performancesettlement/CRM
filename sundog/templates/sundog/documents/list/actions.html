@@ -1,32 +1,9 @@
+{% load actions %}
+
+
 <span class="text-nowrap">
-
-  <a
-    class="documents-delete fm-delete"
-    data-fm-callback="reload"
-    data-fm-head="Delete this document?  {{ instance.title }}"
-    href="{% url "documents.delete.ajax" pk=instance.pk %}"
-    id="{{ instance.pk }}-delete-document"
-  >
-    <span title="Delete document" class="table-action glyphicon glyphicon-remove"></span>
-  </a>
-
-  <a
-    class="documents-preview"
-    href="{% url "documents.preview.pdf" pk=instance.pk %}"
-    id="{{ instance.pk }}-preview-document"
-    target="_blank"
-  >
-    <span title="Preview document" class="table-action glyphicon glyphicon-eye-open"></span>
-  </a>
-
-  <a
-    class="documents-edit fm-update"
-    data-fm-callback="reload"
-    data-fm-head="Editing document: {{ instance.title }}"
-    href="{% url "documents.edit.ajax" pk=instance.pk %}"
-    id="{{ instance.pk }}-edit-document"
-  >
-    <span title="Edit document" class="table-action glyphicon glyphicon-arrow-right"></span>
-  </a>
-
+  {% action_delete viewname="documents.delete.ajax" pk=instance.pk %}
+  {% action label="Preview Document" glyphicon="eye-open" extra_attributes='target="_blank"' viewname="documents.preview.pdf" pk=instance.pk %}
+  {% action_quick_edit viewname="documents.edit.ajax" pk=instance.pk %}
+  {% action_edit viewname="documents.edit" pk=instance.pk %}
 </span>

@@ -1,11 +1,6 @@
-from datatableview.columns import CompoundColumn, DisplayColumn, TextColumn
-from datatableview.views import XEditableDatatableView
 from datetime import datetime, timedelta
 from decimal import Decimal
-from django.db.models import CharField
-from django.db.models.fields import BLANK_CHOICE_DASH
 from django.http import Http404
-from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django_auth_app.services import get_user_timezone
 from sundog.constants import SHORT_DATE_FORMAT
@@ -15,7 +10,6 @@ import hashlib
 import os
 import pytz
 import settings
-import uuid
 
 
 def get_or_404(classmodel, **kwargs):
@@ -113,73 +107,6 @@ def get_enum_name(code, names, default=''):
         if code
         else default
     )
-
-
-def const(value, *_, **__):
-    return lambda *_, **__: value
-
-
-def catching(computation, catcher, exception=Exception):
-    try:
-        return computation()
-    except exception as e:
-        return catcher(e)
-
-
-def defaulting(computation, value, exception=Exception):
-    return catching(
-        computation=computation,
-        catcher=const(value),
-        exception=exception,
-    )
-
-
-def mutate(x, f):
-    f(x)
-    return x
-
-
-def modify_dict(dictionary, key, default, function):
-    if key not in dictionary:
-        dictionary[key] = default
-    dictionary[key] = function(dictionary[key])
-    return dictionary
-
-
-# From https://djangosnippets.org/snippets/2328/
-class LongCharField(CharField):
-    "A basically unlimited-length CharField."
-    description = "Unlimited-length string"
-
-    def __init__(self, *args, **kwargs):
-        kwargs['max_length'] = int(1e9)  # Satisfy management validation.
-        # Don't add max-length validator like CharField does.
-        super().__init__(*args, **kwargs)
-
-    def get_internal_type(self):
-        # This has no function, since this value is used as a lookup in
-        # db_type().  Put something that isn't known by Django so it
-        # raises an error if it's ever used.
-        return 'LongCharField'
-
-    def db_type(self, connection):
-        return 'text'
-
-    def formfield(self, **kwargs):
-        # Don't pass max_length to form field like CharField does.
-        return super().formfield(**kwargs)
-
-    # Restore method removed in https://github.com/django/django/pull/5093/commits/770449e24b3b0fa60d870bc3404961ddca754c3b  # noqa
-    def get_flatchoices(
-        self,
-        include_blank=True,
-        blank_choice=BLANK_CHOICE_DASH,
-    ):
-        """
-        Returns flattened choices with a default blank choice included.
-        """
-        first_choice = blank_choice if include_blank else []
-        return first_choice + list(self.flatchoices)
 
 
 def get_form_errors(form):
@@ -310,105 +237,12 @@ def get_next_work_date(date):
 
 
 def get_date_from_str(date_str):
-    return datetime.strptime(date_str, SHORT_DATE_FORMAT).replace(tzinfo=pytz.utc)
-
-
-def format_column(label, template, fields):
-    return CompoundColumn(
-        label,
-        sources=[
-            TextColumn(source=field)
-            for field in fields
-        ],
-        processor=(
-            lambda *args, **kwargs: template.format(
-                **{
-                    field: values.get(field, '')
-                    for values in [
-                        dict(
-                            zip(
-                                fields,
-                                kwargs.get('default_value', []),
-                            ),
-                        ),
-                    ]
-                    for field in fields
-                },
-            )
-        ),
-    )
-
-
-class SundogDatatableView(XEditableDatatableView):
-    # Override this attribute with the list of column names (not labels, just
-    # the internal names used in code) for which a per-column search input
-    # should be provided.
-    searchable_columns = []
-
-    # This enables the table footer, which is actually displayed just below the
-    # table header and includes all of the per-column search input fields.
-    footer = True
-
-    def get_datatable(self):
-        datatable = super().get_datatable()
-
-        # Add the data-config-searchable="true" attribute to column headers for
-        # columns listed in self.searchable_columns.  This makes those columns
-        # get a text input box for column-specific filtering.
-        for name, column in datatable.columns.items():
-            if name in self.searchable_columns:
-                # The attributes field of Column objects is implemented with
-                # the @property decorator, so the only way to override it on a
-                # per-instance basis is to change the class of the Column object
-                # dynamically.  See http://stackoverflow.com/a/31591589/1392731
-                attributes_ = column.attributes
-
-                class SearchColumn(type(column)):
-                    attributes = attributes_ + ' data-config-searchable="true"'
-
-                    # Subclassing the original column class without resetting
-                    # these two class fields to empty values would make the
-                    # metaclass for columns override registrations for the types
-                    # handled by the original class with this modified subclass.
-                    # This would introduce the attribute for searchable columns
-                    # anywhere those types are used for columns.  To avoid this,
-                    # set these fields to the original values in the Column
-                    # class which specify no registrations by the metaclass.
-                    # Details in datatableview.columns.ColumnMetaclass.__new__
-                    model_field_class = None
-                    handles_field_classes = []
-
-                column.__class__ = SearchColumn
-
-        return datatable
-
-
-def template_column(
-    label,
-    template_name,
-    context={},
-    context_builder=const({}),
-):
-    return DisplayColumn(
-        label=label,
-        processor=(
-            lambda instance, *args, **kwargs:
-                render_to_string(
-                    template_name=template_name,
-                    context={
-                        'instance': instance,
-                        'args': args,
-                        'kwargs': kwargs,
-                        **context,
-                        **context_builder(
-                            instance=instance,
-                            context=context,
-                            label=label,
-                            template_name=template_name,
-                            *args,
-                            **kwargs,
-                        ),
-                    },
-                )
-        ),
+    return (
+        datetime
+        .strptime(
+            date_str,
+            SHORT_DATE_FORMAT,
+        ).replace(
+            tzinfo=pytz.utc,
+        )
     )

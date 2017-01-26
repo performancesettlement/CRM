@@ -7,7 +7,7 @@ from settings import SHORT_DATETIME_FORMAT
 from sundog.models import SettlementOffer
 from sundog.routing import decorate_view, route
 from sundog.templatetags.my_filters import currency, percent
-from sundog.utils import SundogDatatableView
+from sundog.util.views import SundogDatatableView
 
 
 @route(r'^settlements/?$', name='settlements_list')

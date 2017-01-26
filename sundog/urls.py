@@ -109,3 +109,8 @@ if settings.DEBUG:
         document_root=settings.MEDIA_ROOT,
         show_indexes=True
     )
+
+    import debug_toolbar
+    urlpatterns += [
+        url(r'^__debug__/', include(debug_toolbar.urls)),
+    ]

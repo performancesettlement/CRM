@@ -1,0 +1,97 @@
+{% extends "sundog/base/table.html" %}
+
+{% load meta %}
+{% load staticfiles %}
+
+
+{% load django_bootstrap_breadcrumbs %}
+
+{% block breadcrumbs %}
+  {{ block.super }}
+  {% for label, url in breadcrumbs %}
+    {% breadcrumb label url %}
+  {% endfor %}
+{% endblock %}
+
+
+{% block title %}
+  {{ block.super }}
+  {% for label, url in breadcrumbs %}
+  - {{ label }}
+  {% endfor %}
+{% endblock title %}
+
+
+{% block table_view_head %}
+
+  {# bootstrap-select #}
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.11.2/css/bootstrap-select.min.css"
+    integrity="sha256-6pWNO2Viaad+qrj8CQ4U9iYrylSPRgLOzaHGtCba1f4="
+    crossorigin="anonymous"
+  />
+  <script
+    type="text/javascript"
+    src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.11.2/js/bootstrap-select.min.js"
+    integrity="sha256-NpjFqxNtMOVQfuoDn4f9ZgUe3ua/MTbmkM8kl+mfU70="
+    crossorigin="anonymous"
+  ></script>
+
+  {# TinyMCE #}
+  <script
+    type="text/javascript"
+    src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/4.4.3/tinymce.min.js"
+    integrity="sha256-AuSdEJpOGFPsqPZKZf3Leo0EKuCOyAICY1fwp8jiwwc="
+    crossorigin="anonymous"
+  ></script>
+
+  {% block list_view_head %}
+  {% endblock list_view_head %}
+
+{% endblock table_view_head %}
+
+
+{% block table_view_pre_content %}
+
+  {% block list_view_pre_buttons %}
+  {% endblock list_view_pre_buttons %}
+
+  <div class="col-xs-12 m-t-md m-b-md">
+
+    <div class="inline">
+      <a
+        href="{{ add_url|safe }}"
+        class="fm-create btn btn-primary"
+        data-fm-head="Add {% model_verbose_name view.model %}"
+        data-fm-callback="reload"
+      >
+        Add {% model_verbose_name view.model %}
+      </a>
+    </div>
+
+    {% for label, url in buttons %}
+      <div class="inline">
+        <a
+          class="btn btn-primary"
+          href="{{ url }}"
+        >
+          {{ label }}
+        </a>
+      </div>
+    {% endfor %}
+
+  </div>
+
+  {% block list_view_post_buttons %}
+  {% endblock list_view_post_buttons %}
+
+{% endblock table_view_pre_content %}
+
+
+{% block table_view_post_content %}
+
+  {% block list_view_post_content %}
+  {% endblock list_view_post_content %}
+
+{% endblock table_view_post_content %}

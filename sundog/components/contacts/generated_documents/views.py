@@ -1,18 +1,29 @@
 from datatableview import Datatable
 from datatableview.helpers import through_filter
-from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
 from django.forms.models import ModelForm
 from django.forms.widgets import Select
 from django.shortcuts import redirect
 from django.template.defaultfilters import date
+from django.urls import reverse
 from django.views.generic.detail import BaseDetailView
-from fm.views import AjaxCreateView, AjaxDeleteView
 from settings import SHORT_DATETIME_FORMAT
-from sundog.components.documents.models import GeneratedDocument
+from sundog.components.documents.render import view_render_pdf
+
+from sundog.components.contacts.generated_documents.models import (
+    GeneratedDocument,
+)
+
 from sundog.models import Contact
-from sundog.routing import decorate_view, route
-from sundog.utils import SundogDatatableView, format_column, template_column
+from sundog.routing import route
+
+from sundog.util.views import (
+    SundogAJAXAddView,
+    SundogAJAXDeleteView,
+    SundogDatatableView,
+    format_column,
+    template_column,
+)
 
 
 class GeneratedDocumentsCRUDViewMixin:
@@ -21,8 +32,21 @@ class GeneratedDocumentsCRUDViewMixin:
     def get_context_data(self, **kwargs):
         return {
             **super().get_context_data(**kwargs),
-            'menu_page': 'contacts',
+            'breadcrumbs': [
+                ('Contacts', reverse('contacts')),
+                (self.get_contact(), self.get_contact()),
+                (
+                    'Data Sources',
+                    reverse(
+                        'contacts.generated_documents',
+                        kwargs={
+                            'contact_id': self.get_contact().pk,
+                        },
+                    ),
+                ),
+            ],
             'contact': self.get_contact(),
+            'menu_page': 'contacts',
         }
 
     def get_contact(self):
@@ -36,10 +60,10 @@ class GeneratedDocumentsCRUDViewMixin:
         class Meta:
             model = GeneratedDocument
 
-            fields = [
-                'title',
-                'template',
-            ]
+            fields = '''
+                title
+                template
+            '''.split()
 
             widgets = {
                 'template': Select(
@@ -55,18 +79,33 @@ class GeneratedDocumentsCRUDViewMixin:
 
 
 @route(
-    regex=r'^contacts/(?P<contact_id>\d+)/generated_documents/?$',
-    name=[
-        'contacts.generated_documents',
-        'contacts.generated_documents.list',
-    ],
+    regex=r'''
+        ^contacts
+        /(?P<contact_id>\d+)
+        /generated_documents
+        /?$
+    ''',
+    name='''
+        contacts.generated_documents
+        contacts.generated_documents.list
+    '''.split(),
 )
-@decorate_view(login_required)
 class GeneratedDocumentsList(
     GeneratedDocumentsCRUDViewMixin,
     SundogDatatableView,
 ):
-    template_name = 'sundog/contacts/generated_documents/list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return {
+            **context,
+            'add_url': reverse(
+                viewname='contacts.generated_documents.add.ajax',
+                kwargs={
+                    'contact_id': self.get_contact().pk,
+                },
+            ),
+        }
 
     def get_queryset(self):
         return GeneratedDocument.objects.filter(
@@ -89,26 +128,27 @@ class GeneratedDocumentsList(
 
         created_by_full_name = format_column(
             label='Created by',
-            fields=[
-                'created_by__first_name',
-                'created_by__last_name',
-            ],
+            fields='''
+                created_by__first_name
+                created_by__last_name
+            '''.split(),
             template='{created_by__first_name} {created_by__last_name}',
         )
 
         class Meta:
             structure_template = 'datatableview/bootstrap_structure.html'
 
-            columns = [
-                'title',
-                'created_at',
-                'created_by_full_name',
-                'actions',
-            ]
+            columns = '''
+                id
+                created_at
+                created_by_full_name
+                title
+                actions
+            '''.split()
 
-            ordering = [
-                '-created_at',
-            ]
+            ordering = '''
+                -created_at
+            '''.split()
 
             processors = {
                 'created_at': through_filter(
@@ -119,10 +159,16 @@ class GeneratedDocumentsList(
 
 
 @route(
-    regex=r'^contacts/(?P<contact_id>\d+)/generated_documents/(?P<pk>\d+)/view',
+    regex=r'''
+        ^contacts
+        /(?P<contact_id>\d+)
+        /generated_documents
+        /(?P<pk>\d+)
+        /view
+        /?$
+    ''',
     name='contacts.generated_documents.view'
 )
-@decorate_view(login_required)
 class GeneratedDocumentsView(
     GeneratedDocumentsCRUDViewMixin,
     BaseDetailView,
@@ -132,18 +178,20 @@ class GeneratedDocumentsView(
         return redirect(self.object)
 
 
-class GeneratedDocumentsAJAXFormMixin(GeneratedDocumentsCRUDViewMixin):
-    template_name = 'sundog/base/fm_form.html'
-
-
 @route(
-    regex=r'^contacts/(?P<contact_id>\d+)/generated_documents/add/ajax/?$',
+    regex=r'''
+        ^contacts
+        /(?P<contact_id>\d+)
+        /generated_documents
+        /add
+        /ajax
+        /?$
+    ''',
     name='contacts.generated_documents.add.ajax'
 )
-@decorate_view(login_required)
 class GeneratedDocumentsAddAJAX(
-    GeneratedDocumentsAJAXFormMixin,
-    AjaxCreateView,
+    GeneratedDocumentsCRUDViewMixin,
+    SundogAJAXAddView,
 ):
 
     def form_valid(self, form):
@@ -154,12 +202,12 @@ class GeneratedDocumentsAddAJAX(
                 pk=self.get_contact().pk,
             ),
             content=ContentFile(
-                content=(
-                    form.instance.template
-                    .render(
-                        contact=self.get_contact(),
-                    )
-                    .write_pdf()
+                content=view_render_pdf(
+                    template=form.instance.template.template_body,
+                    context={
+                        'contact': form.instance.contact,
+                    },
+                    request=self.request,
                 ),
             ),
         )
@@ -167,15 +215,19 @@ class GeneratedDocumentsAddAJAX(
 
 
 @route(
-    regex=(
-        r'^contacts/(?P<contact_id>\d+)/generated_documents/(?P<pk>\d+)/delete'
-        r'/ajax/?$'
-    ),
+    regex=r'''
+        ^contacts
+        /(?P<contact_id>\d+)
+        /generated_documents
+        /(?P<pk>\d+)
+        /delete
+        /ajax
+        /?$
+    ''',
     name='contacts.generated_documents.delete.ajax',
 )
-@decorate_view(login_required)
 class GeneratedDocumentsDeleteAJAX(
-    GeneratedDocumentsAJAXFormMixin,
-    AjaxDeleteView,
+    GeneratedDocumentsCRUDViewMixin,
+    SundogAJAXDeleteView,
 ):
     pass

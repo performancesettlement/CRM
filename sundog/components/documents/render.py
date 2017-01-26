@@ -1,4 +1,5 @@
 from datetime import date
+from django.core.urlresolvers import resolve
 from django.db.models import Sum
 from django.template.loader import render_to_string
 from django.utils.dateformat import format
@@ -7,6 +8,8 @@ from pystache.defaults import TAG_ESCAPE
 from pystache.renderengine import context_get
 from pystache.renderer import Renderer
 from re import match
+from sundog.components.files.models import File
+
 from sundog.models import (
     ACCOUNT_TYPE_CHOICES,
     ACTIVITY_TYPE_CHOICES,
@@ -14,10 +17,11 @@ from sundog.models import (
     HARDSHIPS_CHOICES,
     NOTE_TYPE_CHOICES,
 )
-from sundog.utils import (
-    defaulting,
-    get_enum_name,
-)
+
+from sundog.util.functional import defaulting
+from sundog.utils import get_enum_name
+from urllib.parse import urlsplit
+from weasyprint import CSS, HTML, default_url_fetcher
 
 
 class Alias:
@@ -46,6 +50,119 @@ def render(template, context):
             **context,
         )
     )
+
+
+def render_pdf(template, context, base_url, host):
+    return (
+        HTML(
+            base_url=base_url,
+            string=render(
+                template=template,
+                context=context,
+            ),
+            url_fetcher=make_url_fetcher(
+                host=host,
+            ),
+        )
+        .write_pdf(
+            stylesheets=[
+                CSS(
+                    string=pdf_css,
+                ),
+            ],
+        )
+    )
+
+
+def view_render_pdf(template, context, request):
+    return render_pdf(
+        template=template,
+        context=context,
+        base_url=request.build_absolute_uri(),
+        host=request.get_host(),
+    )
+
+
+# The host parameter should be provided by a view from request.get_host()
+def make_url_fetcher(host):
+    # Resources linked in the document template such as images and other
+    # embedded documents will be fetched by the PDF generation process from
+    # their URLs specified in the template by the PDF generation process
+    # using this function.  Some resources are hosted by the system and
+    # require authentication to access at their canonical URLs.  The PDF
+    # generation system is part of the system itself so it is clearly
+    # authorized to access system resources on behalf of the user (at least
+    # so long as uploaded files have no differentiated permissions), but
+    # it will not include client credentials or cookies in the requests
+    # it would perform to the uploaded files view.  Therefore, URLs for
+    # uploaded files are given special treatment in this custom URL fetcher.
+    def url_fetcher(url):
+        parsed_url = urlsplit(url)
+
+        # Only give special treatment to URLs hitting the system's hostname:
+        if parsed_url.netloc != host:
+            return default_url_fetcher(url)
+
+        # This attempts to resolve a system view matching the requested URL;
+        # for this to work, the URL passed to the view resolution function
+        # must first be made relative, so this strips out the scheme and
+        # authority parts and leaves only from the path on.
+        resolved_url = resolve(
+            parsed_url
+            ._replace(
+                scheme='',
+                netloc='',
+            )
+            .geturl()
+        )
+
+        # Only URLs for viewing uploaded files are given special treatment:
+        if not resolved_url or resolved_url.url_name != 'files.view':
+            return default_url_fetcher(url)
+
+        # This continues the regular URL fetch process with the AWS S3 URL
+        # for the specified uploaded file, which includes all necessary
+        # authentication credentials.
+        return default_url_fetcher(
+            File
+            .objects
+            .get(
+                pk=resolved_url.kwargs['pk'],
+            )
+            .get_absolute_url()
+        )
+
+    return url_fetcher
+
+
+# TODO: Put this in a static file somewhere
+pdf_css = '''
+    @media all {
+        .page-break { display: none; }
+    }
+
+    @media print {
+
+        .page-break {
+            display: block;
+            page-break-before: always;
+        }
+
+        html {
+            font-family: sans;
+            font-stretch: condensed;
+        }
+
+        @page {
+            size: letter;
+            margin-top: 0.5in;
+            margin-bottom: 0.5in;
+            margin-left: 0.25in;
+            margin-right: 0.25in;
+        }
+
+    }
+'''
 
 
 # This caches computed values to improve rendering speed on repeated uses of a

@@ -21,6 +21,8 @@ services:
       - "postgres"
       - "elasticsearch"
       - "logstash"
+    volumes:
+      - "./data/migrations:/usr/src/app/sundog/migrations"
 
   elasticsearch:
     build:

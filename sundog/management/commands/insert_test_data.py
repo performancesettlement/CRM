@@ -6,13 +6,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         user = User.objects.first()
 
-        lead_source = LeadSource(
-            name='Some lead source',
-        )
-        lead_source.save()
-
         contact_data = {
-            'lead_source': lead_source,
             'call_center_representative': user,
             'assigned_to': user,
         }

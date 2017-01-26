@@ -1,27 +1,8 @@
+{% load actions %}
+
+
 <span class="text-nowrap">
-
-  <a
-    id="{{ instance.pk }}-edit-contact-status"
-    href="{% url "edit_contact_status" contact_id=instance.pk %}"
-    class="edit-contact-status"
-  >
-    <span title="Edit Status" class="table-action glyphicon glyphicon-th"></span>
-  </a>
-
-  <a
-    id="{{ instance.pk }}-edit-contact-info"
-    href="{% url "edit_contact" contact_id=instance.pk %}"
-    class="edit-contact-info"
-  >
-    <span title="Edit Info" class="table-action glyphicon glyphicon-edit"></span>
-  </a>
-
-  <a
-    id="{{ instance.pk }}-contact-dashboard"
-    href="{% url "contact_dashboard" contact_id=instance.pk %}"
-    class="contact-dashboard"
-  >
-    <span title="Dashboard" class="table-action glyphicon glyphicon-arrow-right"></span>
-  </a>
-
+  {% action label="Edit Status" glyphicon="th" viewname="edit_contact_status" contact_id=instance.pk %}
+  {% action label="Edit Info" glyphicon="edit" viewname="edit_contact" contact_id=instance.pk %}
+  {% action label="Dashboard" glyphicon="arrow-right" viewname="contact_dashboard" contact_id=instance.pk %}
 </span>

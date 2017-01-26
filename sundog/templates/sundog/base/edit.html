@@ -1,0 +1,95 @@
+{% extends "sundog/base/app.html" %}
+
+{% load django_bootstrap_breadcrumbs %}
+{% load meta %}
+
+
+{% block breadcrumbs %}
+  {{ block.super }}
+  {% for label, url in breadcrumbs %}
+    {% breadcrumb label url %}
+  {% endfor %}
+  {% breadcrumb object object %}
+{% endblock %}
+
+
+{% block title %}
+  {{ block.super }}
+  {% for label, url in breadcrumbs %}
+  - {{ label }}
+  {% endfor %}
+  - {{ object }}
+{% endblock title %}
+
+
+{% block app_view_head %}
+
+  {# bootstrap-select #}
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.11.2/css/bootstrap-select.min.css"
+    integrity="sha256-6pWNO2Viaad+qrj8CQ4U9iYrylSPRgLOzaHGtCba1f4="
+    crossorigin="anonymous"
+  />
+  <script
+    type="text/javascript"
+    src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.11.2/js/bootstrap-select.min.js"
+    integrity="sha256-NpjFqxNtMOVQfuoDn4f9ZgUe3ua/MTbmkM8kl+mfU70="
+    crossorigin="anonymous"
+  ></script>
+
+  {# TinyMCE #}
+  <script
+    type="text/javascript"
+    src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/4.4.3/tinymce.min.js"
+    integrity="sha256-AuSdEJpOGFPsqPZKZf3Leo0EKuCOyAICY1fwp8jiwwc="
+    crossorigin="anonymous"
+  ></script>
+
+  {% block edit_view_head %}
+  {% endblock edit_view_head %}
+
+{% endblock app_view_head %}
+
+
+{% block app_view_pre_content %}
+
+  {% block edit_view_pre_buttons %}
+  {% endblock edit_view_pre_buttons %}
+
+  {% for label, url in buttons %}
+    <div class="inline">
+      <a
+        class="btn btn-primary"
+        href="{{ url }}"
+      >
+        {{ label }}
+      </a>
+    </div>
+  {% endfor %}
+
+  {% block edit_view_post_buttons %}
+  {% endblock edit_view_post_buttons %}
+
+{% endblock app_view_pre_content %}
+
+
+{% block app_view_content %}
+
+  {% block edit_view_pre_form %}
+  {% endblock edit_view_pre_form %}
+
+  <div class="col-xs-12 no-padding-sides m-t-md">
+    <h3>Edit {% model_verbose_name object %}</h3>
+    <form action="" method="post">
+      {% csrf_token %}
+      {{ form.media }}
+      {{ form.as_p }}
+      <input type="submit" value="Save">
+    </form>
+  </div>
+
+  {% block edit_view_post_form %}
+  {% endblock edit_view_post_form %}
+
+{% endblock app_view_content %}
