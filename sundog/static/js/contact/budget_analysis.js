@@ -1,16 +1,20 @@
 $(document).ready(function(){
-    $('#budget-submit').click(function(event) {
-        event.preventDefault();
-        var form = $('#budget-form');
-        var formData = form.serializeArray();
-        $.post(form.attr('action'), formData, function(response) {
-            if (response.errors) {
-                showErrorPopup(response.errors);
-            }
-            if (response.result) {
-                refreshScreen();
-            }
-        });
+    $('input').change(function(event) {
+        if ($(this).val() == '') {
+            $(this).val(0)
+        }
+        else {
+            var form = $('#budget-form');
+            var formData = form.serializeArray();
+            $.post(form.attr('action'), formData, function(response) {
+                if (response.errors) {
+                    showErrorPopup(response.errors);
+                }
+                if (response.result) {
+                    showSuccessToast('Budget info successfully updated!');
+                }
+            });
+        }
     });
 
     $('#budget-delete').click(function(event) {
@@ -28,7 +32,7 @@ $(document).ready(function(){
                     success: function(response) {
                         if (response && response.result === 'Ok') {
                             $('input').val(0);
-                            showSuccessPopup('Budget info deleted.');
+                            showSuccessPopup('Budget info successfully deleted!');
                         }
                         else {
                             showErrorPopup('An error occurred deleting the the budget info.');

@@ -561,7 +561,7 @@ def add_source(request):
 def _get_users_by_company():
     users_by_company = {}
     for user in list(User.objects.prefetch_related('company').all()):
-        if user.company.company_id not in users_by_company:
+        if user.company and user.company.company_id not in users_by_company:
             users_by_company[user.company.company_id] = []
             users_by_company[user.company.company_id].append({'id': str(user.id), 'name': user.get_full_name()})
     return users_by_company

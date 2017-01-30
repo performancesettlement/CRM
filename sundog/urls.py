@@ -11,11 +11,7 @@ import sundog.components
 urlpatterns = module_urls(views) + package_urls(sundog.components) + [
     url(r'^admin/', include(admin.site.urls)),
 
-    url(r'^accounts/', include('allauth.urls')),
-
     url(r'^account/', include('django_auth_app.urls', namespace='django_auth_app')),
-
-    url(r'^avatar/', include('avatar.urls')),
 
     url(r'^tinymce/', include('tinymce.urls')),
 

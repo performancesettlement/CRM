@@ -39,13 +39,8 @@ INSTALLED_APPS = (
     'sundog',
     'rest_framework',
     'compressor',
-    'taggit',
-    'avatar',
     'colorful',
     'multi_email_field',
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
     'crispy_forms',
     'datatableview',
     'debug_toolbar',
@@ -70,12 +65,9 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-
     'whitenoise.middleware.WhiteNoiseMiddleware',
-
     'sundog.middleware.ImpersonationMiddleware',
     'sundog.middleware.TimezoneMiddleware',
-
     'sundog.middleware.ExceptionResponderMiddleware',
 )
 
@@ -289,10 +281,6 @@ EMAIL_HOST_PASSWORD = 'summer2016'
 EMAIL_USE_TLS = True
 
 ACCESS_TOKEN_EXPIRE_SECONDS = 360000
-
-# avatar
-AVATAR_GRAVATAR_DEFAULT = 'mm'
-AVATAR_AUTO_GENERATE_SIZES = (80, 250)
 
 # seed setting
 SEED_FILE_ID = 1

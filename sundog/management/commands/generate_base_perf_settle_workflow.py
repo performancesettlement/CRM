@@ -1,4 +1,5 @@
 from django.core.management import BaseCommand
+from sundog.management.commands.utils import get_or_create_model_instance, print_script_header, print_script_end
 from sundog.models import Stage, DEBT_SETTLEMENT, Status
 
 
@@ -58,31 +59,23 @@ class Command(BaseCommand):
             },
         ]
 
+        print_script_header('Generate base Performance Settlement Workflow Stage/Status results:')
         stage_order = 1
-        for stage_data in stages:
+        for stage_data_kwargs in stages:
             status_order = 1
-            stage_name = stage_data['name']
-            statuses = stage_data.pop('statuses')
-            stage_data['type'] = DEBT_SETTLEMENT
-            stage_data['order'] = stage_order
-            stage = Stage.objects.filter(name=stage_name).first()
-            if not stage:
-                stage = Stage(**stage_data)
-                stage.save()
-                print("Stage '{name}' has been successfully created.".format(name=stage_name))
-            else:
-                print("Stage '{name}' is already created.".format(name=stage.name))
-            for status_data in statuses:
-                status = Status.objects.filter(name=status_data['name']).first()
-                status_data['stage'] = stage
-                status_data['order'] = status_order
-                if not status:
-                    status = Status(**status_data)
-                    status.save()
-                    print("Status '{status_name}' has been successfully created and associated to '{stage_name}'.".format(
-                        status_name=status.name, stage_name=stage_name))
-                else:
-                    print("Status '{status_name}' is already created and associated to '{stage_name}'.".format(
-                        status_name=status.name, stage_name=stage.name))
+            statuses = stage_data_kwargs.pop('statuses')
+            stage_data_kwargs['type'] = DEBT_SETTLEMENT
+            stage_data_kwargs['order'] = stage_order
+            stage_name = stage_data_kwargs['name']
+            stage_filter_kwargs = {'name': stage_name}
+            stage = get_or_create_model_instance(Stage, stage_data_kwargs, stage_filter_kwargs, stage_name, tabs=1)
+            for status_data_kwargs in statuses:
+                status_name = status_data_kwargs['name']
+                status_data_kwargs['stage'] = stage
+                status_data_kwargs['order'] = status_order
+                status_filter_kwargs = {'name': status_data_kwargs['name']}
+                get_or_create_model_instance(
+                    Status, status_data_kwargs, status_filter_kwargs, status_name, associated_to=stage_name, tabs=2)
                 status_order += 1
             stage_order += 1
+        print_script_end()

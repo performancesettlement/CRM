@@ -25,8 +25,8 @@
     <div class="col-xs-12 m-t-md border-bottom" style="padding-bottom: 20px;">
         <h3>Monthly Budget Analysis For: <a href="{% url "contact_dashboard" contact_id=contact.contact_id %}" style="text-decoration: underline;" title="Back to Dashboard">{{ contact.full_name_straight }}</a></h3>
     </div>
-    <div class="col-xs-12 border-bottom no-padding-sides" style="padding-bottom: 20px;">
-        <div id="totals" class="col-xs-6 m-t-md">
+    <div class="col-xs-12 border-bottom" style="padding-bottom: 20px;">
+        <div id="totals" class="col-xs-12 no-padding-sides m-t-md">
             <div class="inline m-r-md">
                 <div class="m-b-xs font-bold">Total Income</div>
                 <div class="blue font-medium font-bold">{{ form_incomes.instance.total|currency }}</div>
@@ -49,13 +49,9 @@
                 <div class="blue font-medium font-bold">{{ form_incomes.instance.assets|currency }}</div>
             </div>
         </div>
-        <div class="col-xs-6 m-t-md" style="padding-top: 5px;">
-            <a id="budget-submit" href="" class="btn btn-primary m-r-xs">Save</a>
-            <a id="budget-delete" href="{% url "delete_budget_analysis" contact_id=contact.contact_id %}" class="btn btn-danger">Delete</a>
-        </div>
     </div>
-    <div id="budget" class="col-xs-12 m-t-md m-b-md no-padding-sides" style="padding-bottom: 70px;">
-        <form id="budget-form" class="form" action="{% url 'budget_analysis_save' contact_id=contact.contact_id %}" method="post">
+    <div id="budget" class="col-xs-12 m-t-md m-b-md padding-for-bottom" style="padding-bottom: 70px;">
+        <form id="budget-form" class="form col-xs-12 no-padding-sides" action="{% url 'budget_analysis_save' contact_id=contact.contact_id %}" method="post">
             {% csrf_token %}
             <div class="col-xs-12 col-lg-6">
                 {% include "contact/partials/budget_analysis/incomes_form_fields.html" %}

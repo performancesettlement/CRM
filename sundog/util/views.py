@@ -32,37 +32,6 @@ def format_column(label, template, fields):
     )
 
 
-def template_column(
-    label,
-    template_name,
-    context={},
-    context_builder=const({}),
-):
-    return DisplayColumn(
-        label=label,
-        processor=(
-            lambda instance, *args, **kwargs:
-                render_to_string(
-                    template_name=template_name,
-                    context={
-                        'instance': instance,
-                        'args': args,
-                        'kwargs': kwargs,
-                        **context,
-                        **context_builder(
-                            instance=instance,
-                            context=context,
-                            label=label,
-                            template_name=template_name,
-                            *args,
-                            **kwargs,
-                        ),
-                    },
-                )
-        ),
-    )
-
-
 class SundogDatatableView(XEditableDatatableView):
     template_name = 'sundog/base/list.html'
 
@@ -143,3 +112,34 @@ class SundogAJAXEditView(
     AjaxUpdateView,
 ):
     pass
+
+
+def template_column(
+        label,
+        template_name,
+        context={},
+        context_builder=const({}),
+):
+    return DisplayColumn(
+        label=label,
+        processor=(
+            lambda instance, *args, **kwargs:
+            render_to_string(
+                template_name=template_name,
+                context={
+                    'instance': instance,
+                    'args': args,
+                    'kwargs': kwargs,
+                    **context,
+                    **context_builder(
+                        instance=instance,
+                        context=context,
+                        label=label,
+                        template_name=template_name,
+                        *args,
+                        **kwargs,
+                    ),
+                },
+            )
+        ),
+    )

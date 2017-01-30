@@ -3,7 +3,7 @@ from django.core.cache import cache
 from django.db import transaction
 import logging
 from sundog import constants, messages
-from sundog.models import Contact, ClientType, Stage, Status
+from sundog.models import Contact, Stage, Status
 
 
 logger = logging.getLogger(__name__)
@@ -87,22 +87,6 @@ def get_users_by_ids(ids):
         logger.error(messages.ERROR_GET_USERS_BY_IDS % str(ids))
         logger.error(e)
     return results
-
-
-def check_client_type_exists(name):
-    if name is None:
-        return None
-    name_key = 'client_type_' + name.lower().replace(" ", "_")
-    value = cache.get(name_key)
-    if value is not None:
-        return value
-    try:
-        value = ClientType.objects.get(name=name).client_type_id
-        cache.set(name_key, value, constants.CACHE_IMPORT_EXPIRATION)
-    except Exception as e:
-        logger.error(messages.CHECK_MODEL_EXISTS_IN_DB % ('client type', name))
-        logger.error(e)
-    return value
 
 
 def check_client_exists(name, client_id):

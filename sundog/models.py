@@ -26,24 +26,6 @@ import sys
 logger = logging.getLogger(__name__)
 
 
-class ClientType(models.Model):
-    client_type_id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=100, unique=True)
-    active = models.BooleanField(default=True)
-
-    def __str__(self):
-        return '%s' % self.name
-
-    class Meta:
-        verbose_name = 'Client Type'
-        verbose_name_plural = 'Client Type List'
-
-    def save(self, *args, **kwargs):
-        if not self.name.isupper():
-            self.name = self.name.upper()
-        super(ClientType, self).save(*args, **kwargs)
-
-
 class LeadSource(models.Model):
     lead_source_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)

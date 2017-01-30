@@ -1,7 +1,7 @@
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.management import BaseCommand
-
+from sundog.management.commands.utils import get_or_create_model_instance, print_script_header, print_script_end
 
 CONTACT_BASE_CODENAME = 'contact'
 CREDITOR_BASE_CODENAME = 'creditor'
@@ -199,17 +199,13 @@ class Command(BaseCommand):
         ]
 
         content_types = {}
-
-        for permission_data in permissions:
-            model = permission_data.pop('content_type')
+        print_script_header('Generate base Permissions results:')
+        for permission_data_kwargs in permissions:
+            model = permission_data_kwargs.pop('content_type')
             if model not in content_types.keys():
                 content_types[model] = ContentType.objects.get(model=model, app_label='sundog')
-            permission_data['content_type'] = content_types[model]
-            codename = permission_data['codename']
-            permission = Permission.objects.filter(codename=codename).first()
-            message_data = {'name': permission_data['name'], 'codename': permission_data['codename']}
-            if not permission:
-                Permission(**permission_data).save()
-                print("Permission '{name}' ({codename}) created successfully.".format(**message_data))
-            else:
-                print("Permission '{name}' ({codename}) is already created.".format(**message_data))
+            permission_data_kwargs['content_type'] = content_types[model]
+            filter_kwargs = {'codename': permission_data_kwargs['codename']}
+            message_name = permission_data_kwargs['name']
+            get_or_create_model_instance(Permission, permission_data_kwargs, filter_kwargs, message_name, tabs=1)
+        print_script_end()
