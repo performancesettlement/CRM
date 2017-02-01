@@ -1,8 +1,8 @@
-from allauth.compat import render_to_string
 from datatableview import Datatable, DisplayColumn, DateColumn
 from datatableview.helpers import through_filter
 from django.contrib.auth.decorators import login_required
 from django.template.defaultfilters import date
+from django.template.loader import render_to_string
 from settings import SHORT_DATETIME_FORMAT
 from sundog.models import SettlementOffer
 from sundog.routing import decorate_view, route

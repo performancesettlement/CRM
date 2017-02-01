@@ -5,7 +5,6 @@ chardet==2.3.0
 defusedxml==0.4.1
 dj-database-url==0.4.1
 Django==1.10.4
-django-allauth==0.29.0
 django-appconf==1.0.2
 django-avatar==3.1.0
 django-bootstrap-breadcrumbs==0.8.2

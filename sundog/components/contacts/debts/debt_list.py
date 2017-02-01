@@ -1,7 +1,7 @@
-from allauth.compat import render_to_string
 from datatableview import Datatable, DisplayColumn, TextColumn
 from django.contrib.auth.decorators import login_required
 from django.template.defaultfilters import date
+from django.template.loader import render_to_string
 from sundog.models import Debt, Contact
 from sundog.routing import decorate_view, route
 from sundog.templatetags.my_filters import currency
