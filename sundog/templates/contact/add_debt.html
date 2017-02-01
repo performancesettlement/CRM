@@ -1,0 +1,123 @@
+{% extends "app-base.html" %}
+{% load staticfiles %}
+{% block content %}
+    <div class="row wrapper border-bottom white-bg page-heading">
+        <div class="col-lg-10 m-t-md">
+            <ol class="breadcrumb">
+                <li>
+                    <a href="{% url 'list_contacts' %}">Contacts</a>
+                </li>
+                <li>
+                    {{ contact.full_name_straight }}
+                </li>
+                <li class="active">
+                    <strong>Add Debt</strong>
+                </li>
+            </ol>
+        </div>
+    </div>
+    <div id="add-debt" class="col-xs-12 p-xs well m-t-md">
+        <h3 class="no-margins">Add Debt</h3>
+        <form id="add-debt-form" class="m-t-md" action="{% url 'add_debt' contact_id=contact.contact_id%}" method="post">
+            {% csrf_token %}
+            {{ form.contact }}
+            <div class="col-xs-12 no-padding-sides">
+                <div class="col-xs-4 no-padding-sides">
+                    <div class="form-group col-xs-12 no-padding-sides">
+                        <label for="active" class="col-xs-4 no-padding-sides control-label">Original Creditor *</label>
+                        <div class="col-sm-8 no-padding-sides">{{ form.original_creditor }}</div>
+                    </div>
+                    <div class="form-group col-xs-12 no-padding-sides">
+                        <label for="title" class="col-xs-4 no-padding-sides control-label">Account # *</label>
+                        <div class="col-sm-8 no-padding-sides">{{ form.original_creditor_account_number }}</div>
+                    </div>
+                    <div class="form-group col-xs-12 no-padding-sides">
+                        <label for="title" class="col-xs-4 no-padding-sides control-label">Collection / Debt Buyer</label>
+                        <div class="col-sm-8 no-padding-sides">{{ form.debt_buyer }}</div>
+                    </div>
+                    <div class="form-group col-xs-12 no-padding-sides">
+                        <label for="title" class="col-xs-4 no-padding-sides control-label">Account #</label>
+                        <div class="col-sm-8 no-padding-sides">{{ form.debt_buyer_account_number }}</div>
+                    </div>
+                </div>
+                <div class="col-xs-4 no-padding-sides">
+                    <div class="form-group col-xs-12 no-padding-sides">
+                        <label for="title" class="col-xs-4 no-padding-sides control-label">Account Type</label>
+                        <div class="col-sm-8 no-padding-sides">{{ form.account_type }}</div>
+                    </div>
+                    <div class="form-group col-xs-12 no-padding-sides">
+                        <label for="title" class="col-xs-4 no-padding-sides control-label">Original Debt Amount</label>
+                        <div class="col-sm-8 no-padding-sides">{{ form.original_debt_amount }}</div>
+                    </div>
+                    <div class="form-group col-xs-12 no-padding-sides">
+                        <label for="title" class="col-xs-4 no-padding-sides control-label">Current Debt Amount</label>
+                        <div class="col-sm-8 no-padding-sides">{{ form.current_debt_amount }}</div>
+                    </div>
+                    <div class="form-group col-xs-12 no-padding-sides">
+                        <label for="title" class="col-xs-4 no-padding-sides control-label">Current Payment</label>
+                        <div class="col-sm-8 no-padding-sides">{{ form.current_payment }}</div>
+                    </div>
+                </div>
+                <div class="col-xs-4 no-padding-sides">
+                    <div class="form-group col-xs-12 no-padding-sides">
+                        <label for="title" class="col-xs-4 no-padding-sides control-label">Whose Debt</label>
+                        <div class="col-sm-8 no-padding-sides">{{ form.whose_debt }}</div>
+                    </div>
+                    <div class="form-group col-xs-12 no-padding-sides">
+                        <label for="title" class="col-xs-4 no-padding-sides control-label">Last Payment Date *</label>
+                        <div class="col-sm-8 no-padding-sides">{{ form.last_payment_date }}</div>
+                    </div>
+                    <div class="form-group col-xs-12 no-padding-sides">
+                        <label for="title" class="col-xs-4 no-padding-sides control-label">Has Summons / Judgement *</label>
+                        <div class="col-sm-8 no-padding-sides">{{ form.has_summons }}</div>
+                    </div>
+                    <div class="form-group col-xs-12 no-padding-sides">
+                        <label for="title" class="col-xs-4 no-padding-sides control-label">Summons Date</label>
+                        <div class="col-sm-8 no-padding-sides">{{ form.summons_date }}</div>
+                    </div>
+                </div>
+                <div class="col-xs-4 no-padding-sides">
+                    <div class="form-group col-xs-12 no-padding-sides">
+                        <label for="title" class="col-xs-4 no-padding-sides control-label">Court Date</label>
+                        <div class="col-sm-8 no-padding-sides">{{ form.court_date }}</div>
+                    </div>
+                    <div class="form-group col-xs-12 no-padding-sides">
+                        <label for="title" class="col-xs-4 no-padding-sides control-label">Discovery Date</label>
+                        <div class="col-sm-8 no-padding-sides">{{ form.discovery_date }}</div>
+                    </div>
+                </div>
+                <div class="col-xs-4 no-padding-sides">
+                    <div class="form-group col-xs-12 no-padding-sides">
+                        <label for="title" class="col-xs-4 no-padding-sides control-label">Answer Date</label>
+                        <div class="col-sm-8 no-padding-sides">{{ form.answer_date }}</div>
+                    </div>
+                    <div class="form-group col-xs-12 no-padding-sides">
+                        <label for="title" class="col-xs-4 no-padding-sides control-label">Service Date</label>
+                        <div class="col-sm-8 no-padding-sides">{{ form.service_date }}</div>
+                    </div>
+                </div>
+                <div class="col-xs-4 no-padding-sides">
+                    <div class="form-group col-xs-12 no-padding-sides">
+                        <label for="title" class="col-xs-4 no-padding-sides control-label">Paperwork Received Date</label>
+                        <div class="col-sm-8 no-padding-sides">{{ form.paperwork_received_date }}</div>
+                    </div>
+                    <div class="form-group col-xs-12 no-padding-sides">
+                        <label for="title" class="col-xs-4 no-padding-sides control-label">POA Sent Date</label>
+                        <div class="col-sm-8 no-padding-sides">{{ form.poa_sent_date }}</div>
+                    </div>
+                </div>
+                <div class="form-group col-xs-12 no-padding-sides">
+                    <label for="title" class="control-label">Notes</label>
+                    <div>{{ form.note }}</div>
+                </div>
+            </div>
+            <div class="col-xs-12 no-padding-sides">
+                <button class="btn btn-primary" type="submit">Save</button>
+            </div>
+        </form>
+    </div>
+    <script src="{% static "js/plugins/datapicker/bootstrap-datepicker.js" %}"></script>
+    <script type="text/javascript"></script>
+    <script src="{% static "js/contact/edit_debt.js" %}"></script>
+
+{% endblock content %}

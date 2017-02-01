@@ -762,90 +762,35 @@ def add_creditor(request):
 
 
 @login_required
-def contact_debts(request, contact_id):
-    contact = (
-        Contact
-            .objects
-            .prefetch_related('contact_debts')
-            .get(contact_id=contact_id)
-    )
-    order_by_list = [
-        'original_creditor',
-        'debt_buyer',
-        'original_creditor_account_number',
-        'account_type',
-        'current_debt_amount',
-        'whose_debts',
-        'current_payment',
-        'last_payment',
-        'notes',
-        'enrolled',
-    ]
-    page = int(request.GET.get('page', '1'))
-    order_by = request.GET.get('order_by', 'original_creditor')
-
-    if order_by in order_by_list:
-        i = order_by_list.index(order_by)
-        order_by_list[i] = '-' + order_by
-
-    sort = {'name': order_by.replace('-', ''), 'class': 'sorting_desc' if order_by.find('-') else 'sorting_asc'}
-    query = Debt.objects.prefetch_related('notes').filter(contact__contact_id=contact_id)
-    if order_by.replace('-', '') != 'notes':
-        order_by = [order_by]
-        debts = list(query.order_by(*order_by))
-    else:
-        debts = list(query)
-        if order_by == 'notes':
-            debts.sort(key=lambda d: d.notes_count())
-        elif order_by == '-notes':
-            debts.sort(key=lambda d: -d.notes_count())
-
-    form_debt = DebtForm(contact)
-    form_edit_debt = DebtForm(contact)
-    paginator = Paginator(debts, 20)
-    page = paginator.page(page)
-
-    context_info = {
-        'request': request,
-        'user': request.user,
-        'contact': contact,
-        'sort': sort,
-        'order_by_list': order_by_list,
-        'form_debt': form_debt,
-        'form_edit_debt': form_edit_debt,
-        'paginator': paginator,
-        'page': page,
-        'menu_page': 'contacts'
-    }
-    template_path = 'contact/contact_debts.html'
-    return _render_response(request, context_info, template_path)
-
-
-@login_required
 def add_debt(request, contact_id):
+    contact = Contact.objects.get(contact_id=contact_id)
+    form = DebtForm(contact, request.POST or None)
     if request.method == 'POST' and request.POST:
-        contact = Contact.objects.get(contact_id=contact_id)
-        form = DebtForm(contact, request.POST)
         if form.is_valid():
             note_content = form.cleaned_data['note']
             debt = form.save()
             if note_content:
                 debt_note = DebtNote(content=note_content, debt=debt)
                 debt_note.save()
-            response_data = 'Ok'
-            response = {'result': response_data}
-        else:
-            response = {'errors': get_form_errors(form)}
-        return JsonResponse(response)
+            return redirect('contact_debts', contact_id=contact_id)
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'contact': contact,
+        'form_errors': get_form_errors(form),
+        'form': form,
+        'menu_page': 'contacts'
+    }
+    template_path = 'contact/add_debts.html'
+    return _render_response(request, context_info, template_path)
 
 
 @login_required
-def edit_debt(request, contact_id):
+def edit_debt(request, contact_id, debt_id):
+    contact = Contact.objects.get(contact_id=contact_id)
+    instance = Debt.objects.get(debt_id=debt_id)
+    form = DebtForm(contact, request.POST or None, instance=instance)
     if request.method == 'POST' and request.POST:
-        debt_id = request.POST.get('debt_id')
-        contact = Contact.objects.get(contact_id=contact_id)
-        instance = Debt.objects.get(debt_id=debt_id)
-        form = DebtForm(contact, request.POST, instance=instance)
         if form.is_valid():
             form.save()
             response_data = 'Ok'
@@ -853,6 +798,16 @@ def edit_debt(request, contact_id):
         else:
             response = {'errors': get_form_errors(form)}
         return JsonResponse(response)
+    context_info = {
+        'request': request,
+        'user': request.user,
+        'contact': contact,
+        'debt_id': debt_id,
+        'form': form,
+        'menu_page': 'contacts'
+    }
+    template_path = 'contact/edit_debt.html'
+    return _render_response(request, context_info, template_path)
 
 
 @login_required

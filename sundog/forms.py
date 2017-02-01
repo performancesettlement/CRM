@@ -364,7 +364,7 @@ class CreditorForm(forms.ModelForm):
 
 class DebtForm(forms.ModelForm):
     note = forms.CharField(required=False, widget=forms.Textarea(
-        attrs={'style': 'resize: none;', 'class': 'form-control', 'maxlength': 2000}))
+        attrs={'style': 'resize: none; width: 100%', 'maxlength': 2000}))
 
     class Meta:
         model = Debt

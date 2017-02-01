@@ -53,10 +53,10 @@
     <div id="budget" class="col-xs-12 m-t-md m-b-md padding-for-bottom" style="padding-bottom: 70px;">
         <form id="budget-form" class="form col-xs-12 no-padding-sides" action="{% url 'budget_analysis_save' contact_id=contact.contact_id %}" method="post">
             {% csrf_token %}
-            <div class="col-xs-12 col-lg-6">
+            <div class="col-xs-12 col-lg-6 no-padding-left">
                 {% include "contact/partials/budget_analysis/incomes_form_fields.html" %}
             </div>
-            <div class="col-xs-12 col-lg-6">
+            <div class="col-xs-12 col-lg-6 no-padding-sides">
                 {% include "contact/partials/budget_analysis/expenses_form_fields.html" %}
             </div>
         </form>

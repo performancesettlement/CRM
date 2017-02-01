@@ -12,8 +12,8 @@ register = template.Library()
 
 
 @register.filter(name='currency')
-def currency(dollars):
-    dollars = Decimal(dollars).quantize(Decimal('.01'))
+def currency(number):
+    dollars = Decimal(number or 0).quantize(Decimal('.01'))
     if dollars is None:
         return "N/A"
     else:
