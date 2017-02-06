@@ -26,9 +26,23 @@
                 <td>{{ doc.created_at|date:'SHORT_DATETIME_FORMAT' }}</td>
                 <td>{{ doc.created_by.full_name }}</td>
                 <td>
-                    <a href="" class="generated-doc-view"><span title="View" class="glyphicon glyphicon-zoom-in"></span></a>
-                    <a href="" class="generated-doc-download"><span title="Download" class="glyphicon glyphicon-download"></span></a>
-                    <a href="" class="generated-doc-delete"><span title="Delete" class="glyphicon glyphicon-trash"></span></a>
+                    <a href="{% url "contacts.generated_documents.view" contact_id=contact.pk pk=doc.pk %}" class="generated-doc-view"><span title="View" class="glyphicon glyphicon-zoom-in"></span></a>
+                    <a href="{% url "contacts.generated_documents.view" contact_id=contact.pk pk=doc.pk %}" class="generated-doc-download" download><span title="Download" class="glyphicon glyphicon-download"></span></a>
+                    <a
+                        aria-label="Delete Generated Document"
+                        class="contact-generated_document-delete-ajax fm-delete"
+                        data-fm-callback="reload"
+                        data-fm-head="Delete Generated Document: {{ doc }}"
+                        href="{% url "contacts.generated_documents.delete.ajax" contact_id=contact.pk pk=doc.pk %}"
+                        id="contact-generated_document-delete-ajax-{{ doc.pk }}"
+                    >
+                        <span
+                            aria-hidden="true"
+                            class="glyphicon glyphicon-trash"
+                            title="Delete Document"
+                        >
+                        </span>
+                    </a>
                 </td>
             </tr>
         {% endfor %}
