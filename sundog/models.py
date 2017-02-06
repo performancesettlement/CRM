@@ -1176,8 +1176,8 @@ ACTIVITY_TYPE_COLOR = {
 class Activity(TrackedAbstractBase):
     activity_id = models.AutoField(primary_key=True)
     contact = models.ForeignKey(Contact, related_name='activities', blank=True, null=True)
-    type = models.CharField(max_length=20, choices=ACTIVITY_TYPE_CHOICES)
-    description = models.CharField(max_length=300)
+    type = LongCharField(choices=ACTIVITY_TYPE_CHOICES)
+    description = LongCharField()
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     created_by = models.ForeignKey(User, blank=True, null=True)
 
