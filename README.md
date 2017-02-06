@@ -21,7 +21,7 @@ If deploying for production, run `scripts/setup_production.sh`.
 Finally, run the following command:
 
 ```
-docker-compose build && docker-compose up -d
+docker-compose up -d --build
 ```
 
 The service will be made available on port 80 of the container.  In production mode, the service will listen on port 443 with TLS on the host system.  Check `docker-compose.production.yml` for production-specific settings, such as the publicly resolvable DNS address where the service will listen.
@@ -32,4 +32,4 @@ The service will be made available on port 80 of the container.  In production m
 
 It's convenient to use a combination of [Consul and Registrator](https://github.com/mgomezch/local_services) to make the service available through a comfortable local DNS address.  Clone that repository and run `docker-compose up -d` in its root; if you followed the Ubuntu setup instructions, it should bring up the service at <http://crm_web.service.consul.test/>.
 
-To work on the code, simply edit files in your repository clone and repeat the `docker-compose build && docker-compose up -d` command to bring up your changes.
+To work on the code, simply edit files in your repository clone and repeat the `docker-compose up -d --build` command to bring up your changes.
