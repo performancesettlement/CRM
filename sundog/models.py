@@ -16,6 +16,7 @@ from sundog.constants import SHORT_DATE_FORMAT, CONTACT_DEFAULT_STAGE, CONTACT_D
 from sundog.media import S3PrivateFileField
 from sundog.routing import package_models
 from sundog.templatetags.my_filters import currency
+from sundog.util.models import LongCharField
 from sundog.utils import format_price
 
 import copy
