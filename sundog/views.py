@@ -560,7 +560,7 @@ def add_source(request):
 
 def _get_users_by_company():
     users_by_company = {}
-    for user in list(User.objects.prefetch_related('company').all()):
+    for user in list(User.objects.prefetch_related('userprofile').prefetch_related('userprofile__company').all()):
         if user.company and user.company.company_id not in users_by_company:
             users_by_company[user.company.company_id] = []
             users_by_company[user.company.company_id].append({'id': str(user.id), 'name': user.get_full_name()})
@@ -2289,11 +2289,16 @@ def add_user_role(request):
     form = GroupForm(request.POST or None)
     if request.method == 'POST' and request.POST:
         if form.is_valid():
+            assignable = form.cleaned_data['assignable']
+            parent = form.cleaned_data['parent']
             ids = request.POST['ids'].split(',') if 'ids' in request.POST and request.POST['ids'] else []
             permissions = list(Permission.objects.filter(id__in=ids))
             role = form.save()
             role.permissions.set(permissions)
             role.save()
+            role.extension.assignable = assignable
+            role.extension.parent = parent
+            role.extension.save()
             response = {'result': 'Ok', 'id': str(role.id), 'name': role.name}
         else:
             response = {'errors': get_form_errors(form)}
@@ -2318,11 +2323,16 @@ def edit_user_role(request, role_id):
     form = GroupForm(request.POST or None, instance=instance)
     if request.method == 'POST' and request.POST:
         if form.is_valid():
+            assignable = form.cleaned_data['assignable']
+            parent = form.cleaned_data['parent']
             ids = request.POST['ids'].split(',') if 'ids' in request.POST else []
             permissions = list(Permission.objects.filter(id__in=ids))
             role = form.save()
             role.permissions.set(permissions)
             role.save()
+            role.extension.assignable = assignable
+            role.extension.parent = parent
+            role.extension.save()
             response = {'result': 'Ok'}
         else:
             response = {'errors': get_form_errors(form)}

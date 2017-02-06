@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from sundog.models import Document
+from sundog.components.documents.models import Document
 from sundog.util.functional import mutate
 
 

@@ -1,3 +1,4 @@
+from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from django.core.management import BaseCommand
 from sundog.management.commands.utils import print_script_header, get_or_create_model_instance, print_script_end
@@ -33,8 +34,9 @@ class Command(BaseCommand):
                                          tabs=1)
 
         company = Company.objects.get(name='Performance Settlement')
-        user_data_kwargs = {'username': Command.ADMIN_USER_NAME, 'password': 'Changeme12', 'email': '',
-                            'company': company}
+        user_data_kwargs = {'username': Command.ADMIN_USER_NAME, 'password': make_password('Changeme12')}
         user_filter_kwargs = {'username': Command.ADMIN_USER_NAME}
-        get_or_create_model_instance(User, user_data_kwargs, user_filter_kwargs, Command.ADMIN_USER_NAME, tabs=1)
+        user = get_or_create_model_instance(User, user_data_kwargs, user_filter_kwargs, Command.ADMIN_USER_NAME, tabs=1)
+        user.userprofile.company = company
+        user.userprofile.save()
         print_script_end()

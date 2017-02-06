@@ -42,6 +42,7 @@ $(document).ready(function() {
                 }
                 if (response.result === 'Ok') {
                     $('#select-role').append('<option value="' + response.id + '">' + response.name + '</option>');
+                    $('#permissions-container').find('input').prop('checked', false);
                     form.find('.reset').click();
                     showSuccessPopup('User Role successfully created!');
                 }

@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from django.http import Http404
 from django.utils.html import strip_tags
-from django_auth_app.services import get_user_timezone
 from sundog.constants import SHORT_DATE_FORMAT
 
 import calendar
@@ -44,15 +43,6 @@ def utc_to_local(utc_dt, timezone):
     local_tz = pytz.timezone(timezone)
     local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone(local_tz)
     return local_tz.normalize(local_dt)  # .normalize might be unnecessary
-
-
-def set_date_to_user_timezone(date, user_id):
-    local_date = date
-    user_tz = get_user_timezone(user_id)
-    if user_tz:
-        local_date = utc_to_local(date, user_tz)
-
-    return local_date
 
 
 def save_import_file(f, file_path):

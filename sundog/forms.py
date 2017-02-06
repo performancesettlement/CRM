@@ -1,14 +1,13 @@
 import copy
 from itertools import chain
-from colorful.widgets import ColorFieldWidget
 from django import forms
 from django.contrib.auth.models import Group, User
 from django.core.validators import validate_email
 from django.db.models import Q
 from django.utils.encoding import force_text
+from localflavor.us.us_states import US_STATES
 import pytz
 import re
-from django_auth_app import enums
 from sundog.models import Contact, Stage, Status, Campaign, Source, BankAccount, Note, Call,\
     Email, DEBT_SETTLEMENT, Uploaded, Incomes, Expenses, Creditor, Debt, DebtNote, EnrollmentPlan, FeePlan, FeeProfile,\
     FeeProfileRule, WorkflowSettings, Enrollment, AMOUNT_CHOICES, Payment, PAYMENT_TYPE_CHOICES, \
@@ -411,7 +410,7 @@ class EnrollmentPlanForm(forms.ModelForm):
             'show_fee_subtotal_column': forms.CheckboxInput(),
             'savings_adjustment': forms.CheckboxInput(),
             'show_savings_accumulation': forms.CheckboxInput(),
-            'states': forms.SelectMultiple(choices=enums.US_STATES, attrs={'class': 'col-xs-2 no-padding-sides',
+            'states': forms.SelectMultiple(choices=US_STATES, attrs={'class': 'col-xs-2 no-padding-sides',
                                                                            'style': 'height: 200px;'}),
             'fee_profile': forms.Select(attrs={'class': 'col-xs-2 no-padding-sides'})
         }
@@ -677,18 +676,25 @@ class AdjustPaymentForm(forms.Form):
 
 
 class GroupForm(forms.ModelForm):
+    parent = forms.ModelChoiceField(required=False, widget=forms.Select(attrs={'class': 'col-xs-6 no-padding'}),
+                                    empty_label=EMPTY_LABEL, queryset=Group.objects.all())
+    assignable = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={'class': 'no-margins'}))
+
     class Meta:
         model = Group
         widgets = {
-            'parent': forms.Select(attrs={'class': 'col-xs-6 no-padding'}),
             'name': forms.TextInput(attrs={'class': 'col-xs-6'}),
-            'assignable': forms.CheckboxInput(attrs={'class': 'no-margins'}),
         }
         exclude = ['permissions']
 
     def __init__(self, *args, **kwargs):
+        if 'instance' in kwargs and kwargs['instance']:
+            if 'initial' not in kwargs:
+                kwargs['initial'] = {}
+            kwargs['initial']['assignable'] = kwargs['instance'].extension.assignable
+            if kwargs['instance'].extension.parent:
+                kwargs['initial']['parent'] = kwargs['instance'].extension.parent.id
         super(GroupForm, self).__init__(*args, **kwargs)
-        self.fields['parent'].empty_label = EMPTY_LABEL
 
 
 class TeamForm(forms.ModelForm):
@@ -761,7 +767,7 @@ class CreateUserForm(forms.ModelForm):
             'username': forms.TextInput(attrs={'class': 'col-xs-11'}),
             'password': forms.PasswordInput(attrs={'class': 'col-xs-11'}),
         }
-        fields = ['username', 'password', 'company']
+        fields = ['username', 'password']
 
     def _password_matches(self):
         password = self.cleaned_data.get('password')
@@ -790,7 +796,14 @@ class CreateUserForm(forms.ModelForm):
         if commit:
             user.set_password(user.password)
             user.save()
+            user.userprofile.save()
+            self.update_userprofile(user)
         return user
+
+    def update_userprofile(self, user):
+        if 'company' in self.cleaned_data:
+            user.userprofile.company = self.cleaned_data['company']
+            user.userprofile.save()
 
 
 AT_LEAST_1_LOWER_CASE_RE = '[a-z]+'
@@ -807,28 +820,38 @@ class EditUserForm(forms.ModelForm):
     email = forms.EmailField(widget=forms.TextInput(attrs={'class': 'col-xs-11'}))
     company = forms.ModelChoiceField(empty_label=EMPTY_LABEL, queryset=Company.objects.filter(active=True),
                                      widget=forms.Select(attrs={'class': 'col-xs-11 no-padding-sides'}))
+    shared_user_data = forms.ModelMultipleChoiceField(required=False, queryset=User.objects.filter(is_active=True),
+                                                      widget=forms.SelectMultiple(
+                                                          attrs={'class': 'col-lg-2 no-padding-sides'}))
+    shared_with_all = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={'class': 'no-margins'}))
+    reports_to = forms.ModelChoiceField(required=False, empty_label=EMPTY_LABEL, queryset=User.objects.filter(is_active=True),
+                                        widget=forms.Select(attrs={'class': 'col-xs-11 no-padding-sides'}))
 
     class Meta:
         model = User
         widgets = {
             'username': forms.TextInput(attrs={'class': 'col-xs-11', 'value': ''}),
             'groups': forms.Select(attrs={'class': 'col-xs-11 no-padding-sides'}),
-            'reports_to': forms.Select(attrs={'class': 'col-xs-11 no-padding-sides'}),
             'first_name': forms.TextInput(attrs={'class': 'col-xs-11'}),
             'last_name': forms.TextInput(attrs={'class': 'col-xs-11'}),
             'email': forms.TextInput(attrs={'class': 'col-xs-11'}),
-            'company': forms.Select(attrs={'class': 'col-xs-11 no-padding-sides'}),
-            'shared_user_data': forms.SelectMultiple(attrs={'class': 'col-lg-2 no-padding-sides'}),
-            'shared_with_all': forms.CheckboxInput(attrs={'class': 'no-margins'}),
         }
-        fields = ['username', 'company', 'groups', 'reports_to', 'first_name', 'last_name', 'email',
-                  'company', 'shared_user_data', 'shared_with_all']
+        fields = ['username', 'groups', 'first_name', 'last_name', 'email']
 
     def __init__(self, *args, **kwargs):
+        if 'instance' in kwargs and kwargs['instance']:
+            if 'initial' not in kwargs:
+                kwargs['initial'] = {}
+            if kwargs['instance'].userprofile.company:
+                kwargs['initial']['company'] = kwargs['instance'].userprofile.company.company_id
+            if kwargs['instance'].userprofile.reports_to:
+                kwargs['initial']['reports_to'] = kwargs['instance'].userprofile.reports_to.id
+            if len(kwargs['instance'].userprofile.shared_user_data.all()):
+                kwargs['initial']['shared_user_data'] = [user.id for user in kwargs['instance'].userprofile.shared_user_data.all()]
+            kwargs['initial']['shared_with_all'] = kwargs['instance'].userprofile.shared_with_all
         super(EditUserForm, self).__init__(*args, **kwargs)
         self.fields['groups'].empty_label = EMPTY_LABEL
-        self.fields['reports_to'].empty_label = EMPTY_LABEL
-        if self.instance.shared_with_all:
+        if self.instance.userprofile.shared_with_all:
             self.fields['shared_user_data'].widget.attrs.update({'style': 'display: none;'})
         self.invalid_password = False
         self.changing_password = False
@@ -869,8 +892,20 @@ class EditUserForm(forms.ModelForm):
 
     def save(self, commit=True):
         user = super(EditUserForm, self).save(commit=False)
+        self.update_userprofile(user)
         if commit:
             if self.changing_password:
                 user.set_password(self.cleaned_data.get('new_password'))
             user.save()
+            user.userprofile.save()
         return user
+
+    def update_userprofile(self, user):
+        if 'company' in self.cleaned_data:
+            user.userprofile.company = self.cleaned_data['company']
+        if 'reports_to' in self.cleaned_data:
+            user.userprofile.reports_to = self.cleaned_data['reports_to']
+        if 'shared_user_data' in self.cleaned_data:
+            user.userprofile.shared_user_data = self.cleaned_data['shared_user_data']
+        if 'shared_with_all' in self.cleaned_data:
+            user.userprofile.shared_with_all = self.cleaned_data['shared_with_all']

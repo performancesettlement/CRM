@@ -2,7 +2,7 @@ from django.conf.urls import include, url
 from django.conf.urls.static import static
 from django.contrib import admin
 
-from sundog import ajax, views
+from sundog import views
 from sundog.routing import module_urls, package_urls
 
 import settings
@@ -77,8 +77,6 @@ urlpatterns = module_urls(views) + package_urls(sundog.components) + [
 
     url(r'^client/add/$', views.add_client_ajax, name='ajax_client_add'),
     url(r'^profile/stop_impersonate_user/$', views.stop_impersonate_user, name='stop_impersonate_user'),
-    url(r'^admin/update_preferences_for_section_collapsed_state/$', ajax.update_preferences_for_section_collapsed_state, name='update_section_collapsed_state'),
-    url(r'^admin/get_preferences_for_sections_collapsed_state/$', ajax.get_preferences_for_sections_collapsed_state, name='get_sections_collapsed_state'),
 
     url(r'^company/add/$', views.add_company, name='add_company'),
     url(r'^company/(?P<company_id>\d+)/edit/$', views.edit_company, name='edit_company'),

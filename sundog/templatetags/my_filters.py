@@ -55,20 +55,6 @@ def format_datetime(datetime):
         return utils.format_date(datetime)
 
 
-@register.filter(name='formatDatetimeTz')
-def format_datetime_tz(datetime, user_id):
-    return (
-        ''
-        if datetime is None
-        else utils.format_date(
-            utils.set_date_to_user_timezone(
-                datetime,
-                user_id,
-            )
-        )
-    )
-
-
 @register.filter(name='paginatorRange')
 def paginator_range(paginator, page_number):
     len_range = len(paginator.page_range)

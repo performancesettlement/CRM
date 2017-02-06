@@ -18,20 +18,13 @@
                             <form role="form" name="LoginForm" action="{% url 'django_auth_app:login' %}" method="post">
                                 {% csrf_token %}
                                 {% if next %}
-                                <input type="hidden" name="next" value="{{ next }}" />
+                                    <input type="hidden" name="next" value="{{ next }}" />
                                 {% endif %}
                                 <div class="form-group"><label>Username</label> <input type="text" placeholder="Enter username" class="form-control" required="" id="username" name="username"></div>
                                 <div class="form-group"><label>Password</label> <input type="password" placeholder="Password" class="form-control" required="" id="password" name="password"></div>
-                                <div class="form-group m-l-lg">
-                                    <div class="checkbox">
-                                        <label for="remember-me">
-                                            <input name="remember-me" type="checkbox"> Remember me
-                                        </label>
-                                    </div>
-                                </div>
-                                <div>
-                                    <a href="{% url 'django_auth_app:recover' %}" ><small>Forgot password?</small></a>
-                                    <input type="hidden" id="id_timezone" name="timezone" value="" />
+                                <div class="form-group">
+                                    <input id="remember-me" name="remember-me" type="checkbox" class="vertical-align no-margins">
+                                    <label for="remember-me">Remember me</label>
                                 </div>
                                 <div class="form-group">
                                     <button class="btn btn-primary pull-right m-b" type="submit"><strong>Log in</strong></button>

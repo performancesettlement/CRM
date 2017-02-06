@@ -8,7 +8,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.urls import reverse
 from django.utils.timezone import now
-from django_auth_app import enums
+from localflavor.us.us_states import US_STATES
 from numpy import arange
 from settings import MEDIA_PRIVATE
 from sundog.constants import SHORT_DATE_FORMAT
@@ -71,7 +71,7 @@ class Company(models.Model):
     address = models.CharField(max_length=1000, blank=True, null=True)
     address_2 = models.CharField(max_length=1000, blank=True, null=True)
     city = models.CharField(max_length=100, blank=True, null=True)
-    state = models.CharField(max_length=4, choices=enums.US_STATES, blank=True, null=True)
+    state = models.CharField(max_length=4, choices=US_STATES, blank=True, null=True)
     zip = models.CharField(max_length=100, blank=True, null=True)
     phone = models.CharField(max_length=10, blank=True, null=True)
     fax = models.CharField(max_length=10, blank=True, null=True)
@@ -272,13 +272,13 @@ class Contact(models.Model):
     address_1 = models.CharField(max_length=300, blank=True, null=True)
     address_2 = models.CharField(max_length=300, blank=True, null=True)
     city = models.CharField(max_length=60, blank=True, null=True)
-    state = models.CharField(max_length=4, choices=enums.US_STATES, blank=True, null=True)
+    state = models.CharField(max_length=4, choices=US_STATES, blank=True, null=True)
     zip_code = models.CharField(max_length=12, blank=True, null=True)
     residential_status = models.CharField(max_length=100, choices=RESIDENTIAL_STATUS_CHOICES, blank=True, null=True)
     co_applicant_address_1 = models.CharField(max_length=300, blank=True, null=True)
     co_applicant_address_2 = models.CharField(max_length=300, blank=True, null=True)
     co_applicant_city = models.CharField(max_length=60, blank=True, null=True)
-    co_applicant_state = models.CharField(max_length=4, choices=enums.US_STATES, blank=True, null=True)
+    co_applicant_state = models.CharField(max_length=4, choices=US_STATES, blank=True, null=True)
     co_applicant_zip_code = models.CharField(max_length=12, blank=True, null=True)
 
     employer = models.CharField(max_length=100, blank=True, null=True)
@@ -775,7 +775,7 @@ class Creditor(models.Model):
     address_1 = models.CharField(max_length=1000, blank=True, null=True)
     address_2 = models.CharField(max_length=1000, blank=True, null=True)
     city = models.CharField(max_length=100, blank=True, null=True)
-    state = models.CharField(max_length=4, choices=enums.US_STATES, blank=True, null=True)
+    state = models.CharField(max_length=4, choices=US_STATES, blank=True, null=True)
     zip_code = models.CharField(max_length=100, blank=True, null=True)
     phone_1 = models.CharField(max_length=10, blank=True, null=True)
     phone_2 = models.CharField(max_length=10, blank=True, null=True)
@@ -968,7 +968,7 @@ class Settlement(models.Model):
     no_payments = models.BooleanField(default=False)
     address = models.CharField(max_length=1000)
     city = models.CharField(max_length=20)
-    state = models.CharField(max_length=4, choices=enums.US_STATES)
+    state = models.CharField(max_length=4, choices=US_STATES)
     zip_code = models.CharField(max_length=10)
     creditor_reference = models.CharField(max_length=100, blank=True, null=True)  # Account # 5491100095397355: Jamie Ordaz
     phone = models.CharField(max_length=10, blank=True, null=True)
@@ -988,7 +988,7 @@ class BankAccount(models.Model):
     bank_name = models.CharField(max_length=100)
     address = models.CharField(max_length=100, blank=True, null=True)
     city = models.CharField(max_length=20, blank=True, null=True)
-    state = models.CharField(max_length=4, choices=enums.US_STATES, blank=True, null=True)
+    state = models.CharField(max_length=4, choices=US_STATES, blank=True, null=True)
     zip_code = models.CharField(max_length=10, blank=True, null=True)
     phone = models.CharField(max_length=10, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
@@ -1612,27 +1612,63 @@ class Campaign(models.Model):
         return '%s' % self.title
 
 
-if not hasattr(User, 'company'):
-    company = models.ForeignKey(Company, related_name='users', blank=True, null=True)
-    company.contribute_to_class(User, 'company')
-if not hasattr(User, 'reports_to'):
-    reports_to = models.ForeignKey(User, related_name='reports_to_me', blank=True, null=True)
-    reports_to.contribute_to_class(User, 'reports_to')
-if not hasattr(User, 'shared_user_data'):
-    shared_user_data = models.ManyToManyField(User, related_name='sharing_data_with', blank=True)
-    shared_user_data.contribute_to_class(User, 'shared_user_data')
-if not hasattr(User, 'shared_with_all'):
-    shared_with_all = models.BooleanField(default=False)
-    shared_with_all.contribute_to_class(User, 'shared_with_all')
+def print_user(self):
+    return self.get_full_name() if self.get_full_name() else self.username
 
-User.add_to_class('__str__', User.get_full_name)
+User.add_to_class('__str__', print_user)
 
-if not hasattr(Group, 'parent'):
-    parent = models.ForeignKey(Group, related_name='children', blank=True, null=True)
-    parent.contribute_to_class(Group, 'parent')
-if not hasattr(Group, 'assignable'):
+
+class GroupExtension(models.Model):
+    group = models.OneToOneField(Group, related_name='extension', primary_key=True)
+    parent = models.OneToOneField(Group, related_name='parent', blank=True, null=True)
     assignable = models.BooleanField(default=False)
-    assignable.contribute_to_class(Group, 'assignable')
+
+
+class GroupMethods(Group):
+    class Meta:
+        proxy = True
+
+    def __init__(self, *args, **kwargs):
+        super(GroupMethods, self).__init__(*args, **kwargs)
+        self.parent = self.get_parent()
+        self.assignable = self.get_assignable()
+
+    def get_parent(self):
+        return self.extension.parent if self.extension else None
+
+    def get_assignable(self):
+        return self.extension.assignable if self.assignable else None
+
+
+@receiver(post_save, sender=Group)
+def create_group_extension(sender, instance, created, **kwargs):
+    if created:
+        GroupExtension(group=instance).save()
+
+
+class UserProfile(models.Model):
+    related_user = models.OneToOneField(User)
+    birthday = models.DateField(blank=True, null=True)
+    phone_number = models.CharField(max_length=50, blank=True, null=True)
+    country = models.CharField(max_length=60, blank=True, null=True)
+    state = models.CharField(max_length=4, choices=US_STATES, blank=True, null=True)
+    city = models.CharField(max_length=60, blank=True, null=True)
+    zip_code = models.CharField(max_length=12, blank=True, null=True)
+    address = models.CharField(max_length=300, blank=True, null=True)
+    last_login = models.DateTimeField(blank=True, null=True)
+    company = models.ForeignKey(Company, related_name='users', blank=True, null=True)
+    reports_to = models.ForeignKey(User, related_name='reports_to_me', blank=True, null=True)
+    shared_user_data = models.ManyToManyField(User, related_name='sharing_data_with', blank=True)
+    shared_with_all = models.BooleanField(default=False)
+
+    def __unicode__(self):
+        return '%s' % self.related_user.username
+
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile(related_user=instance).save()
 
 
 for model in package_models(sundog.components):

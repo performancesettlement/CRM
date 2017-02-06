@@ -1,9 +1,8 @@
-from datatableview import Datatable, DisplayColumn, TextColumn, BooleanColumn, DateColumn
+from datatableview import Datatable, DisplayColumn, TextColumn, DateColumn
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.template.defaultfilters import date
 from django.template.loader import render_to_string
-from sundog.models import Company
 from sundog.routing import route, decorate_view
 from sundog.util.views import SundogDatatableView
 
@@ -15,9 +14,7 @@ class UsersList(SundogDatatableView):
 
     model = User
 
-    searchable_columns = [
-        'name',
-    ]
+    searchable_columns = ['name']
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -25,7 +22,8 @@ class UsersList(SundogDatatableView):
         return context
 
     def get_queryset(self):
-        return User.objects.prefetch_related('company').prefetch_related('groups').prefetch_related('userprofile').all()
+        return User.objects.prefetch_related('groups').prefetch_related('groups__extension') \
+            .prefetch_related('userprofile').prefetch_related('userprofile__company').all()
 
     class datatable_class(Datatable):
         status = TextColumn(
@@ -47,8 +45,7 @@ class UsersList(SundogDatatableView):
 
         company = TextColumn(
             label='Company',
-            source='company__name',
-            processor=lambda instance, *_, **__: instance.company.name if instance.company else '',
+            source='userprofile__company__name',
         )
 
         last_login = DateColumn(

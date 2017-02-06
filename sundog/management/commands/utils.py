@@ -23,7 +23,8 @@ def get_or_create_model_instance(model, model_data_kwargs, filter_kwargs, messag
         instance = model.objects.get(**filter_kwargs)
         msg = "{model} '{name}' is already created."
     except model.DoesNotExist:
-        instance = model(**model_data_kwargs).save()
+        instance = model(**model_data_kwargs)
+        instance.save()
         msg = "{model} '{name}' created successfully."
     if associated_to:
         msg = msg.replace('.', " and associated to '{associated_to}'.")

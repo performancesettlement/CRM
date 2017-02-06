@@ -108,7 +108,7 @@ class ContactsList(SundogDatatableView):
 
         company = TextColumn(
             label="Company",
-            sources=['company__name'],
+            source='userprofile__company__name',
         )
 
         type_ = DisplayColumn(

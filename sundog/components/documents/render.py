@@ -3,7 +3,6 @@ from django.core.urlresolvers import resolve
 from django.db.models import Sum
 from django.template.loader import render_to_string
 from django.utils.dateformat import format
-from django_auth_app.enums import US_STATES
 from pystache.defaults import TAG_ESCAPE
 from pystache.renderengine import context_get
 from pystache.renderer import Renderer
