@@ -1,5 +1,6 @@
 from _decimal import ROUND_UP
 from decimal import Decimal
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.models import Permission, Group, User
 from django.core import mail
@@ -10,9 +11,11 @@ from django.http import Http404
 from django.http.response import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, render_to_response, redirect
 from django.urls import reverse
+from django.utils.html import strip_tags
 from django.utils.timezone import now
 
 from numpy import arange
+import pytz
 
 from sundog.constants import SHORT_DATE_FORMAT, FIXED_VALUES
 from sundog.decorators import bypass_impersonation_login_required
@@ -22,7 +25,7 @@ from sundog.forms import ContactForm, StageForm, StatusForm, \
     ExpensesForm, IncomesForm, CreditorForm, DebtForm, DebtNoteForm, EnrollmentPlanForm, FeePlanForm, FeeProfileForm, \
     FeeProfileRuleForm, WorkflowSettingsForm, EnrollmentForm, PaymentForm, CompensationTemplateForm, \
     CompensationTemplatePayeeForm, SettlementOfferForm, SettlementForm, FeeForm, AdjustPaymentForm, GroupForm, TeamForm, \
-    CompanyForm, PayeeForm, CreateUserForm, EditUserForm
+    CompanyForm, PayeeForm, CreateUserForm, EditUserForm, LoginForm
 from datetime import datetime, timedelta
 from sundog.management.commands.generate_base_permissions import CONTACT_BASE_CODENAME, CREDITOR_BASE_CODENAME, \
     ENROLLMENT_BASE_CODENAME, SETTLEMENT_BASE_CODENAME, DOCS_BASE_CODENAME, FILES_BASE_CODENAME, \
@@ -64,6 +67,47 @@ def index(request):
         return _render_response(request, context_info, settings.INDEX_PAGE)
     else:
         return HttpResponseRedirect(settings.INDEX_PAGE)
+
+
+def login_user(request):
+    form = LoginForm(request.POST or None)
+    form_errors = None
+    user_tz = str(pytz.utc)
+    if request.method == 'POST' and request.POST:
+        if form.is_valid():
+            user = form.login(request)
+            if user:
+                login(request, user)
+                now_date = now()
+                now_date.replace(tzinfo=pytz.utc)
+                profile = user.userprofile
+                profile.last_login = now_date
+                profile.save()
+                if user_tz:
+                    request.session['django_timezone'] = user_tz
+                else:
+                    try:
+                        user_tz = request.POST["timezone"]
+                        request.session['django_timezone'] = user_tz
+                    except:
+                        pass
+                return HttpResponseRedirect(reverse('list_contacts'))
+        else:
+            form_errors = []
+            for field in form:
+                if field.errors:
+                    for field_error in field.errors:
+                        field_error_text = strip_tags(field.html_name.replace("_", " ").title()) + ": " + field_error
+                        form_errors.append(field_error_text)
+            for non_field_error in form.non_field_errors():
+                form_errors.append(non_field_error)
+    template_path = 'auth/login.html'
+    return _render_response(request, {'form': form, 'form_errors': form_errors}, template_path)
+
+
+def logout_user(request):
+    logout(request)
+    return redirect('login')
 
 
 @login_required
@@ -2521,10 +2565,6 @@ def activate_user(request, user_id):
 
 
 #######################################################################
-
-
-def terms(request):
-    return render_to_response('sundog/terms.html')
 
 
 def render404(request):

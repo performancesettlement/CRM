@@ -16,7 +16,6 @@ django_app_nginx.conf
 /app/build/*
 *.iml
 /log/*
-django_auth_app/migrations/0*
 sundog/migrations/0*
 local_config.py
 import/history/*

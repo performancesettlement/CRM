@@ -19,12 +19,12 @@ DATABASE_PORT = local_config.DATABASE_PORT
 DATABASE_PASSWORD = local_config.DATABASE_PASSWORD
 
 INDEX_PAGE = '/contacts'
-LOGIN_URL = '/account/login/'
+LOGIN_URL = '/auth/login/'
 ADMIN_MEDIA_PREFIX = '/static/admin/'
 
 SITE_ID = 2
 
-AUTH_PROFILE_MODULE = 'django_auth_app.UserProfile'
+AUTH_PROFILE_MODULE = 'sundog.UserProfile'
 
 INSTALLED_APPS = (
     'django.contrib.admin',
@@ -35,7 +35,6 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.sitemaps',
     'django.contrib.sites',
-    'django_auth_app',
     'sundog',
     'rest_framework',
     'compressor',
@@ -79,14 +78,6 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            os.path.join(PROJECT_ROOT, 'django_auth_app', 'templates'),
-            os.path.join(
-                PROJECT_ROOT,
-                'django_auth_app/templates',
-                'registration',
-            ),
-            os.path.join(PROJECT_ROOT, 'django_auth_app/templates', 'account'),
-            os.path.join(PROJECT_ROOT, 'django_auth_app/templates', 'mail'),
             os.path.join(PROJECT_ROOT, 'sundog', 'templates'),
         ],
         'APP_DIRS': True,
@@ -204,11 +195,6 @@ LOGGING = {
         },
 
         'sundog': {
-            'handlers': ['mail', 'syslog', 'logstash'],
-            'level': 'DEBUG',
-        },
-
-        'django_auth_app': {
             'handlers': ['mail', 'syslog', 'logstash'],
             'level': 'DEBUG',
         },

@@ -1,6 +1,5 @@
 from django.conf.urls import include, url
 from django.conf.urls.static import static
-from django.contrib import admin
 
 from sundog import views
 from sundog.routing import module_urls, package_urls
@@ -9,9 +8,8 @@ import settings
 import sundog.components
 
 urlpatterns = module_urls(views) + package_urls(sundog.components) + [
-    url(r'^admin/', include(admin.site.urls)),
-
-    url(r'^account/', include('django_auth_app.urls', namespace='django_auth_app')),
+    url(r'^auth/login/$', views.login_user, name='login'),
+    url(r'^auth/logout/$', views.logout_user, name='logout'),
 
     url(r'^tinymce/', include('tinymce.urls')),
 
@@ -76,7 +74,6 @@ urlpatterns = module_urls(views) + package_urls(sundog.components) + [
     url(r'^creditor/add/$', views.add_creditor, name='add_creditor'),
 
     url(r'^client/add/$', views.add_client_ajax, name='ajax_client_add'),
-    url(r'^profile/stop_impersonate_user/$', views.stop_impersonate_user, name='stop_impersonate_user'),
 
     url(r'^company/add/$', views.add_company, name='add_company'),
     url(r'^company/(?P<company_id>\d+)/edit/$', views.edit_company, name='edit_company'),
