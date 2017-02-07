@@ -76,23 +76,6 @@ class Command(BaseCommand):
             {'codename': CREDITOR_BASE_CODENAME + '.delete_creditors', 'name': 'Delete Creditors', 'content_type': 'creditor'},
             {'codename': CREDITOR_BASE_CODENAME + '.generate_creditor_letters', 'name': 'Generate Creditor Letters', 'content_type': 'creditor'},
 
-            # Calendar
-            # {'codename': 'calendar.access_tab', 'name': 'Access Tab', 'content_type': ''},
-            # {'codename': 'calendar.create_events', 'name': 'Create Events', 'content_type': ''},
-            # {'codename': 'calendar.edit_events', 'name': 'Edit Events', 'content_type': ''},
-            # {'codename': 'calendar.delete_events', 'name': 'Delete Events', 'content_type': ''},
-            # {'codename': 'calendar.edit_event_types', 'name': 'Edit Event Types', 'content_type': ''},
-            # {'codename': 'calendar.create_custom_calendars', 'name': 'Create Custom Calendars', 'content_type': ''},
-            # {'codename': 'calendar.delete_calendars', 'name': 'Delete Calendars', 'content_type': ''},
-            # {'codename': 'calendar.add_tasks', 'name': 'Add Tasks', 'content_type': ''},
-            # {'codename': 'calendar.export_tasks', 'name': 'Export Tasks', 'content_type': ''},
-            # {'codename': 'calendar.view_all_tasks', 'name': 'View All Tasks', 'content_type': ''},
-            # {'codename': 'calendar.edit_multiple_tasks', 'name': 'Edit Multiple Tasks', 'content_type': ''},
-            # {'codename': 'calendar.delete_tasks', 'name': 'Delete Tasks', 'content_type': ''},
-            # {'codename': 'calendar.edit_task_types', 'name': 'Edit Task Types', 'content_type': ''},
-            # {'codename': 'calendar.edit_tasks', 'name': 'Edit Task Settings', 'content_type': ''},
-            # {'codename': 'calendar.availability_schedule', 'name': 'Availability Schedule', 'content_type': ''},
-
             # Enrollments
             {'codename': ENROLLMENT_BASE_CODENAME + '.access_tab', 'name': 'Access Tab', 'content_type': 'enrollment'},
             {'codename': ENROLLMENT_BASE_CODENAME + '.pause_payments', 'name': 'Pause Payments', 'content_type': 'enrollment'},
@@ -127,15 +110,15 @@ class Command(BaseCommand):
             {'codename': ENROLLMENT_BASE_CODENAME + '.export_reports', 'name': 'Export Reports', 'content_type': 'enrollment'},
 
             # Accounting
-            # {'codename': 'accounting.access_tab', 'name': 'Access Tab', 'content_type': ''},
-            # {'codename': 'accounting.create_reports', 'name': 'Create Reports', 'content_type': ''},
-            # {'codename': 'accounting.export_reports', 'name': 'Export Reports', 'content_type': ''},
-            # {'codename': 'accounting.modify_reports', 'name': 'Modify Reports', 'content_type': ''},
-            # {'codename': 'accounting.delete_reports', 'name': 'Delete Reports', 'content_type': ''},
-            # {'codename': 'accounting.view_fee_accounts', 'name': 'View Fee Accounts', 'content_type': ''},
-            # {'codename': 'accounting.edit_fee_accounts', 'name': 'Edit Fee Accounts', 'content_type': ''},
-            # {'codename': 'accounting.view_accounting', 'name': 'View Accounting Summaries', 'content_type': ''},
-            # {'codename': 'accounting.view_pipeline_report', 'name': 'View Pipeline Report', 'content_type': ''},
+            {'codename': 'accounting.access_tab', 'name': 'Access Tab', 'content_type': ''},
+            {'codename': 'accounting.create_reports', 'name': 'Create Reports', 'content_type': ''},
+            {'codename': 'accounting.export_reports', 'name': 'Export Reports', 'content_type': ''},
+            {'codename': 'accounting.modify_reports', 'name': 'Modify Reports', 'content_type': ''},
+            {'codename': 'accounting.delete_reports', 'name': 'Delete Reports', 'content_type': ''},
+            {'codename': 'accounting.view_fee_accounts', 'name': 'View Fee Accounts', 'content_type': ''},
+            {'codename': 'accounting.edit_fee_accounts', 'name': 'Edit Fee Accounts', 'content_type': ''},
+            {'codename': 'accounting.view_accounting', 'name': 'View Accounting Summaries', 'content_type': ''},
+            {'codename': 'accounting.view_pipeline_report', 'name': 'View Pipeline Report', 'content_type': ''},
 
             # Settlements
             {'codename': SETTLEMENT_BASE_CODENAME + '.access_tab', 'name': 'Access Tab', 'content_type': 'settlement'},

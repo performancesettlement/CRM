@@ -65,7 +65,6 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    'sundog.middleware.ImpersonationMiddleware',
     'sundog.middleware.TimezoneMiddleware',
     'sundog.middleware.ExceptionResponderMiddleware',
 )

@@ -9,7 +9,7 @@ from django.db import transaction
 
 from django.http import Http404
 from django.http.response import HttpResponseRedirect, JsonResponse
-from django.shortcuts import render, render_to_response, redirect
+from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils.html import strip_tags
 from django.utils.timezone import now
@@ -72,7 +72,7 @@ def index(request):
 def login_user(request):
     form = LoginForm(request.POST or None)
     form_errors = None
-    user_tz = str(pytz.utc)
+    user_tz = 'US/Pacific'
     if request.method == 'POST' and request.POST:
         if form.is_valid():
             user = form.login(request)
