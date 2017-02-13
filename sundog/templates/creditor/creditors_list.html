@@ -14,9 +14,13 @@
             </ol>
         </div>
     </div>
+    {% if 'sundog.creditor__create_creditors' in perms %}
     <div class="col-xs-12 m-t-md m-b-md no-padding-sides">
-        <div class="inline"><a class="btn btn-primary m-r-xs" href="{% url "add_creditor" %}">Add Creditor</a></div>
+        <div class="inline">
+            <a class="btn btn-primary m-r-xs" href="{% url "add_creditor" %}">Add Creditor</a>
+        </div>
     </div>
+    {% endif %}
     <div class="hidden">
         <form id="search-form" action="{% url 'list_contacts' %}" method="get">
             <input type="hidden" name="page" value="{{ page.number }}"/>

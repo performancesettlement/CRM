@@ -48,7 +48,7 @@ $(document).ready(function() {
                     showErrorPopup(response.errors);
                 }
                 else if (response.result === 'Ok') {
-                    $('#comp-temp-chooser').prepend('<option value="' + response.id + '">' + response.name + '</option>');
+                    $('option[value=""]').after('<option value="' + response.id + '">' + response.name + '</option>');
                     $('#reset-template').click();
                     showSuccessPopup('Compensation Template successfully created!');
                 }

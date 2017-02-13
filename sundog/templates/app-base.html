@@ -27,11 +27,11 @@
           <li class="menu-elem {% ifequal menu_page "contacts" %}menu-active{% endifequal %}">
             <a href="{% url 'list_contacts' %}">Contacts</a>
           </li>
-
+          {% if 'sundog.creditor__access_tab' in perms %}
           <li class="menu-elem {% ifequal menu_page "creditors" %}menu-active{% endifequal %}">
             <a href="{% url 'creditors_list' %}">Creditors</a>
           </li>
-
+          {% endif %}
           <li class="menu-elem {% ifequal menu_page "enrollments" %}menu-active{% endifequal %}">
             <a href="{% url 'enrollments_list' %}">Enrollments</a>
           </li>

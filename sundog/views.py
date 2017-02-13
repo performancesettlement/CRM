@@ -734,7 +734,7 @@ def add_lead_source(request):
     return _render_response(request, context_info, template_path)
 
 
-@login_required
+@permission_required(get_permission_codename(CREDITOR_ACCESS_TAB), 'forbidden')
 def creditors_list(request):
     order_by_list = ['name', 'address_1', 'city', 'state', 'zip_code', 'debtors', 'total_debts', 'avg']
     page = int(request.GET.get('page', '1'))
@@ -777,7 +777,8 @@ def creditors_list(request):
     return _render_response(request, context_info, template_path)
 
 
-@login_required
+@permission_required(get_permission_codename(CREDITOR_CREATE), 'forbidden')
+@permission_required(get_permission_codename(CREDITOR_ACCESS_TAB), 'forbidden')
 def add_creditor(request):
     form = CreditorForm(request.POST or None)
     if request.method == 'POST' and request.POST and form.is_valid():

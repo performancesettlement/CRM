@@ -20,7 +20,7 @@ class Command(BaseCommand):
             {'codename': CONTACT_MARK_PRIVATE, 'name': 'Mark Contacts Private', 'content_type': CONTACT_BASE_CODENAME},
             {'codename': CONTACT_PRIMARY_ASSIGNED, 'name': 'Change Primary Assigned', 'content_type': CONTACT_BASE_CODENAME},
             {'codename': CONTACT_CHANGE_STATUS, 'name': 'Change Contact Status', 'content_type': CONTACT_BASE_CODENAME},
-            {'codename': CONTACT_ADD_NOTES, 'name': 'Add Notes', 'content_type': CONTACT_BASE_CODENAME},
+            {'codename': CONTACT_CREATE_NOTES, 'name': 'Add Notes', 'content_type': CONTACT_BASE_CODENAME},
             # {'codename': CONTACT_BASE_CODENAME + '.view_attorney_notes', 'name': 'View Attorney Notes', 'content_type': CONTACT_BASE_CODENAME},
             {'codename': CONTACT_DELETE_NOTES, 'name': 'Delete Notes', 'content_type': CONTACT_BASE_CODENAME},
             {'codename': CONTACT_GENERATE_PDF, 'name': 'Generate PDFs', 'content_type': CONTACT_BASE_CODENAME},
@@ -62,10 +62,10 @@ class Command(BaseCommand):
 
             # Creditors
             {'codename': CREDITOR_ACCESS_TAB, 'name': 'Access Tab', 'content_type': CREDITOR_BASE_CODENAME},
-            {'codename': CREDITOR_ADD, 'name': 'Add Creditors', 'content_type': CREDITOR_BASE_CODENAME},
-            {'codename': CREDITOR_EDIT, 'name': 'Edit Creditors', 'content_type': CREDITOR_BASE_CODENAME},
+            {'codename': CREDITOR_CREATE, 'name': 'Add Creditors', 'content_type': CREDITOR_BASE_CODENAME},
+            # {'codename': CREDITOR_EDIT, 'name': 'Edit Creditors', 'content_type': CREDITOR_BASE_CODENAME},
             # {'codename': CREDITOR_BASE_CODENAME + '.merge_creditors', 'name': 'Merge Creditors', 'content_type': CREDITOR_BASE_CODENAME},  # ????
-            {'codename': CREDITOR_DELETE, 'name': 'Delete Creditors', 'content_type': CREDITOR_BASE_CODENAME},
+            # {'codename': CREDITOR_DELETE, 'name': 'Delete Creditors', 'content_type': CREDITOR_BASE_CODENAME},
             # {'codename': CREDITOR_BASE_CODENAME + '.generate_creditor_letters', 'name': 'Generate Creditor Letters', 'content_type': CREDITOR_BASE_CODENAME},  # ????
 
             # Enrollments
@@ -157,14 +157,14 @@ class Command(BaseCommand):
             {'codename': ADMIN_CREATE_TEAMS, 'name': 'Create Teams', 'content_type': COMPANY_BASE_CODENAME},
             {'codename': ADMIN_EDIT_TEAMS, 'name': 'Edit Teams', 'content_type': COMPANY_BASE_CODENAME},
             {'codename': ADMIN_DELETE_TEAMS, 'name': 'Delete Teams', 'content_type': COMPANY_BASE_CODENAME},
-            {'codename': ADMIN_EDIT_TRIGGERS, 'name': 'Edit Triggers', 'content_type': COMPANY_BASE_CODENAME},
+            # {'codename': ADMIN_EDIT_TRIGGERS, 'name': 'Edit Triggers', 'content_type': COMPANY_BASE_CODENAME},
             # {'codename': ADMIN_BASE_CODENAME + '.edit_program_options', 'name': 'Edit Program Options', 'content_type': COMPANY_BASE_CODENAME},
             {'codename': ADMIN_CREATE_COMPENSATION_TEMPLATES, 'name': 'Create Compensation Templates', 'content_type': COMPANY_BASE_CODENAME},
             {'codename': ADMIN_EDIT_COMPENSATION_TEMPLATES, 'name': 'Edit Compensation Templates', 'content_type': COMPANY_BASE_CODENAME},
             {'codename': ADMIN_CREATE_PAYEES, 'name': 'Create Payees', 'content_type': COMPANY_BASE_CODENAME},
             {'codename': ADMIN_EDIT_PAYEES, 'name': 'Edit Payees', 'content_type': COMPANY_BASE_CODENAME},
-            {'codename': ADMIN_VIEW_SYSTEM_LOG, 'name': 'View System Log', 'content_type': COMPANY_BASE_CODENAME},
-            {'codename': ADMIN_EDIT_SYSTEM_SETTINGS, 'name': 'Edit System Settings', 'content_type': COMPANY_BASE_CODENAME},
+            # {'codename': ADMIN_VIEW_SYSTEM_LOG, 'name': 'View System Log', 'content_type': COMPANY_BASE_CODENAME},
+            # {'codename': ADMIN_EDIT_SYSTEM_SETTINGS, 'name': 'Edit System Settings', 'content_type': COMPANY_BASE_CODENAME},
             # {'codename': ADMIN_BASE_CODENAME + '.edit_ip_whitelisting', 'name': 'Edit IP Whitelisting', 'content_type': COMPANY_BASE_CODENAME},
             # {'codename': ADMIN_BASE_CODENAME + '.login_as_other_users', 'name': 'Login As Other Users', 'content_type': COMPANY_BASE_CODENAME},
         ]
