@@ -1,5 +1,7 @@
 <span class="text-nowrap">
+  {% if 'sundog.admin__edit_companies' in perms %}
   <a href="{% url "edit_company" company_id=company_id %}">
       <span title="View" class="view-settlement glyphicon glyphicon-arrow-right"></span>
   </a>
+  {% endif %}
 </span>

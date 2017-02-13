@@ -10,10 +10,16 @@
 
 {% block table_view_pre_content %}
     <div class="col-xs-12 m-t-md m-b-md no-padding-sides">
+        {% if 'sundog.admin__create_users' in perms %}
         <a href="{% url "add_user" %}" type="button" class="btn btn-primary m-r-xs">Add User</a>
+        {% endif %}
         <a href="{% url "company_list" %}" type="button" class="btn btn-primary m-r-xs">Companies</a>
+        {% if 'sundog.admin__create_roles' in perms %}
         <a href="{% url "add_user_role" %}" type="button" class="btn btn-primary m-r-xs">Roles</a>
+        {% endif %}
+        {% if 'sundog.admin__create_teams' in perms %}
         <a href="{% url "add_team" %}" type="button" class="btn btn-primary m-r-xs">Teams</a>
+        {% endif %}
     </div>
 {% endblock table_view_pre_content %}
 

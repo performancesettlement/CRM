@@ -46,4 +46,29 @@ $(document).ready(function() {
             }
         });
     });
+
+    $('#delete-role').click(function() {
+        showConfirmationPopup(
+            'There are relations depending on this role that will be deleted, this data cannot be recovered!',
+            'Yes, delete',
+            function() {
+                $.ajax({
+                    url: deleteRoleUrl,
+                    beforeSend: function(xhr) {
+                        xhr.setRequestHeader('X-CSRFToken', csrfToken);
+                    },
+                    type: 'DELETE',
+                    success: function(response) {
+                        if (response.errors) {
+                            showErrorPopup(response.errors);
+                        }
+                        if (response.result === 'Ok') {
+                            redirect(addRoleUrl);
+                        }
+                    }
+                });
+            },
+            false
+        );
+    });
 });

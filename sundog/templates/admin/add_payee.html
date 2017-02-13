@@ -95,11 +95,13 @@
                         <td>{% if payee.account_type %}{{ payee.account_type_label|default:'' }}{% endif %}</td>
                         <td>{{ payee.name_on_account|default:'' }}</td>
                         <td>{{ payee.get_all_cleared_payments|length }}/{{ payee.get_all_payments|length }}</td>
+                        {% if 'sundog.admin__edit_payees' in perms %}
                         <td>
                             <a href="{% url "edit_payee" company_id=company_id payee_id=payee.payee_id %}">
                                 <span title="Edit" class="glyphicon glyphicon-edit"></span>
                             </a>
                         </td>
+                        {% endif %}
                     </tr>
                 {% endfor %}
             {% else %}

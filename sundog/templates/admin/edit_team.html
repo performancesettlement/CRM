@@ -26,7 +26,7 @@
         <form id="edit-team-form" action="{% url "edit_team" team_id=team_id %}">
             {% csrf_token %}
             <input id="id_team_id" name="team_id" type="hidden" value="{{ team_id }}">
-            <div class="col-xs-11 no-padding-sides">
+            <div class="col-xs-10 no-padding-sides">
                 <div class="col-xs-3">
                     <label class="col-xs-6 no-padding made-by-option">Name</label>
                     {{ form.name }}
@@ -50,14 +50,17 @@
                     {{ form.users }}
                 </div>
             </div>
-            <div class="col-xs-1">
+            <div class="col-xs-2">
                 <button id="save-team" type="button" class="pull-right btn btn-primary">Save</button>
+                <button id="delete-team" type="button" class="pull-right btn btn-danger m-r-xs">Delete</button>
             </div>
         </form>
     </div>
     <script type="text/javascript">
         var editTeamUrl = '{% url "edit_team" team_id=0 %}';
         var addTeamUrl = '{% url "add_team" %}';
+        var deleteTeamUrl = '{% url "delete_team" team_id=team_id %}';
+        var csrfToken = '{{ csrf_token }}';
     </script>
     <script src="{% static "js/admin/edit_team.js" %}"></script>
 {% endblock %}

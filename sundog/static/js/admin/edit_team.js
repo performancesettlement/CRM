@@ -26,4 +26,29 @@ $(document).ready(function() {
             }
         });
     });
+
+    $('#delete-team').click(function() {
+        showConfirmationPopup(
+            'There are relations depending on this team that will be deleted, this data cannot be recovered!',
+            'Yes, delete',
+            function() {
+                $.ajax({
+                    url: deleteTeamUrl,
+                    beforeSend: function(xhr) {
+                        xhr.setRequestHeader('X-CSRFToken', csrfToken);
+                    },
+                    type: 'DELETE',
+                    success: function(response) {
+                        if (response.errors) {
+                            showErrorPopup(response.errors);
+                        }
+                        if (response.result === 'Ok') {
+                            redirect(addTeamUrl);
+                        }
+                    }
+                });
+            },
+            false
+        );
+    });
 });

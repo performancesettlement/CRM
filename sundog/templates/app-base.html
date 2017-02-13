@@ -51,21 +51,25 @@
           <li class="menu-elem {% ifequal menu_page "emarketing" %}menu-active{% endifequal %}">
             <a href="{% url 'emarketing' %}">E-mail Marketing</a>
           </li>
-
+          {% if 'sundog.admin__access_tab' in perms %}
           <li class="menu-elem {% ifequal menu_page "admin" %}menu-active{% endifequal %}">
             <a href="{% url 'users_list' %}">Admin</a>
           </li>
-
+          {% endif %}
         </ul>
 
         <ul class="nav navbar-top-links navbar-right">
+          <li>
+            <a href="{% url 'logout'%}">
+                <i class="glyphicon glyphicon-user"></i>{{ user.username }}
+            </a>
+          </li>
           <li>
             <a href="{% url 'logout'%}">
               <i class="fa fa-sign-out"></i> Log out
             </a>
           </li>
         </ul>
-
       </nav>
     </div>
 

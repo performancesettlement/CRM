@@ -1,32 +1,29 @@
+import copy
+import logging
+import sys
 from _decimal import ROUND_UP
 from decimal import Decimal
+from numpy import arange
+from datetime import datetime, timedelta
+
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib.auth.models import Permission, Group, User
+from django.contrib.auth.models import Permission
 from django.core import mail
+from django.core.urlresolvers import resolve
 from django.core.paginator import Paginator
 from django.db import transaction
-
 from django.http import Http404
 from django.http.response import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
+
 from django.utils.html import strip_tags
 from django.utils.timezone import now
 
-from numpy import arange
-import pytz
-
-from sundog.constants import SHORT_DATE_FORMAT, FIXED_VALUES
+from sundog.constants import *
 from sundog.decorators import bypass_impersonation_login_required
-
-from sundog.forms import ContactForm, StageForm, StatusForm, \
-    CampaignForm, SourceForm, ContactStatusForm, BankAccountForm, NoteForm, CallForm, EmailForm, UploadedForm, \
-    ExpensesForm, IncomesForm, CreditorForm, DebtForm, DebtNoteForm, EnrollmentPlanForm, FeePlanForm, FeeProfileForm, \
-    FeeProfileRuleForm, WorkflowSettingsForm, EnrollmentForm, PaymentForm, CompensationTemplateForm, \
-    CompensationTemplatePayeeForm, SettlementOfferForm, SettlementForm, FeeForm, AdjustPaymentForm, GroupForm, TeamForm, \
-    CompanyForm, PayeeForm, CreateUserForm, EditUserForm, LoginForm
-from datetime import datetime, timedelta
+from sundog.forms import *
 from sundog.management.commands.generate_base_permissions import CONTACT_BASE_CODENAME, CREDITOR_BASE_CODENAME, \
     ENROLLMENT_BASE_CODENAME, SETTLEMENT_BASE_CODENAME, DOCS_BASE_CODENAME, FILES_BASE_CODENAME, \
     E_MARKETING_BASE_CODENAME, ADMIN_BASE_CODENAME
@@ -34,7 +31,6 @@ from sundog.models import CAMPAIGN_SOURCES_CHOICES, Contact, Stage, STAGE_TYPE_C
     Campaign, Activity, Uploaded, Expenses, Incomes, Creditor, Debt, DebtNote, Enrollment, EnrollmentPlan, \
     FeeProfile, FeeProfileRule, WorkflowSettings, DEBT_SETTLEMENT, Payment, Company, CompensationTemplate, \
     SettlementOffer, SETTLEMENT_SUB_TYPE_CHOICES, Settlement, Team, Payee
-
 from sundog.services import reorder_stages, reorder_status
 from sundog.templatetags.my_filters import currency, percent
 from sundog.utils import (
@@ -48,11 +44,7 @@ from sundog.utils import (
     get_payments_data,
     to_int,
     get_forms, FOUR_PLACES, roundup_places, get_date_from_str)
-
-import copy
-import logging
-import settings
-import sys
+from sundog.util.permission import get_permission_codename
 
 logger = logging.getLogger(__name__)
 
@@ -61,12 +53,9 @@ def _render_response(request, context_info, template_path):
     return render(request, template_path, context_info)
 
 
-def index(request):
-    context_info = {'request': request, 'user': request.user}
-    if settings.INDEX_PAGE.endswith(".html"):
-        return _render_response(request, context_info, settings.INDEX_PAGE)
-    else:
-        return HttpResponseRedirect(settings.INDEX_PAGE)
+def forbidden(request):
+    template_path = 'forbidden.html'
+    return _render_response(request, {}, template_path)
 
 
 def login_user(request):
@@ -1969,6 +1958,8 @@ def edit_payment(request, contact_id):
     return JsonResponse(response)
 
 
+@permission_required(get_permission_codename(ADMIN_CREATE_COMPENSATION_TEMPLATES), 'forbidden')
+@permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden')
 def add_compensation_template(request, company_id):
     compensation_templates = CompensationTemplate.objects.filter(company__company_id=company_id)
     form = CompensationTemplateForm(request.POST or None)
@@ -1988,12 +1979,15 @@ def add_compensation_template(request, company_id):
                     payee = form_payee.save(commit=False)
                     payee.compensation_template = compensation_template
                     payee.save()
-            redirect('add_compensation_template', company_id=company_id)
+            response = {'result': 'Ok', 'id': compensation_template.compensation_template_id,
+                        'name': compensation_template.name}
         else:
             list_of_error_lists = list((get_form_errors(form) for form in forms))
             form_errors = get_form_errors(form) + list(error for sub_list in list_of_error_lists for error in sub_list)
             if not forms_validation:
                 form_errors.append('The fee amounts of all payees must add 100 percent.')
+            response = {'errors': form_errors}
+        return JsonResponse(response)
     compensation_templates_choices = [('', '--Add new compensation template--')] + \
                                      [(str(template.compensation_template_id), template.name)
                                       for template in compensation_templates]
@@ -2011,6 +2005,8 @@ def add_compensation_template(request, company_id):
     return _render_response(request, context_info, template_path)
 
 
+@permission_required(get_permission_codename(ADMIN_EDIT_COMPENSATION_TEMPLATES), 'forbidden')
+@permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden')
 def edit_compensation_template(request, company_id, compensation_template_id):
     compensation_templates = CompensationTemplate.objects.filter(company__company_id=company_id)
     instance = CompensationTemplate.objects.get(compensation_template_id=compensation_template_id)
@@ -2267,12 +2263,12 @@ def _generate_permission_sections(checked_permissions=[]):
     permission_sections = []
     data = [
         ('Contacts', CONTACT_BASE_CODENAME), ('Creditors', CREDITOR_BASE_CODENAME),
-        ('Enrollments', ENROLLMENT_BASE_CODENAME), ('Settlements', SETTLEMENT_BASE_CODENAME),
-        ('Docs', DOCS_BASE_CODENAME), ('Files', FILES_BASE_CODENAME),
+        ('Enrollments', ENROLLMENT_BASE_CODENAME), ('Accounting', ACCOUNTING_BASE_CODENAME),
+        ('Settlements', SETTLEMENT_BASE_CODENAME), ('Docs', DOCS_BASE_CODENAME), ('Files', FILES_BASE_CODENAME),
         ('E-Marketing', E_MARKETING_BASE_CODENAME), ('Admin', ADMIN_BASE_CODENAME),
     ]
     for data_element in data:
-        permissions = list(Permission.objects.filter(codename__startswith=data_element[1] + '.'))
+        permissions = list(Permission.objects.filter(codename__startswith=data_element[1] + '__'))
         permissions.sort(key=lambda x: x.name != 'Access Tab')
         permission_data = {'name': data_element[0], 'permissions': permissions}
         if checked_permissions:
@@ -2283,7 +2279,8 @@ def _generate_permission_sections(checked_permissions=[]):
     return permission_sections
 
 
-@login_required
+@permission_required(get_permission_codename(ADMIN_CREATE_COMPANIES), 'forbidden')
+@permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden')
 def add_company(request):
     form = CompanyForm(request.POST or None)
     errors = []
@@ -2304,10 +2301,11 @@ def add_company(request):
     return _render_response(request, context_info, template_path)
 
 
-@login_required
+@permission_required(get_permission_codename(ADMIN_EDIT_COMPANIES), 'forbidden')
+@permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden')
 def edit_company(request, company_id):
-    instance = Company.objects.prefetch_related('users').prefetch_related('users__userprofile') \
-        .prefetch_related('users__groups').prefetch_related('children').get(company_id=company_id)
+    instance = Company.objects.prefetch_related('users').prefetch_related('users__related_user') \
+        .prefetch_related('users__related_user__groups').prefetch_related('children').get(company_id=company_id)
     form = CompanyForm(request.POST or None, instance=instance)
     if request.method == 'POST' and request.POST:
         if form.is_valid():
@@ -2328,7 +2326,8 @@ def edit_company(request, company_id):
     return _render_response(request, context_info, template_path)
 
 
-@login_required
+@permission_required(get_permission_codename(ADMIN_CREATE_ROLES), 'forbidden')
+@permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden')
 def add_user_role(request):
     form = GroupForm(request.POST or None)
     if request.method == 'POST' and request.POST:
@@ -2361,7 +2360,8 @@ def add_user_role(request):
     return _render_response(request, context_info, template_path)
 
 
-@login_required
+@permission_required(get_permission_codename(ADMIN_EDIT_ROLES), 'forbidden')
+@permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden')
 def edit_user_role(request, role_id):
     instance = Group.objects.prefetch_related('permissions').get(pk=role_id)
     form = GroupForm(request.POST or None, instance=instance)
@@ -2398,7 +2398,20 @@ def edit_user_role(request, role_id):
     return _render_response(request, context_info, template_path)
 
 
-@login_required
+@permission_required(get_permission_codename(ADMIN_DELETE_ROLES), 'forbidden')
+@permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden')
+def delete_user_role(request, role_id):
+    if request.method == 'DELETE' and request.is_ajax():
+        try:
+            Group.objects.get(pk=role_id).delete()
+            response = {'result': 'Ok'}
+        except:
+            response = {'errors': 'An error has occurred deleting the role.'}
+        return JsonResponse(response)
+
+
+@permission_required(get_permission_codename(ADMIN_CREATE_TEAMS), 'forbidden')
+@permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden')
 def add_team(request):
     form = TeamForm(request.POST or None)
     if request.method == 'POST' and request.POST:
@@ -2420,7 +2433,8 @@ def add_team(request):
     return _render_response(request, context_info, template_path)
 
 
-@login_required
+@permission_required(get_permission_codename(ADMIN_EDIT_TEAMS), 'forbidden')
+@permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden')
 def edit_team(request, team_id):
     instance = Team.objects.get(team_id=team_id)
     form = TeamForm(request.POST or None, instance=instance)
@@ -2444,7 +2458,20 @@ def edit_team(request, team_id):
     return _render_response(request, context_info, template_path)
 
 
-@login_required
+@permission_required(get_permission_codename(ADMIN_DELETE_TEAMS), 'forbidden')
+@permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden')
+def delete_team(request, team_id):
+    if request.method == 'DELETE' and request.is_ajax():
+        try:
+            Team.objects.get(team_id=team_id).delete()
+            response = {'result': 'Ok'}
+        except:
+            response = {'errors': 'An error has occurred deleting the team.'}
+        return JsonResponse(response)
+
+
+@permission_required(get_permission_codename(ADMIN_CREATE_PAYEES), 'forbidden')
+@permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden')
 def add_payee(request, company_id):
     company = Company.objects.prefetch_related('payees').get(company_id=company_id)
     form = PayeeForm(request.POST or None)
@@ -2471,7 +2498,8 @@ def add_payee(request, company_id):
     return _render_response(request, context_info, template_path)
 
 
-@login_required
+@permission_required(get_permission_codename(ADMIN_EDIT_PAYEES), 'forbidden')
+@permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden')
 def edit_payee(request, company_id, payee_id):
     company = Company.objects.prefetch_related('payees').get(company_id=company_id)
     instance = Payee.objects.get(payee_id=payee_id)
@@ -2500,7 +2528,8 @@ def edit_payee(request, company_id, payee_id):
     return _render_response(request, context_info, template_path)
 
 
-@login_required
+@permission_required(get_permission_codename(ADMIN_CREATE_USERS), 'forbidden')
+@permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden')
 def add_user(request):
     form = CreateUserForm(request.POST or None)
     errors = []
@@ -2521,7 +2550,8 @@ def add_user(request):
     return _render_response(request, context_info, template_path)
 
 
-@login_required
+@permission_required(get_permission_codename(ADMIN_EDIT_USERS), 'forbidden')
+@permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden')
 def edit_user(request, user_id):
     instance = User.objects.prefetch_related('groups').get(id=user_id)
     post_data = request.POST.copy()
@@ -2550,14 +2580,16 @@ def edit_user(request, user_id):
     return _render_response(request, context_info, template_path)
 
 
-@login_required
+@permission_required(get_permission_codename(ADMIN_DELETE_USERS), 'forbidden')
+@permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden')
 def suspend_user(request, user_id):
     if request.is_ajax() and request.method == 'POST':
         User.objects.filter(id=user_id).update(is_active=False)
         return JsonResponse({'result': 'Ok'})
 
 
-@login_required
+@permission_required(get_permission_codename(ADMIN_DELETE_USERS), 'forbidden')
+@permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden')
 def activate_user(request, user_id):
     if request.is_ajax() and request.method == 'POST':
         User.objects.filter(id=user_id).update(is_active=True)

@@ -10,9 +10,11 @@
 {% endblock %}
 
 {% block table_view_pre_content %}
+    {% if 'sundog.admin__create_companies' in perms %}
     <div class="col-xs-12 m-t-md m-b-md no-padding-sides">
         <a class="btn btn-primary" href="{% url 'add_company' %}">Add Company</a>
     </div>
+    {% endif %}
 {% endblock table_view_pre_content %}
 
 {% block table_view_post_content %}

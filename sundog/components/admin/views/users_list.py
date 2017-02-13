@@ -1,14 +1,17 @@
 from datatableview import Datatable, DisplayColumn, TextColumn, DateColumn
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.context_processors import PermWrapper
+from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.models import User
 from django.template.defaultfilters import date
 from django.template.loader import render_to_string
+from sundog.constants import ADMIN_ACCESS_TAB
 from sundog.routing import route, decorate_view
+from sundog.util.permission import get_permission_codename
 from sundog.util.views import SundogDatatableView
 
 
 @route(r'^user/?$', name='users_list')
-@decorate_view(login_required)
+@decorate_view(permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden'))
 class UsersList(SundogDatatableView):
     template_name = 'admin/users_list.html'
 
@@ -57,11 +60,12 @@ class UsersList(SundogDatatableView):
         actions = DisplayColumn(
             label='',
             processor=(
-                lambda instance, *_, **__:
+                lambda instance, *_, **kwargs:
                 render_to_string(
                     template_name='admin/partials/user_actions_template.html',
                     context={
                         'user_id': instance.id,
+                        'perms': PermWrapper(kwargs['view'].request.user),
                     },
                 )
             ),

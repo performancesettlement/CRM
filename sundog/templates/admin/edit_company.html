@@ -17,8 +17,12 @@
         </div>
     </div>
     <div class="col-xs-12 m-t-md">
+        {% if 'sundog.admin__create_payees' in perms %}
         <a href="{% url "add_payee" company_id=company.company_id %}" class="btn btn-primary m-r-xs">Payees</a>
+        {% endif %}
+        {% if 'sundog.admin__create_compensation_templates' in perms %}
         <a href="{% url "add_compensation_template" company_id=company.company_id %}" class="btn btn-primary">Compensation Templates</a>
+        {% endif %}
     </div>
     <div class="m-t-md col-xs-4 padding-for-footer">
         <form id="edit-company-form" action="{% url "edit_company" company_id=company.company_id %}" class="col-xs-12 no-padding-sides" method="post">
@@ -130,14 +134,14 @@
                 </thead>
                 <tbody>
                 {% if company.users.all %}
-                {% for user in company.users.all %}
+                {% for user_profile in company.users.all %}
                     <tr>
-                        <td><span class="glyphicon glyphicon-user {% if user.is_active %}green{% else %}red{% endif %}"></span></td>
-                        <td>{{ user.username|default:'' }}</td>
-                        <td>{{ user.get_full_name|default:'' }}</td>
-                        <td>{{ user.email|default:'' }}</td>
-                        <td>{% if user.groups.first %}{{ user.groups.first.name }}{% endif %}</td>
-                        <td>{{ user.userprofile.last_login|date:'SHORT_DATETIME_FORMAT' }}</td>
+                        <td><span class="glyphicon glyphicon-user {% if user_profile.related_user.is_active %}green{% else %}red{% endif %}"></span></td>
+                        <td>{{ user_profile.related_user.username|default:'' }}</td>
+                        <td>{{ user_profile.related_user.get_full_name|default:'' }}</td>
+                        <td>{{ user_profile.related_user.email|default:'' }}</td>
+                        <td>{% if user_profile.related_user.groups.first %}{{ user_profile.related_user.groups.first.name }}{% endif %}</td>
+                        <td>{{ user_profile.related_user.userprofile.last_login|date:'SHORT_DATETIME_FORMAT' }}</td>
                         <td>
                             <a href="">  {# TODO: add edit user link #}
                                 <span title="View" class="view-settlement glyphicon glyphicon-arrow-right"></span>

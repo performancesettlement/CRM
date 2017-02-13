@@ -22,7 +22,7 @@ $(document).ready(function() {
                 }
                 if (response.result === 'Ok') {
                     $('#select-team').append('<option value="' + response.id + '">' + response.name + '</option>');
-                    $('select').val('');
+                    $('#reset-team').click();
                     showSuccessPopup('Team successfully created!');
                 }
             }

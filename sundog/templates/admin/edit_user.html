@@ -21,6 +21,7 @@
             <input type="hidden" id="id_id" name="id" value="{{ edited_user.id }}">
             <div class="col-xs-12 no-padding">
                 <h3 class="col-xs-6 no-padding-sides m-b-xs">User Login Information</h3>
+                {% if 'sundog.admin__delete_users' in perms %}
                 <div class="col-xs-6 no-padding-sides m-b-xs" style="{% if not edited_user.is_active %}display: none;{% endif %}">
                     <button id="suspend-user" class="btn btn-primary pull-right" type="button">
                         <span class="glyphicon glyphicon-user red m-r-xs"></span>Suspend User
@@ -31,6 +32,7 @@
                         <span class="glyphicon glyphicon-user green m-r-xs"></span>Activate User
                     </button>
                 </div>
+                {% endif %}
                 <div class="col-xs-12 border p-xs">
                     <div class="col-xs-8 no-padding-sides">
                         <div class="col-xs-4 no-padding-sides">

@@ -99,10 +99,9 @@ class Company(models.Model):
 class Team(models.Model):
     team_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
-    companies = models.ManyToManyField(Company, related_name='company_teams')
-    users = models.ManyToManyField(User, related_name='user_teams')
-    roles = models.ManyToManyField(Group, related_name='group_teams')
-    permissions = models.ManyToManyField(Permission, related_name='used_in_teams')
+    companies = models.ManyToManyField(Company, related_name='company_teams', blank=True)
+    users = models.ManyToManyField(User, related_name='user_teams', blank=True)
+    roles = models.ManyToManyField(Group, related_name='group_teams', blank=True)
 
     def __str__(self):
         return self.name

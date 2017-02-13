@@ -14,6 +14,7 @@
         </div>
     </div>
     <h3 class="m-t-md">Add User Role</h3>
+    {% if 'sundog.admin__edit_roles' in perms %}
     <div class="col-xs-12 no-padding">
         <label for="select-role" class="col-xs-1 made-by-option no-padding">Select to Edit:</label>
         <select id="select-role" class="col-xs-2 no-padding">
@@ -22,6 +23,7 @@
             {% endfor %}
         </select>
     </div>
+    {% endif %}
     <div class="well p-xs m-t-md col-xs-12">
         <form id="add-role-form" action="{% url "add_user_role" %}">
             {% csrf_token %}

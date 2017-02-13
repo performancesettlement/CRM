@@ -16,6 +16,7 @@
             </ol>
         </div>
     </div>
+    {% if 'sundog.admin__edit_compensation_templates' in perms %}
     <div class="col-xs-12">
         <select id="comp-temp-chooser" class="col-xs-2 no-padding-sides m-t-md">
             {% for template in compensation_templates_choices %}
@@ -23,6 +24,7 @@
             {% endfor %}
         </select>
     </div>
+    {% endif %}
     <div class="col-xs-12 m-t-md">
         <h3>Add Compensation Template</h3>
         <form id="add-compensation-template-form" class="m-t-md" action="{% url 'add_compensation_template' company_id=company_id %}" method="post">
@@ -40,7 +42,10 @@
                     <label>Available For</label>
                     {{ form.available_for }}
                 </div>
-                <div class="pull-right"><button class="btn btn-primary" type="submit">Save</button></div>
+                <div class="pull-right">
+                    <button class="btn btn-primary" type="submit">Save</button>
+                    <button id="reset-template" class="btn btn-primary hidden" type="reset">Reset</button>
+                </div>
             </div>
             <div>
                 <button id="add-fee" class="btn btn-primary m-r-xs" type="button">Add Payee</button>

@@ -35,6 +35,27 @@ $(document).ready(function() {
         }
     });
 
+    $('#add-compensation-template-form').submit(function(event) {
+        event.preventDefault();
+        var form = $(this);
+        var formData = form.serializeArray();
+        $.ajax({
+            url: form.attr('action'),
+            data: formData,
+            type: 'POST',
+            success: function(response) {
+                if (response.errors) {
+                    showErrorPopup(response.errors);
+                }
+                else if (response.result === 'Ok') {
+                    $('#comp-temp-chooser').prepend('<option value="' + response.id + '">' + response.name + '</option>');
+                    $('#reset-template').click();
+                    showSuccessPopup('Compensation Template successfully created!');
+                }
+            }
+        });
+    });
+
     $('#comp-temp-chooser').change(function() {
         var newVal = $(this).val();
         if (newVal == '') {

@@ -42,6 +42,9 @@
             </div>
             <div class="col-xs-3">
                 <button id="save-role" type="button" class="pull-right btn btn-primary">Save</button>
+                {% if 'sundog.admin__delete_roles' in perms %}
+                <button id="delete-role" type="button" class="pull-right btn btn-danger m-r-xs">Delete</button>
+                {% endif %}
             </div>
         </form>
     </div>
@@ -79,6 +82,8 @@
     <script type="text/javascript">
         var editRoleUrl = '{% url "edit_user_role" role_id=0 %}';
         var addRoleUrl = '{% url "add_user_role" %}';
+        var deleteRoleUrl = '{% url "delete_user_role" role_id=role_id %}';
+        var csrfToken = '{{ csrf_token }}';
     </script>
     <script src="{% static "js/admin/edit_user_role.js" %}"></script>
 {% endblock %}

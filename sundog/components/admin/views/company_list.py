@@ -1,13 +1,16 @@
 from datatableview import Datatable, DisplayColumn, TextColumn, BooleanColumn
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.context_processors import PermWrapper
+from django.contrib.auth.decorators import permission_required
 from django.template.loader import render_to_string
+from sundog.constants import ADMIN_ACCESS_TAB
 from sundog.models import Company
 from sundog.routing import route, decorate_view
+from sundog.util.permission import get_permission_codename
 from sundog.util.views import SundogDatatableView
 
 
 @route(r'^companies/?$', name='company_list')
-@decorate_view(login_required)
+@decorate_view(permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden'))
 class CompanyList(SundogDatatableView):
     template_name = 'admin/company_list.html'
 
@@ -59,11 +62,12 @@ class CompanyList(SundogDatatableView):
         actions = DisplayColumn(
             label='',
             processor=(
-                lambda instance, *_, **__:
+                lambda instance, *_, **kwargs:
                 render_to_string(
                     template_name='admin/partials/company_actions_template.html',
                     context={
                         'company_id': instance.company_id,
+                        'perms': PermWrapper(kwargs['view'].request.user),
                     },
                 )
             ),
