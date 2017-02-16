@@ -13,7 +13,7 @@ from sundog.models import Contact, Stage, Status, Campaign, Source, BankAccount,
     Email, DEBT_SETTLEMENT, Uploaded, Incomes, Expenses, Creditor, Debt, DebtNote, EnrollmentPlan, FeePlan, FeeProfile,\
     FeeProfileRule, WorkflowSettings, Enrollment, AMOUNT_CHOICES, Payment, PAYMENT_TYPE_CHOICES, \
     CompensationTemplate, CompensationTemplatePayee, NONE_CHOICE_LABEL, Payee, COMPENSATION_TEMPLATE_PAYEE_TYPE_CHOICES, \
-    AVAILABLE_FOR_CHOICES, COMPENSATION_TEMPLATE_TYPES_CHOICES, SettlementOffer, Settlement, Fee, Team, Company
+    AVAILABLE_FOR_CHOICES, COMPENSATION_TEMPLATE_TYPES_CHOICES, SettlementOffer, Settlement, Fee, Team, Company, YES_NO_CHOICES
 
 from sundog.constants import (
     SHORT_DATE_FORMAT,
@@ -477,6 +477,8 @@ class FeePlanForm(forms.ModelForm):
                                              widget=forms.HiddenInput())
     fixed_amount = forms.DecimalField(required=False, widget=forms.TextInput(attrs={'style': 'max-width: 140px;'}))
     percentage_amount = forms.DecimalField(required=False, widget=forms.Select(choices=AMOUNT_CHOICES))
+    defer = forms.CharField(required=False, widget=forms.Select(choices=YES_NO_CHOICES))
+    discount = forms.DecimalField(required=False)
 
     class Meta:
         model = FeePlan
