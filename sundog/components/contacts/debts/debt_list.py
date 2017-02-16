@@ -49,6 +49,11 @@ class ContactDebtList(SundogDatatableView):
             processor=lambda instance, *_, **__: instance.account_type_label if instance.account_type else '',
         )
 
+        original_debt_amount = TextColumn(
+            label='Original Debt Amount',
+            source='original_debt_amount',
+        )
+
         current_debt_amount = TextColumn(
             label='Current Debt Amount',
             source='current_debt_amount',
@@ -112,6 +117,7 @@ class ContactDebtList(SundogDatatableView):
                 'collection',
                 'account',
                 'account_type',
+                'original_debt_amount',
                 'current_debt_amount',
                 'whose_debt',
                 'current_payment',
