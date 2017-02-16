@@ -580,6 +580,7 @@ class EnrollmentPlan(models.Model):
 
 
 YES_NO_CHOICES = (
+    (None, NONE_CHOICE_LABEL),
     ('yes', 'Yes'),
     ('no', 'No'),
 )
@@ -603,9 +604,8 @@ class FeePlan(models.Model):
     name = models.CharField(max_length=100)
     type = models.CharField(max_length=128, choices=FEE_TYPE_CHOICES)
     amount = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'))
-    defer = models.CharField(max_length=3, choices=YES_NO_CHOICES, default='no')
-    discount = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
-
+    defer = models.CharField(max_length=3, null=True)
+    discount = models.DecimalField(max_digits=14, decimal_places=2, null=True)
 
 ACCOUNT_TYPE_CHOICES = (
     (None, NONE_CHOICE_LABEL),
