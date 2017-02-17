@@ -8,6 +8,7 @@ import settings
 import sundog.components
 
 urlpatterns = module_urls(views) + package_urls(sundog.components) + [
+    url(r'^$', views.home, name='home'),
     url(r'^auth/login/$', views.login_user, name='login'),
     url(r'^auth/logout/$', views.logout_user, name='logout'),
 

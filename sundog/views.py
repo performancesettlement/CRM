@@ -1,4 +1,3 @@
-import copy
 import logging
 import sys
 from _decimal import ROUND_UP
@@ -10,11 +9,10 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.models import Permission
 from django.core import mail
-from django.core.urlresolvers import resolve
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.http import Http404
-from django.http.response import HttpResponseRedirect, JsonResponse
+from django.http.response import HttpResponseRedirect, HttpResponsePermanentRedirect, JsonResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 
@@ -56,6 +54,10 @@ def _render_response(request, context_info, template_path):
 def forbidden(request):
     template_path = 'forbidden.html'
     return _render_response(request, {}, template_path)
+
+
+def home(request):
+    return HttpResponsePermanentRedirect(reverse('list_contacts'))
 
 
 def login_user(request):
