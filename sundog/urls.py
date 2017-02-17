@@ -1,5 +1,6 @@
 from django.conf.urls import include, url
 from django.conf.urls.static import static
+from django.http import HttpResponse
 
 from sundog import views
 from sundog.routing import module_urls, package_urls
@@ -8,6 +9,8 @@ import settings
 import sundog.components
 
 urlpatterns = module_urls(views) + package_urls(sundog.components) + [
+    url(r'^robots.txt$', lambda r: HttpResponse('User-agent: *\nDisallow: /', content_type='text/plain')),
+
     url(r'^$', views.home, name='home'),
     url(r'^auth/login/$', views.login_user, name='login'),
     url(r'^auth/logout/$', views.logout_user, name='logout'),
