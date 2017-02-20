@@ -72,9 +72,9 @@ class ContactForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(ContactForm, self).__init__(*args, **kwargs)
         if args and args[0] and 'company' in args[0]:
-            assigned_to_query = User.objects.filter(company__company_id=args[0]['company'])
+            assigned_to_query = User.objects.filter(userprofile__company__company_id=args[0]['company'])
         elif self.instance:
-            assigned_to_query = User.objects.filter(company=self.instance.company)
+            assigned_to_query = User.objects.filter(userprofile__company=self.instance.company)
         else:
             assigned_to_query = User.objects.none()
         self.fields['assigned_to'].queryset = assigned_to_query
