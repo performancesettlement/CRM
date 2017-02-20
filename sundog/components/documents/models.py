@@ -3,7 +3,6 @@ from django.contrib.auth.models import User
 from django.db.models import (
     DateTimeField,
     ForeignKey,
-    Model,
     SET_NULL,
 )
 
@@ -15,11 +14,12 @@ from sundog.components.documents.enums import (
     DOCUMENT_STATE_CHOICES,
 )
 
+from sundog.models import TrackedAbstractBase
 from sundog.util.models import LongCharField
 from tinymce.models import HTMLField
 
 
-class Document(Model):
+class Document(TrackedAbstractBase):
 
     created_at = DateTimeField(
         auto_now_add=True,

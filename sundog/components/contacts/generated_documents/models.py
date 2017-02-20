@@ -4,7 +4,6 @@ from django.db.models import (
     CASCADE,
     DateTimeField,
     ForeignKey,
-    Model,
     SET_NULL,
 )
 
@@ -12,7 +11,10 @@ from settings import MEDIA_PRIVATE
 from sundog.components.documents.render import render
 from sundog.components.documents.models import Document
 from sundog.media import S3PrivateFileField
-from sundog.models import Contact
+from sundog.models import (
+    Contact,
+    TrackedAbstractBase,
+)
 from sundog.util.models import LongCharField
 
 
@@ -25,7 +27,7 @@ def generated_document_filename(instance, filename):
     )
 
 
-class GeneratedDocument(Model):
+class GeneratedDocument(TrackedAbstractBase):
 
     created_at = DateTimeField(
         auto_now_add=True,

@@ -5,17 +5,17 @@ from django.db.models import (
     DateTimeField,
     FloatField,
     ForeignKey,
-    Model,
     OneToOneField,
     SET_NULL,
 )
 
 from django.urls import reverse
 from sundog.components.contacts.data_sources.fields.models import Field
+from sundog.models import TrackedAbstractBase
 from sundog.util.models import LongCharField
 
 
-class Replacement(Model):
+class Replacement(TrackedAbstractBase):
 
     created_at = DateTimeField(
         auto_now_add=True,

@@ -3,7 +3,6 @@ from django.contrib.auth.models import User
 from django.db.models import (
     DateTimeField,
     ForeignKey,
-    Model,
     SET_NULL,
     TextField,
 )
@@ -11,7 +10,7 @@ from django.db.models import (
 from django.urls import reverse
 
 from sundog.components.emarketing.templates.enums import CATEGORY_CHOICES
-
+from sundog.models import TrackedAbstractBase
 from sundog.util.models import (
     LongCharField,
 )
@@ -19,7 +18,7 @@ from sundog.util.models import (
 from tinymce.models import HTMLField
 
 
-class EmailTemplate(Model):
+class EmailTemplate(TrackedAbstractBase):
 
     CATEGORY_CHOICES = CATEGORY_CHOICES
     CATEGORY_CHOICES_DICT = dict(CATEGORY_CHOICES)
