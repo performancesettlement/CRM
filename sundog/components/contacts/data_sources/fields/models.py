@@ -4,7 +4,6 @@ from django.db.models import (
     CASCADE,
     DateTimeField,
     ForeignKey,
-    Model,
     SET_NULL,
 )
 
@@ -15,10 +14,11 @@ from sundog.components.contacts.data_sources.fields.enums import (
 )
 
 from sundog.components.contacts.data_sources.models import DataSource
+from sundog.models import TrackedAbstractBase
 from sundog.util.models import LongCharField
 
 
-class Field(Model):
+class Field(TrackedAbstractBase):
 
     created_at = DateTimeField(
         auto_now_add=True,

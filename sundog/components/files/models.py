@@ -2,7 +2,6 @@ from django.contrib.auth.models import User
 from django.db.models import (
     DateTimeField,
     ForeignKey,
-    Model,
     SET_NULL,
 )
 from settings import MEDIA_PRIVATE
@@ -11,6 +10,7 @@ from sundog.components.files.enums import (
     TYPE_CHOICES_DICT,
 )
 from sundog.media import S3PrivateFileField
+from sundog.models import TrackedAbstractBase
 from sundog.util.models import LongCharField
 
 
@@ -22,7 +22,7 @@ def file_filename(instance, filename):
     )
 
 
-class File(Model):
+class File(TrackedAbstractBase):
 
     created_at = DateTimeField(
         auto_now_add=True,

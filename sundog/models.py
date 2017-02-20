@@ -11,6 +11,7 @@ from django.utils.timezone import now
 from localflavor.us.us_states import US_STATES
 from numpy import arange
 from settings import MEDIA_PRIVATE
+from simple_history.models import HistoricalRecords
 from sundog.constants import SHORT_DATE_FORMAT
 from sundog.media import S3PrivateFileField
 from sundog.routing import package_models
@@ -26,7 +27,14 @@ import sys
 logger = logging.getLogger(__name__)
 
 
-class LeadSource(models.Model):
+class TrackedAbstractBase(models.Model):
+    history = HistoricalRecords(inherit=True)
+
+    class Meta:
+        abstract = True
+
+
+class LeadSource(TrackedAbstractBase):
     lead_source_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
 
@@ -59,7 +67,7 @@ THEME_CHOICES = (
 )
 
 
-class Company(models.Model):
+class Company(TrackedAbstractBase):
     company_id = models.AutoField(primary_key=True)
     active = models.BooleanField(default=False)
     type = models.CharField(choices=COMPANY_TYPE_CHOICES, max_length=100, blank=True, null=True)
@@ -96,7 +104,7 @@ class Company(models.Model):
         return self.contacts.exclude(enrollments__isnull=True)
 
 
-class Team(models.Model):
+class Team(TrackedAbstractBase):
     team_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
     companies = models.ManyToManyField(Company, related_name='company_teams', blank=True)
@@ -116,7 +124,7 @@ STAGE_TYPE_CHOICES = (
 )
 
 
-class Stage(models.Model):
+class Stage(TrackedAbstractBase):
     type = models.CharField(max_length=15, choices=STAGE_TYPE_CHOICES, default=DEBT_SETTLEMENT)
     stage_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
@@ -131,7 +139,7 @@ class Stage(models.Model):
         return self.name
 
 
-class Status(models.Model):
+class Status(TrackedAbstractBase):
     status_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
     color = RGBColorField(default='#FFFFFF')
@@ -147,7 +155,7 @@ class Status(models.Model):
         return self.name
 
 
-class WorkflowSettings(models.Model):
+class WorkflowSettings(TrackedAbstractBase):
     workflow_settings_id = models.AutoField(primary_key=True)
     type = models.CharField(max_length=15, choices=STAGE_TYPE_CHOICES, default='debt_settlement')
     require_plan = models.BooleanField(default=False)
@@ -244,7 +252,7 @@ AUTHORIZATION_FORM_ON_FILE_CHOICES = (
 )
 
 
-class Contact(models.Model):
+class Contact(TrackedAbstractBase):
     contact_id = models.AutoField(primary_key=True)
     first_name = models.CharField(max_length=100, default="")
     middle_name = models.CharField(max_length=100, blank=True, null=True)
@@ -516,7 +524,7 @@ def add_contact_permission(sender, instance, created, **kwargs):
             instance.created_by.user_permissions.add(permission)
 
 
-class FeeProfile(models.Model):
+class FeeProfile(TrackedAbstractBase):
     fee_profile_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
 
@@ -524,7 +532,7 @@ class FeeProfile(models.Model):
         return self.name
 
 
-class FeeProfileRule(models.Model):
+class FeeProfileRule(TrackedAbstractBase):
     fee_profile_rule_id = models.AutoField(primary_key=True)
     fee_profile = models.ForeignKey(FeeProfile, related_name='rules', blank=True, null=True)
     accts_low = models.DecimalField(max_digits=14, decimal_places=2)
@@ -553,7 +561,7 @@ MONTH_CHOICES = [(str(x), str(x) + ' Month') for x in range(1, 301)]
 AMOUNT_CHOICES = [(x, '{}%'.format(x)) for x in arange(Decimal('0.00'), Decimal('51.00'), Decimal('0.5'))]
 
 
-class EnrollmentPlan(models.Model):
+class EnrollmentPlan(TrackedAbstractBase):
     enrollment_plan_id = models.AutoField(primary_key=True)
     active = models.NullBooleanField()
     file_type = models.CharField(max_length=15, choices=STAGE_TYPE_CHOICES)
@@ -596,7 +604,7 @@ FEE_TYPE_CHOICES = (
 WITH_HALF_FULL_CHOICES = [('half', 'Half'), ('full', 'Full')] + copy.copy(MONTH_CHOICES)
 
 
-class FeePlan(models.Model):
+class FeePlan(TrackedAbstractBase):
     fee_plan_id = models.AutoField(primary_key=True)
     enrollment_plan = models.ForeignKey(EnrollmentPlan, related_name='fee_plans')
     active = models.BooleanField(default=False)
@@ -614,7 +622,7 @@ ACCOUNT_TYPE_CHOICES = (
 )
 
 
-class Payee(models.Model):
+class Payee(TrackedAbstractBase):
     payee_id = models.AutoField(primary_key=True)
     default_for_company = models.BooleanField(default=False)
     name = models.CharField(max_length=100)
@@ -656,7 +664,7 @@ AVAILABLE_FOR_CHOICES = (
 )
 
 
-class CompensationTemplate(models.Model):
+class CompensationTemplate(TrackedAbstractBase):
     compensation_template_id = models.AutoField(primary_key=True)
     company = models.ForeignKey(Company)
     name = models.CharField(max_length=100)
@@ -674,7 +682,7 @@ COMPENSATION_TEMPLATE_PAYEE_TYPE_CHOICES = (
 )
 
 
-class CompensationTemplatePayee(models.Model):
+class CompensationTemplatePayee(TrackedAbstractBase):
     compensation_template_payee_id = models.AutoField(primary_key=True)
     compensation_template = models.ForeignKey(CompensationTemplate, related_name='payees')
     type = models.CharField(max_length=20, choices=COMPENSATION_TEMPLATE_PAYEE_TYPE_CHOICES)
@@ -686,7 +694,7 @@ class CompensationTemplatePayee(models.Model):
 CUSTODIAL_ACCOUNT_CHOICES = [('epps', 'EPPS'), ('dpg', 'DPG Custodial')]
 
 
-class Enrollment(models.Model):
+class Enrollment(TrackedAbstractBase):
     enrollment_id = models.AutoField(primary_key=True)
     enrollment_plan = models.ForeignKey(EnrollmentPlan, related_name='enrollments_linked', blank=True, null=True)
     contact = models.ForeignKey(Contact, related_name='enrollments', blank=True, null=True)
@@ -758,7 +766,7 @@ class Enrollment(models.Model):
         return Decimal('0.00')
 
 
-class Fee(models.Model):
+class Fee(TrackedAbstractBase):
     fee_id = models.AutoField(primary_key=True)
     amount = models.DecimalField(max_digits=14, decimal_places=2)
     fee_plan = models.ForeignKey(FeePlan, related_name='fees_related', blank=True, null=True)
@@ -766,7 +774,7 @@ class Fee(models.Model):
     enrollment = models.ForeignKey(Enrollment, related_name='fees', blank=True, null=True)
 
 
-class Creditor(models.Model):
+class Creditor(TrackedAbstractBase):
     creditor_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
     first_name = models.CharField(max_length=100, blank=True, null=True)
@@ -843,7 +851,7 @@ HAS_SUMMONS_TYPE_CHOICES = (
 )
 
 
-class Debt(models.Model):
+class Debt(TrackedAbstractBase):
     debt_id = models.AutoField(primary_key=True)
     contact = models.ForeignKey(Contact, related_name='contact_debts', blank=True, null=True)
     original_creditor = models.ForeignKey(Creditor, related_name='creditor_debts', blank=True, null=True)
@@ -927,7 +935,7 @@ SETTLEMENT_OFFER_STATUS_CHOICES = (
 )
 
 
-class SettlementOffer(models.Model):
+class SettlementOffer(TrackedAbstractBase):
     settlement_offer_id = models.AutoField(primary_key=True)
     enrollment = models.ForeignKey(Enrollment, related_name='settlement_offers')
     debt = models.ForeignKey(Debt, related_name='offers')
@@ -959,7 +967,7 @@ class SettlementOffer(models.Model):
         return ((self.offer_amount * 100) / self.debt_amount).quantize(Decimal('.01'))
 
 
-class Settlement(models.Model):
+class Settlement(TrackedAbstractBase):
     settlement_id = models.AutoField(primary_key=True)
     settlement_offer = models.ForeignKey(SettlementOffer, related_name='settlements')
     payable_to = models.CharField(max_length=20)
@@ -978,7 +986,7 @@ class Settlement(models.Model):
     created_by = models.ForeignKey(User, blank=True, null=True)
 
 
-class BankAccount(models.Model):
+class BankAccount(TrackedAbstractBase):
     contact = models.OneToOneField(Contact, related_name='bank_account', primary_key=True)
     routing_number = models.CharField(max_length=20)
     account_number = models.CharField(max_length=30)
@@ -1070,7 +1078,7 @@ PAYMENT_CHARGE_TYPE_CHOICES = (
 )
 
 
-class Payment(models.Model):
+class Payment(TrackedAbstractBase):
     active = models.BooleanField(default=True)
     payment_id = models.AutoField(primary_key=True)
     enrollment = models.ForeignKey(Enrollment, related_name='payments', blank=True, null=True)
@@ -1157,7 +1165,7 @@ ACTIVITY_TYPE_COLOR = {
 }
 
 
-class Activity(models.Model):
+class Activity(TrackedAbstractBase):
     activity_id = models.AutoField(primary_key=True)
     contact = models.ForeignKey(Contact, related_name='activities', blank=True, null=True)
     type = models.CharField(max_length=20, choices=ACTIVITY_TYPE_CHOICES)
@@ -1202,7 +1210,7 @@ CALL_RESULT_TYPE_CHOICES = (
 )
 
 
-class Call(models.Model):
+class Call(TrackedAbstractBase):
     call_id = models.AutoField(primary_key=True)
     contact = models.ForeignKey(Contact, related_name='calls', blank=True, null=True)
     type = models.CharField(max_length=20, choices=CALL_TYPE_CHOICES)
@@ -1232,7 +1240,7 @@ EMAIL_TYPE_CHOICES = (
 )
 
 
-class Email(models.Model):
+class Email(TrackedAbstractBase):
     email_id = models.AutoField(primary_key=True)
     contact = models.ForeignKey(Contact, related_name='emails', blank=True, null=True)
     message = models.CharField(max_length=10000, blank=True, null=True)
@@ -1271,7 +1279,7 @@ NOTE_TYPE_CHOICES = (
 )
 
 
-class Note(models.Model):
+class Note(TrackedAbstractBase):
     note_id = models.AutoField(primary_key=True)
     contact = models.ForeignKey(Contact, related_name='notes', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
@@ -1306,7 +1314,7 @@ def esigned_content_filename(instance, filename):
     )
 
 
-class ESigned(models.Model):
+class ESigned(TrackedAbstractBase):
     e_signed_id = models.AutoField(primary_key=True)
     contact = models.ForeignKey(Contact, related_name='e_signed_docs', blank=True, null=True)
     title = models.CharField(max_length=300)
@@ -1328,7 +1336,7 @@ class ESigned(models.Model):
         return self.content.url
 
 
-class Signer(models.Model):
+class Signer(TrackedAbstractBase):
     signer_id = models.AutoField(primary_key=True)
     e_signed = models.ForeignKey(ESigned, related_name='signers')
     first_name = models.CharField(max_length=30)
@@ -1375,7 +1383,7 @@ def uploaded_content_filename(instance, filename):
     )
 
 
-class Uploaded(models.Model):
+class Uploaded(TrackedAbstractBase):
     uploaded_id = models.AutoField(primary_key=True)
     contact = models.ForeignKey(Contact, related_name='uploaded_docs', blank=True, null=True)
     name = models.CharField(max_length=300)
@@ -1406,7 +1414,7 @@ class Uploaded(models.Model):
         return self.content.url
 
 
-class Incomes(models.Model):
+class Incomes(TrackedAbstractBase):
     incomes_id = models.AutoField(primary_key=True)
     contact = models.ForeignKey(Contact, related_name='incomes', blank=True, null=True)
     take_home_pay = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
@@ -1483,7 +1491,7 @@ class Incomes(models.Model):
         return total
 
 
-class Expenses(models.Model):
+class Expenses(TrackedAbstractBase):
     expenses_id = models.AutoField(primary_key=True)
     contact = models.ForeignKey(Contact, related_name='expenses', blank=True, null=True)
     rent = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
@@ -1547,13 +1555,13 @@ class Expenses(models.Model):
         return total
 
 
-class DebtNote(models.Model):
+class DebtNote(TrackedAbstractBase):
     debt_note_id = models.AutoField(primary_key=True)
     debt = models.ForeignKey(Debt, related_name='notes', blank=True, null=True)
     content = models.CharField(max_length=2000, blank=True, null=True)
 
 
-class Source(models.Model):
+class Source(TrackedAbstractBase):
     source_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100, unique=True)
 
@@ -1589,7 +1597,7 @@ CAMPAIGN_SOURCES_CHOICES = (
 )
 
 
-class Campaign(models.Model):
+class Campaign(TrackedAbstractBase):
     campaign_id = models.AutoField(primary_key=True)
     created_by = models.ForeignKey(User, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
@@ -1617,7 +1625,7 @@ def print_user(self):
 User.add_to_class('__str__', print_user)
 
 
-class GroupExtension(models.Model):
+class GroupExtension(TrackedAbstractBase):
     group = models.OneToOneField(Group, related_name='extension', primary_key=True)
     parent = models.OneToOneField(Group, related_name='parent', blank=True, null=True)
     assignable = models.BooleanField(default=False)
@@ -1645,7 +1653,7 @@ def create_group_extension(sender, instance, created, **kwargs):
         GroupExtension(group=instance).save()
 
 
-class UserProfile(models.Model):
+class UserProfile(TrackedAbstractBase):
     related_user = models.OneToOneField(User)
     birthday = models.DateField(blank=True, null=True)
     phone_number = models.CharField(max_length=50, blank=True, null=True)

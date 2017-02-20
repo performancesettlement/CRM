@@ -49,6 +49,7 @@ INSTALLED_APPS = (
     'fm',
     'multiselectfield',
     'tinymce',
+    'simple_history',
 )
 
 
@@ -67,6 +68,7 @@ MIDDLEWARE_CLASSES = (
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'sundog.middleware.TimezoneMiddleware',
     'sundog.middleware.ExceptionResponderMiddleware',
+    'simple_history.middleware.HistoryRequestMiddleware',
 )
 
 

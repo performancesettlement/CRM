@@ -11,12 +11,11 @@ from django.db.models import (
     EmailField,
     ForeignKey,
     IntegerField,
-    Model,
     SET_NULL,
 )
 
 from django.urls import reverse
-
+from sundog.models import TrackedAbstractBase
 from sundog.util.models import (
     DomainNameField,
     LongCharField,
@@ -24,7 +23,7 @@ from sundog.util.models import (
 )
 
 
-class Sender(Model):
+class Sender(TrackedAbstractBase):
 
     created_at = DateTimeField(
         auto_now_add=True,

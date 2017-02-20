@@ -5,7 +5,6 @@ from django.db.models import (
     DateTimeField,
     ForeignKey,
     ManyToManyField,
-    Model,
     SET_NULL,
     UUIDField,
 )
@@ -26,13 +25,14 @@ from sundog.models import (
     Contact,
     DEBT_SETTLEMENT,
     Stage,
+    TrackedAbstractBase,
 )
 
 from sundog.util.models import LongCharField
 from uuid import uuid4
 
 
-class DataSource(Model):
+class DataSource(TrackedAbstractBase):
 
     created_at = DateTimeField(
         auto_now_add=True,
