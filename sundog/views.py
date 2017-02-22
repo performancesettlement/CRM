@@ -46,6 +46,11 @@ from sundog.util.permission import get_permission_codename
 
 logger = logging.getLogger(__name__)
 
+REGULAR_SETTLEMENT_TYPE = 'RS'
+REGULAR_SETTLEMENT_RANGE = range(1, 11)
+CFLN_SETTLEMENT_TYPE = 'CFLN'
+CFLN_SETTLEMENT_RANGE = range(1, 8)
+
 
 def _render_response(request, context_info, template_path):
     return render(request, template_path, context_info)
@@ -636,61 +641,185 @@ def _get_users_by_company():
 @permission_required(get_permission_codename(CONTACT_CREATE), 'forbidden')
 @permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
 def add_contact(request):
+    sett_tracked_forms = get_sett_tracked_forms(REGULAR_SETTLEMENT_RANGE, REGULAR_SETTLEMENT_TYPE, request)
+    cfln_tracked_forms = get_sett_tracked_forms(CFLN_SETTLEMENT_RANGE, CFLN_SETTLEMENT_TYPE, request)
     post_data = request.POST.copy()
     if post_data:
         post_data['created_by'] = request.user.id
     form = ContactForm(post_data or None)
-    if request.method == 'POST' and request.POST and form.is_valid():
-        form.save()
-        return redirect('list_contacts')
+    if request.method == 'POST' and request.POST:
+        if form.is_valid() and all([form.is_valid() for form in sett_tracked_forms]) \
+            and all([form.is_valid() for form in cfln_tracked_forms]):
+            contact = form.save()
+            for sett_tracked_form in sett_tracked_forms:
+                sett_tracked = sett_tracked_form.save(commit=False)
+                sett_tracked.type = REGULAR_SETTLEMENT_TYPE
+                sett_tracked.contact = contact
+                sett_tracked.save()
+            for cfln_tracked_form in cfln_tracked_forms:
+                cfln_tracked = cfln_tracked_form.save(commit=False)
+                cfln_tracked.type = CFLN_SETTLEMENT_TYPE
+                cfln_tracked.contact = contact
+                cfln_tracked.save()
+            response = {'result': 'Ok'}
+        else:
+            response = {'errors': get_form_errors(form)}
+        return JsonResponse(response)
     users_by_company = _get_users_by_company()
+    templates = [('Add a Client', 'add_a_client'), ('Client Tracker', 'client_tracker'),
+                 ('Lead Tracker', 'lead_tracker')]
     context_info = {
         'request': request,
         'user': request.user,
         'form': form,
         'form_errors': get_form_errors(form) or None,
-        'templates': [('Add a Client', 'add_a_client')],
+        'templates': templates,
         'label': 'Add',
         'public': True,
         'users_by_company': users_by_company,
         'menu_page': 'contacts',
+        'sett_tracked_forms': sett_tracked_forms,
+        'cfln_tracked_forms': cfln_tracked_forms,
     }
     template_path = 'contact/contact.html'
     return _render_response(request, context_info, template_path)
 
 
+def get_sett_tracked_forms(range, type, request):
+    sett_tracked_forms = []
+    for i in range:
+        prefix = type + str(i)
+        data = get_data(prefix, request.POST)
+        if not request.POST or (request.POST and data):
+            sett_tracked_forms.append(
+                SettlementTrackedForm(
+                    data,
+                    prefix=prefix,
+                )
+            )
+    return sett_tracked_forms
+
+
 @permission_required(get_permission_codename(CONTACT_EDIT), 'forbidden')
 @permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
 def edit_contact(request, contact_id):
-    instance = Contact.objects.get(contact_id=contact_id)
+    instance = (
+        Contact
+            .objects
+            .prefetch_related('settlements_tracked')
+            .get(contact_id=contact_id)
+    )
+    settlements_tracked = list(instance.settlements_tracked.all())
+    result = set_sett_tracked_forms(request, settlements_tracked)
+    sett_tracked_forms = result["sett_tracked_forms"]
+    cfln_tracked_forms = result["cfln_tracked_forms"]
+    removed_sett_tracked = result["removed_sett_tracked"]
     post_data = request.POST.copy()
     if post_data:
         post_data['created_by'] = request.user.id
     form = ContactForm(post_data or None, instance=instance)
     if request.method == 'POST' and request.POST:
-        if form.is_valid():
+        submitted_sett_forms = get_sett_tracked_forms(range(len(sett_tracked_forms) + 1, 11),
+                                                      REGULAR_SETTLEMENT_TYPE, request)
+        submitted_cfln_forms = get_sett_tracked_forms(range(len(cfln_tracked_forms) + 1, 8),
+                                                      CFLN_SETTLEMENT_TYPE, request)
+        submitted_sett_forms.extend(sett_tracked_forms)
+        submitted_cfln_forms.extend(cfln_tracked_forms)
+        if form.is_valid() and all([form.is_valid() for form in submitted_sett_forms]) \
+            and all([form.is_valid() for form in submitted_cfln_forms]):
             contact = form.save()
             remove_public = contact.public and not request.user.has_perm(get_permission_codename(CONTACT_MARK_PRIVATE))\
                 or not contact.public and not request.user.has_perm(get_permission_codename(CONTACT_MARK_PUBLIC))
+            for sett_tracked_form in submitted_sett_forms:
+                sett_tracked = sett_tracked_form.save(commit=False)
+                sett_tracked.type = REGULAR_SETTLEMENT_TYPE
+                sett_tracked.contact = contact
+                sett_tracked.save()
+            for cfln_tracked_form in submitted_cfln_forms:
+                cfln_tracked = cfln_tracked_form.save(commit=False)
+                cfln_tracked.type = CFLN_SETTLEMENT_TYPE
+                cfln_tracked.contact = contact
+                cfln_tracked.save()
+            if removed_sett_tracked:
+                SettlementTracked.objects.filter(sett_tracker_id__in=removed_sett_tracked).delete()
             response = {'result': 'Ok', 'remove_public': remove_public}
         else:
             response = {'errors': get_form_errors(form)}
         return JsonResponse(response)
     users_by_company = _get_users_by_company()
+    templates = [('Add a Client', 'add_a_client'), ('Client Tracker', 'client_tracker'),
+                 ('Lead Tracker', 'lead_tracker')]
+    sett_tracked_forms += [
+        SettlementTrackedForm(
+            get_data(
+                str(i),
+                request.POST,
+            ),
+            prefix=REGULAR_SETTLEMENT_TYPE + str(i),
+        )
+        for i in range(len(sett_tracked_forms) + 1, 11)
+        ]
+    cfln_tracked_forms += [
+        SettlementTrackedForm(
+            get_data(
+                str(i),
+                request.POST,
+            ),
+            prefix=CFLN_SETTLEMENT_TYPE + str(i),
+        )
+        for i in range(len(cfln_tracked_forms) + 1, 8)
+        ]
     context_info = {
         'request': request,
         'user': request.user,
         'form': form,
         'contact_id': contact_id,
         'form_errors': get_form_errors(form) or None,
-        'templates': [('Add a Client', 'add_a_client')],
+        'templates': templates,
         'label': 'Edit',
         'public': instance.public,
         'users_by_company': users_by_company,
-        'menu_page': 'contacts'
+        'menu_page': 'contacts',
+        'sett_tracked_forms': sett_tracked_forms,
+        'cfln_tracked_forms': cfln_tracked_forms,
     }
     template_path = 'contact/contact.html'
     return _render_response(request, context_info, template_path)
+
+
+def set_sett_tracked_forms(request, settlements_tracked):
+    counter = 0
+    sett_tracked_forms = []
+    cfln_tracked_forms = []
+    removed_sett_tracked = []
+    for sett in settlements_tracked:
+        counter += 1
+        prefix = sett.type + str(counter)
+        data = get_data(prefix, request.POST)
+        if not request.POST or (request.POST and data):
+            if sett.type == REGULAR_SETTLEMENT_TYPE:
+                sett_tracked_forms.append(
+                    SettlementTrackedForm(
+                        data,
+                        instance=sett,
+                        prefix=prefix,
+                    )
+                )
+            else:
+                cfln_tracked_forms.append(
+                    SettlementTrackedForm(
+                        data,
+                        instance=sett,
+                        prefix=prefix,
+                    )
+                )
+        elif request.POST and not data:
+            removed_sett_tracked.append(sett.sett_tracker_id)
+    return {
+        'sett_tracked_forms': sett_tracked_forms,
+        'cfln_tracked_forms': cfln_tracked_forms,
+        'removed_sett_tracked': removed_sett_tracked
+    }
 
 
 @login_required

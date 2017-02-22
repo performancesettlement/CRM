@@ -3,6 +3,7 @@
 {% block extrahead %}
     <link href="{% static "css/plugins/datapicker/datepicker3.css" %}" rel="stylesheet">
     <link href="{% static "css/plugins/chosen/chosen.css" %}" rel="stylesheet">
+    <link href="{% static "css/plugins/timepicker/bootstrap-timepicker.css" %}" rel="stylesheet">
 {% endblock extrahead %}
 {% block content %}
     <div class="row wrapper border-bottom white-bg page-heading">
@@ -19,78 +20,70 @@
     </div>
     <div class="m-t-md">
         <select id="template-chooser">
-        {% for template in templates %}
-            <option value="{{template.1}}" >{{template.0}}</option>
-        {% endfor %}
+            {% for template in templates %}
+                <option value="{{ template.1 }}">{{ template.0 }}</option>
+            {% endfor %}
         </select>
     </div>
-    <div id="add_a_client" class="form-template m-t-md">
-        <ul class="nav nav-tabs" role="tablist">
-            <li class="active"><a href="#tab-1" data-toggle="tab">Lead Tracker</a></li>
-            <li class=""><a href="#tab-2" data-toggle="tab">Contact Information</a></li>
-            <li class=""><a href="#tab-3" data-toggle="tab">Address Information</a></li>
-            <li class=""><a href="#tab-4" data-toggle="tab">Employment Information</a></li>
-            <li class=""><a href="#tab-5" data-toggle="tab">Hardships</a></li>
-            <li class=""><a href="#tab-6" data-toggle="tab">Special Notes</a></li>
-            <li class=""><a href="#tab-7" data-toggle="tab">3rd Party Speaker Information</a></li>
-        </ul>
-        <form id="contact-form" action="{% if label == 'Add' %}{% url 'add_contact' %}{% else %}{% url 'edit_contact' contact_id=contact_id %}{% endif %}" method="post">
-            {% csrf_token %}
-            {% if label == 'Edit' %}
-                <input type="hidden" id="id_contact_id" name="contact_id" value="{{ contact_id }}">
-            {% endif %}
-            <div class="col-xs-12 m-t-md m-b-md">
-                {{ form.contact_id }}
-                {% if 'sundog.contact__mark_contact_public' in perms and not public or 'sundog.contact__mark_contacts_private' in perms and public %}
-                <div class="m-r-md inline">
-                    <label class="reset-min-width">Public:</label>
-                    <div class="inline vertical-align no-margins">
-                        {{ form.public }}
-                    </div>
-                </div>
-                {% endif %}
-                <div class="m-r-md inline">
-                    <label class="reset-min-width">Company:</label>
-                    <div class="inline vertical-align no-margins">{{ form.company }}</div>
-                </div>
-                <div class="m-r-md inline">
-                    <label class="reset-min-width">Assigned To:</label>
-                    <div class="inline vertical-align no-margins">{{ form.assigned_to }}</div>
-                </div>
-            </div>
-            <div class="tab-content col-xs-12 no-padding-sides">
-                <div class="tab-pane active" id="tab-1">
-                    {% include "contact/partials/contact/lead_tracker.html" %}
-                </div>
-                <div class="tab-pane" id="tab-2">
-                    {% include "contact/partials/contact/info.html" %}
-                </div>
-                <div class="tab-pane" id="tab-3">
-                    {% include "contact/partials/contact/address.html" %}
-                </div>
-                <div class="tab-pane" id="tab-4">
-                    {% include "contact/partials/contact/employment.html" %}
-                </div>
-                <div class="tab-pane" id="tab-5">
-                    {% include "contact/partials/contact/hardships.html" %}
-                </div>
-                <div class="tab-pane" id="tab-6">
-                    {% include "contact/partials/contact/special_notes.html" %}
-                </div>
-                <div class="tab-pane" id="tab-7">
-                    {% include "contact/partials/contact/third_party_speaker.html" %}
-                </div>
-            </div>
-            <div class="col-xs-12 m-t-md padding-for-footer">
-                <button class="btn btn-primary" type="submit">Save Contact</button>
-            </div>
-        </form>
-    </div>
+    <form id="contact-form" action="
+        {% if label == 'Add' %}{% url 'add_contact' %}{% else %}{% url 'edit_contact' contact_id=contact_id %}{% endif %}"
+          method="post">
+        {% csrf_token %}
+        {% if label == 'Edit' %}
+            <input type="hidden" id="id_contact_id" name="contact_id" value="{{ contact_id }}">
+        {% endif %}
+        <div class="add_a_client form-template m-t-md">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a id="lead-tracker-tab" href="#lead-tracker-section" data-toggle="tab">Lead Tracker</a></li>
+                <li class=""><a id="contact-info-tab" href="#contact-info-section" data-toggle="tab">Contact Information</a></li>
+                <li class=""><a id="address-info-tab" href="#address-info-section" data-toggle="tab">Address Information</a></li>
+                <li class=""><a id="employment-info-tab" href="#employment-info-section" data-toggle="tab">Employment Information</a></li>
+                <li class=""><a id="hardships-tab" href="#hardships-section" data-toggle="tab">Hardships</a></li>
+                <li class=""><a id="special-notes-tab" href="#special-notes-section" data-toggle="tab">Special Notes</a></li>
+                <li class=""><a id="third-party-tab" href="#third-party-section" data-toggle="tab">3rd Party Speaker Information</a></li>
+            </ul>
+        </div>
+        <div class="client_tracker form-template m-t-md" style="display: none;">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a id="general-info-tab" href="#general-info-section" data-toggle="tab">General Information</a></li>
+                <li class=""><a id="wc-tracker-tab" href="#wc-tracker-section" data-toggle="tab">Welcome Call Tracker</a></li>
+                <li class=""><a id="mar-tracker-tab" href="#mar-tracker-section" data-toggle="tab">MAR Tracker</a></li>
+                <li class=""><a id="presettlement-tracker-tab" href="#presettlement-tracker-section" data-toggle="tab">Pre-Settlement Tracker</a></li>
+                <li class=""><a id="settlement-tracker-tab" href="#settlement-tracker-section" data-toggle="tab">Settlement Tracker</a></li>
+                <li class=""><a id="unknown-creditors-tab" href="#unknown-creditors-section" data-toggle="tab">Unknown Creditors</a></li>
+            </ul>
+        </div>
+        <div class="lead_tracker form-template m-t-md" style="display: none;">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a id="transfer-tracker-tab" href="#transfer-tracker-section" data-toggle="tab">Transfer Tracker</a></li>
+                <li class=""><a id="lead-tracker-sub-tab" href="#lead-tracker-sub-section" data-toggle="tab">Lead Tracker</a></li>
+                <li class=""><a id="kill-tracker-tab" href="#kill-tracker-section" data-toggle="tab">Kill Tracker</a></li>
+                <li class=""><a id="debt-tracker-tab" href="#debt-tracker-section" data-toggle="tab">Debt Tracker</a></li>
+                <li class=""><a id="notes-tab" href="#notes-section" data-toggle="tab">Special Notes</a></li>
+            </ul>
+        </div>
+        {% include "contact/partials/contact/header.html" %}
+        <div class="add_a_client form-template m-t-md">
+            {% include "contact/partials/contact/add_a_client.html" %}
+        </div>
+        <div class="client_tracker form-template m-t-md" style="display: none;">
+            {% include "contact/partials/contact/client_tracker.html" %}
+        </div>
+        <div class="lead_tracker form-template m-t-md" style="display: none;">
+            {% include "contact/partials/contact/lead_tracker.html" %}
+        </div>
+        <div class="col-xs-12 m-t-md padding-for-footer">
+            <button id="save-contact-form" class="btn btn-primary" type="submit">Save Contact</button>
+        </div>
+    </form>
     <script type="text/javascript">
         var usersByCompany = {{ users_by_company|jsonify }};
         var errors = {{ form_errors|jsonify }};
+        var contactsListUrl = '{% url 'list_contacts' %}';
         var isEdit = {% if label == 'Edit' %}true{% else %}false{% endif %};
     </script>
+    <script src="{% static "js/plugins/datapicker/bootstrap-datepicker.js" %}"></script>
+    <script src="{% static "js/plugins/timepicker/bootstrap-timepicker.js" %}"></script>
     <script src="{% static "js/contact/contact.js" %}"></script>
 
 {% endblock content %}

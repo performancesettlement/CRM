@@ -9,6 +9,7 @@ from django.dispatch import receiver
 from django.urls import reverse
 from django.utils.timezone import now
 from localflavor.us.us_states import US_STATES
+from multiselectfield import MultiSelectField
 from numpy import arange
 from settings import MEDIA_PRIVATE
 from simple_history.models import HistoricalRecords
@@ -251,6 +252,36 @@ AUTHORIZATION_FORM_ON_FILE_CHOICES = (
     ('yes', 'Yes'),
 )
 
+TRUST_ACCOUNT_PROVIDERS = (
+    (None, NONE_CHOICE_LABEL),
+    ('debtpay_gateway', 'DebtPay Gateway'),
+    ('payment_service_systems', 'Payment Service Systems'),
+)
+
+MAR_TYPE = (
+    (None, NONE_CHOICE_LABEL),
+    ('call', 'Call'),
+    ('email', 'Email'),
+)
+
+KILL_REASON_CHOICES = (
+    ('cannot_afford', 'Cannot Afford'),
+    ('credit_concerns', 'Credit Concerns'),
+    ('eligible_debt_below', 'Eligible Debt Below Minimum Req'),
+    ('legal_concerns', 'Legal Concerns'),
+    ('program_payment_concerns', 'Program Payment Amount Concerns'),
+    ('unacceptable_state', 'Resides In Unacceptable State'),
+    ('unable_to_reach', 'Unable To Reach'),
+    ('keep_paying_creditors', 'Wants To Keep Paying Creditors'),
+    ('other', 'Other: See Notes'),
+)
+
+YES_NO_CHOICES = (
+    (None, NONE_CHOICE_LABEL),
+    ('yes', 'Yes'),
+    ('no', 'No'),
+)
+
 
 class Contact(TrackedAbstractBase):
     contact_id = models.AutoField(primary_key=True)
@@ -322,6 +353,44 @@ class Contact(TrackedAbstractBase):
     stage = models.ForeignKey(Stage, related_name='contact', blank=True, null=True)
     status = models.ForeignKey(Status, related_name='contact', blank=True, null=True)
     last_status_change = models.DateTimeField(blank=True, null=True)
+
+    trust_account_provider = models.CharField(max_length=100, choices=TRUST_ACCOUNT_PROVIDERS, blank=True, null=True)
+    first_payment_cleared_date = models.DateField(blank=True, null=True)
+    client_had_delinquent_accounts = models.CharField(max_length=100, choices=YES_NO_CHOICES, blank=True, null=True)
+    last_payment_cleared_date = models.DateField(blank=True, null=True)
+    units = models.CharField(max_length=100, blank=True, null=True)
+
+    wc_due_date = models.DateField(blank=True, null=True)
+    wc_time = models.CharField(max_length=100, blank=True, null=True)
+    wc_completed_date = models.DateField(blank=True, null=True)
+    wc_was_live_transfer = models.CharField(max_length=100, choices=YES_NO_CHOICES, blank=True, null=True)
+
+    mar_due_date = models.DateField(blank=True, null=True)
+    last_mar_completed_date = models.DateField(blank=True, null=True)
+    mar_time = models.CharField(max_length=100, blank=True, null=True)
+    mar_type = models.CharField(max_length=100, choices=MAR_TYPE, blank=True, null=True)
+    last_mar_attempt_date = models.DateField(blank=True, null=True)
+
+    contact_info_updated_date = models.DateField(blank=True, null=True)
+    atc_sent_date = models.DateField(blank=True, null=True)
+    notarized_atc = models.CharField(max_length=100, choices=YES_NO_CHOICES, blank=True, null=True)
+    last_uc_sent_date = models.DateField(blank=True, null=True)
+    last_sett_completed_date = models.DateField(blank=True, null=True)
+    last_letter_sent_date = models.DateField(blank=True, null=True)
+    unknown_creditor_1 = models.CharField(max_length=100, blank=True, null=True)
+    unknown_creditor_2 = models.CharField(max_length=100, blank=True, null=True)
+    unknown_creditor_3 = models.CharField(max_length=100, blank=True, null=True)
+    unknown_creditor_4 = models.CharField(max_length=100, blank=True, null=True)
+    unknown_creditor_5 = models.CharField(max_length=100, blank=True, null=True)
+
+    lead_transferred = models.CharField(max_length=100, choices=YES_NO_CHOICES, blank=True, null=True)
+    appointment_date = models.DateField(blank=True, null=True)
+    appointment_time = models.CharField(max_length=100, blank=True, null=True)
+    kill_date = models.DateField(blank=True, null=True)
+    kill_reason = MultiSelectField(choices=KILL_REASON_CHOICES, blank=True, null=True)
+    total_debt_amount = models.DecimalField(max_digits=14, decimal_places=2, blank=True, null=True)
+    de_enrolled_date = models.DateField(blank=True, null=True)
+
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True, null=True)
     created_by = models.ForeignKey(User, related_name='contact_created', blank=True, null=True)
@@ -524,6 +593,19 @@ def add_contact_permission(sender, instance, created, **kwargs):
             instance.created_by.user_permissions.add(permission)
 
 
+class SettlementTracked(TrackedAbstractBase):
+    sett_tracker_id = models.AutoField(primary_key=True)
+    contact = models.ForeignKey(Contact, related_name='settlements_tracked', blank=True, null=True)
+    type = models.CharField(max_length=100, blank=True, null=True)
+    original_creditor = models.CharField(max_length=100, blank=True, null=True)
+    account_last_4_digits = models.CharField(max_length=4, blank=True, null=True)
+    revenue_earned = models.DecimalField(max_digits=14, decimal_places=2, blank=True, null=True)
+    date_completed = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        ordering = ['sett_tracker_id']
+
+
 class FeeProfile(TrackedAbstractBase):
     fee_profile_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
@@ -586,12 +668,6 @@ class EnrollmentPlan(TrackedAbstractBase):
     def __str__(self):
         return self.name
 
-
-YES_NO_CHOICES = (
-    (None, NONE_CHOICE_LABEL),
-    ('yes', 'Yes'),
-    ('no', 'No'),
-)
 
 FEE_TYPE_CHOICES = (
     (None, NONE_CHOICE_LABEL),

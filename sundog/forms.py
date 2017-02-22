@@ -5,6 +5,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import Group, User
 from django.core.validators import validate_email
 from django.db.models import Q
+from django.forms.widgets import SelectMultiple
 from django.utils.encoding import force_text
 from localflavor.us.us_states import US_STATES
 import pytz
@@ -13,17 +14,25 @@ from sundog.models import Contact, Stage, Status, Campaign, Source, BankAccount,
     Email, DEBT_SETTLEMENT, Uploaded, Incomes, Expenses, Creditor, Debt, DebtNote, EnrollmentPlan, FeePlan, FeeProfile,\
     FeeProfileRule, WorkflowSettings, Enrollment, AMOUNT_CHOICES, Payment, PAYMENT_TYPE_CHOICES, \
     CompensationTemplate, CompensationTemplatePayee, NONE_CHOICE_LABEL, Payee, COMPENSATION_TEMPLATE_PAYEE_TYPE_CHOICES, \
-    AVAILABLE_FOR_CHOICES, COMPENSATION_TEMPLATE_TYPES_CHOICES, SettlementOffer, Settlement, Fee, Team, Company, YES_NO_CHOICES
+    AVAILABLE_FOR_CHOICES, COMPENSATION_TEMPLATE_TYPES_CHOICES, SettlementOffer, Settlement, Fee, Team, Company, \
+    YES_NO_CHOICES, TRUST_ACCOUNT_PROVIDERS, SettlementTracked
 
 from sundog.constants import (
     SHORT_DATE_FORMAT,
     FIXED_VALUES,
+    TIME_INPUT_FORMAT
 )
 
 
 DATE_INPUT_SETTINGS = {
     'format': SHORT_DATE_FORMAT,
     'attrs': {'placeholder': 'mm/dd/yyyy', 'data-provide': 'datepicker', 'data-date-autoclose': 'true'},
+}
+
+
+TIME_INPUT_SETTINGS = {
+    'format': TIME_INPUT_FORMAT,
+    'attrs': {'placeholder': '12:00 PM', 'data-provide': 'timepicker'},
 }
 
 
@@ -65,6 +74,26 @@ class ContactForm(forms.ModelForm):
     class Meta:
         widgets = {
             'contact_id': forms.HiddenInput(),
+            'first_payment_cleared_date': forms.DateInput(**DATE_INPUT_SETTINGS),
+            'last_payment_cleared_date': forms.DateInput(**DATE_INPUT_SETTINGS),
+            'wc_due_date': forms.DateInput(**DATE_INPUT_SETTINGS),
+            'wc_time': forms.TimeInput(**TIME_INPUT_SETTINGS),
+            'wc_completed_date': forms.DateInput(**DATE_INPUT_SETTINGS),
+            'mar_due_date': forms.DateInput(**DATE_INPUT_SETTINGS),
+            'mar_time': forms.TimeInput(**TIME_INPUT_SETTINGS),
+            'last_mar_completed_date': forms.DateInput(**DATE_INPUT_SETTINGS),
+            'last_mar_attempt_date': forms.DateInput(**DATE_INPUT_SETTINGS),
+            'contact_info_updated_date': forms.DateInput(**DATE_INPUT_SETTINGS),
+            'atc_sent_date': forms.DateInput(**DATE_INPUT_SETTINGS),
+            'last_uc_sent_date': forms.DateInput(**DATE_INPUT_SETTINGS),
+            'appointment_date': forms.DateInput(**DATE_INPUT_SETTINGS),
+            'appointment_time': forms.TimeInput(**TIME_INPUT_SETTINGS),
+            'kill_date': forms.DateInput(**DATE_INPUT_SETTINGS),
+            'kill_reason': SelectMultiple(attrs={'class': 'selectpicker', 'data-actions-box': 'true',
+                                    'data-live-search': 'true',},),
+            'de_enrolled_date': forms.DateInput(**DATE_INPUT_SETTINGS),
+            'last_sett_completed_date': forms.DateInput(**DATE_INPUT_SETTINGS),
+            'last_letter_sent_date': forms.DateInput(**DATE_INPUT_SETTINGS),
         }
         model = Contact
         exclude = ['last_status_change', 'created_at', 'updated_at']
@@ -114,6 +143,20 @@ class ContactStatusForm(forms.ModelForm):
             self.fields['status'].queryset = Status.objects.filter(stage__stage_id=stage_id)
         else:
             self.fields['status'].queryset = Status.objects.none()
+
+
+class SettlementTrackedForm(forms.ModelForm):
+    account_last_4_digits = forms.CharField(required=False, max_length=4,
+                            widget=forms.TextInput(attrs={'placeholder': 'Last 4 of Acct#'}))
+
+    class Meta:
+        model = SettlementTracked
+        widgets = {
+            'original_creditor': forms.TextInput(attrs={'placeholder': 'Original Creditor'}),
+            'revenue_earned': forms.TextInput(attrs={'placeholder': 'Revenue Earned'}),
+            'date_completed': forms.DateInput(**DATE_INPUT_SETTINGS),
+        }
+        fields = '__all__'
 
 
 class StageForm(forms.ModelForm):
