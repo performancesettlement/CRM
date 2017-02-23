@@ -818,7 +818,7 @@ def add_debt(request, contact_id):
         'form': form,
         'menu_page': 'contacts'
     }
-    template_path = 'contact/add_debts.html'
+    template_path = 'contact/add_debt.html'
     return _render_response(request, context_info, template_path)
 
 
