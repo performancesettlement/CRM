@@ -81,8 +81,8 @@ class Company(TrackedAbstractBase):
     city = models.CharField(max_length=100, blank=True, null=True)
     state = models.CharField(max_length=4, choices=US_STATES, blank=True, null=True)
     zip = models.CharField(max_length=100, blank=True, null=True)
-    phone = models.CharField(max_length=10, blank=True, null=True)
-    fax = models.CharField(max_length=10, blank=True, null=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    fax = models.CharField(max_length=20, blank=True, null=True)
     email = models.CharField(max_length=100, blank=True, null=True)
     domain = models.CharField(max_length=100, blank=True, null=True)
     account_exec = models.CharField(choices=ACCOUNT_EXEC_CHOICES, max_length=100, blank=True, null=True)
@@ -314,7 +314,7 @@ class Contact(TrackedAbstractBase):
     authorization_form_on_file = models.CharField(
         max_length=100, choices=AUTHORIZATION_FORM_ON_FILE_CHOICES, blank=True, null=True)
 
-    active = models.BooleanField(default=True)
+    public = models.BooleanField(default=True)
     assigned_to = models.ForeignKey(User, null=True, blank=True, related_name='assigned_to')
     call_center_representative = models.ForeignKey(User, related_name='call_center_representative', blank=True, null=True)
     lead_source = models.ForeignKey(LeadSource, blank=True, null=True)
@@ -1218,7 +1218,7 @@ class Call(TrackedAbstractBase):
     duration = models.CharField(max_length=10, blank=True, null=True)
     phone_from = models.CharField(max_length=10, blank=True, null=True)
     phone_to = models.CharField(max_length=10, blank=True, null=True)
-    event_type = models.CharField(max_length=10, choices=CALL_EVENT_TYPE_CHOICES, blank=True, null=True)
+    event_type = models.CharField(max_length=12, choices=CALL_EVENT_TYPE_CHOICES, blank=True, null=True)
     result = models.CharField(max_length=20, choices=CALL_RESULT_TYPE_CHOICES, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     created_by = models.ForeignKey(User, blank=True, null=True)

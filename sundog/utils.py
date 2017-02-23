@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from decimal import Decimal
+import decimal
 from django.http import Http404
 from django.utils.html import strip_tags
 from sundog.constants import SHORT_DATE_FORMAT
@@ -236,3 +237,10 @@ def get_date_from_str(date_str):
             tzinfo=pytz.utc,
         )
     )
+
+
+def get_dti(incomes, expenses):
+    if incomes:
+        return (expenses * Decimal('100') / incomes).quantize(Decimal('.01'), rounding=decimal.ROUND_UP)
+    else:
+        return Decimal('0.00')

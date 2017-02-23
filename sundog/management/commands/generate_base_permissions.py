@@ -89,7 +89,7 @@ class Command(BaseCommand):
             {'codename': ENROLLMENT_EDIT_SUBMITTED_CONTACTS, 'name': 'Edit Submitted Contacts', 'content_type': ENROLLMENT_BASE_CODENAME},
             {'codename': ENROLLMENT_EDIT_ENROLLED_CONTACTS, 'name': 'Edit Enrolled Contacts', 'content_type': ENROLLMENT_BASE_CODENAME},
             {'codename': ENROLLMENT_RESET_CLIENT, 'name': 'Reset Clients', 'content_type': ENROLLMENT_BASE_CODENAME},
-            {'codename': ENROLLMENT_VIEW_LIST_DATA, 'name': 'View List Data', 'content_type': ENROLLMENT_BASE_CODENAME},  # CHECK THIS
+            {'codename': ENROLLMENT_VIEW_LIST_DATA, 'name': 'View List Data', 'content_type': ENROLLMENT_BASE_CODENAME},
             {'codename': ENROLLMENT_VIEW_REPORTS, 'name': 'View Reports', 'content_type': ENROLLMENT_BASE_CODENAME},
             {'codename': ENROLLMENT_CREATE_REPORTS, 'name': 'Create Reports', 'content_type': ENROLLMENT_BASE_CODENAME},
             {'codename': ENROLLMENT_CREATE_PLAN, 'name': 'Create Enrollment Plans', 'content_type': ENROLLMENT_BASE_CODENAME},
@@ -98,7 +98,7 @@ class Command(BaseCommand):
             {'codename': ENROLLMENT_VIEW_PAYMENT_DETAILS, 'name': 'View Payment Details', 'content_type': ENROLLMENT_BASE_CODENAME},
             {'codename': ENROLLMENT_MANUAL_TRANSACTION, 'name': 'Manual Transactions', 'content_type': ENROLLMENT_BASE_CODENAME},
             {'codename': ENROLLMENT_SEARCH_TRANSACTION, 'name': 'Search Transactions', 'content_type': ENROLLMENT_BASE_CODENAME},
-            {'codename': ENROLLMENT_SCHEDULE_TRANFERS, 'name': 'Schedule Transfers', 'content_type': ENROLLMENT_BASE_CODENAME},
+            {'codename': ENROLLMENT_SCHEDULE_TRANSFERS, 'name': 'Schedule Transfers', 'content_type': ENROLLMENT_BASE_CODENAME},
             {'codename': ENROLLMENT_EXPORT_REPORTS, 'name': 'Export Reports', 'content_type': ENROLLMENT_BASE_CODENAME},
 
             # Accounting
@@ -121,13 +121,16 @@ class Command(BaseCommand):
 
             # Documents
             {'codename': DOCS_ACCESS_TAB, 'name': 'Access Tab', 'content_type': DOCS_BASE_CODENAME},
+            {'codename': DOCS_VIEW_DOCUMENT_TEMPLATE, 'name': 'View Document Templates', 'content_type': DOCS_BASE_CODENAME},
             {'codename': DOCS_CREATE_DOCUMENT_TEMPLATE, 'name': 'Create Document Templates', 'content_type': DOCS_BASE_CODENAME},
             {'codename': DOCS_EDIT_DOCUMENT_TEMPLATE, 'name': 'Edit Document Templates', 'content_type': DOCS_BASE_CODENAME},
             {'codename': DOCS_DELETE_DOCUMENT_TEMPLATE, 'name': 'Delete Document Templates', 'content_type': DOCS_BASE_CODENAME},
 
             # Files
             {'codename': FILES_ACCESS_TAB, 'name': 'Access Tab', 'content_type': DOCS_BASE_CODENAME},
+            {'codename': FILES_VIEW_MEDIA, 'name': 'View Media', 'content_type': DOCS_BASE_CODENAME},
             {'codename': FILES_UPLOAD_MEDIA, 'name': 'Upload Media', 'content_type': DOCS_BASE_CODENAME},
+            {'codename': FILES_EDIT_MEDIA, 'name': 'Edit Media', 'content_type': DOCS_BASE_CODENAME},
             {'codename': FILES_DELETE_MEDIA, 'name': 'Delete Media', 'content_type': DOCS_BASE_CODENAME},
             {'codename': FILES_VIEW_FTP, 'name': "View FTP's", 'content_type': DOCS_BASE_CODENAME},
             {'codename': FILES_CREATE_FTP, 'name': "Create FTP's", 'content_type': DOCS_BASE_CODENAME},
@@ -135,13 +138,14 @@ class Command(BaseCommand):
 
             # E-Marketing
             {'codename': E_MARKETING_ACCESS_TAB, 'name': 'Access Tab', 'content_type': COMPANY_BASE_CODENAME},
-            {'codename': E_MARKETING_VIEW_CAMPAIGN_DESIGN, 'name': 'View Campaign Designs', 'content_type': COMPANY_BASE_CODENAME},
             {'codename': E_MARKETING_CREATE_CAMPAIGN_DESIGN, 'name': 'Create Campaign Designs', 'content_type': COMPANY_BASE_CODENAME},
+            {'codename': E_MARKETING_EDIT_CAMPAIGN_DESIGN, 'name': 'Edit Campaign Designs', 'content_type': COMPANY_BASE_CODENAME},
             {'codename': E_MARKETING_DELETE_CAMPAIGN_DESIGN, 'name': 'Delete Campaign Designs', 'content_type': COMPANY_BASE_CODENAME},
             {'codename': E_MARKETING_SCHEDULE_CAMPAIGN_LAUNCHES, 'name': 'Schedule Campaign Launches', 'content_type': COMPANY_BASE_CODENAME},
             {'codename': E_MARKETING_VIEW_CAMPAIGN_STATISTICS, 'name': 'View Campaign Statistics', 'content_type': COMPANY_BASE_CODENAME},
             {'codename': E_MARKETING_EDIT_CAMPAIGN_CATEGORIES, 'name': 'Edit Campaign Categories', 'content_type': COMPANY_BASE_CODENAME},
             {'codename': E_MARKETING_CREATE_SENDER, 'name': 'Create Senders', 'content_type': COMPANY_BASE_CODENAME},
+            {'codename': E_MARKETING_EDIT_SENDER, 'name': 'Edit Senders', 'content_type': COMPANY_BASE_CODENAME},
             {'codename': E_MARKETING_DELETE_SENDER, 'name': 'Delete Senders', 'content_type': COMPANY_BASE_CODENAME},
 
             # Admin

@@ -2,9 +2,6 @@
 {% load staticfiles my_filters admin_urls %}
 {% block extrahead %}
     <link href="{% static "css/plugins/datapicker/datepicker3.css" %}" rel="stylesheet">
-    <link href="{% static "css/plugins/morris/morris-0.4.3.min.css" %}" rel="stylesheet">
-    <link href="{% static "css/plugins/dataTables/dataTables.bootstrap.css" %}" rel="stylesheet">
-    <link href="{% static "css/plugins/dataTables/dataTables.responsive.css" %}" rel="stylesheet">
 {% endblock extrahead %}
 {% block content %}
     <script src="{% static "js/plugins/ckeditor/ckeditor.js" %}"></script>
@@ -27,21 +24,27 @@
         <div class="inline">
             <a id="delete-contact" class="btn btn-primary m-r-xs" href="{% url "delete_contact" contact_id=contact.contact_id %}">Delete</a>
         </div>
+        {% if 'sundog.enrollment__create_income_expense' in perms %}
         <div class="inline">
             <a class="btn btn-primary m-r-xs" href="{% url "budget_analysis" contact_id=contact.contact_id %}">Budget Analysis</a>
         </div>
+        {% endif %}
         <div class="inline">
             <a class="btn btn-primary m-r-xs" href="{% url "contact_debts" contact_id=contact.contact_id %}">Creditors</a>
         </div>
-        {% if contact.bank_account %}
+        {% if 'sundog.enrollment__save_client_enrollments' in perms %}
+        {% if contact.bank_account %} {# TODO: change here for logic to check the enrollment settings #}
         <div class="inline">
             <a class="btn btn-primary m-r-xs" href="{% url "add_contact_enrollment" contact_id=contact.contact_id %}">Enrollment</a>
         </div>
         {% endif %}
+        {% endif %}
+        {% if 'sundog.settlement__create_offers' in perms %}
         {% if contact.enrollments.first %}
         <div class="inline">
             <a class="btn btn-primary m-r-xs" href="{% url "contact_settlement_offer" contact_id=contact.contact_id %}">Settlement</a>
         </div>
+        {% endif %}
         {% endif %}
     </div>
     <div class="col-xs-4">
@@ -98,18 +101,22 @@
     </div>
     <div class="col-xs-8 m-t-md m-b-md">
         <div id="buttons" class="m-b-md">
-            <a id="activity-btn" class="btn btn-{% if section == 'activity' %}primary{% else %}default{% endif %} inline dashboard-button m-r-xs" href="">Activity</a>
-            <a id="docs-btn" class="btn btn-{% if section == 'docs' %}primary{% else %}default{% endif %} inline dashboard-button m-r-xs" href="">Documents</a>
-            <a id="bank-account-btn" class="btn btn-{% if section == 'bank-account' %}primary{% else %}default{% endif %} inline dashboard-button m-r-xs" href="">Bank Account</a>
-            <a id="debts-btn" class="btn btn-{% if section == 'debts' %}primary{% else %}default{% endif %} inline dashboard-button m-r-xs" href="">Debts</a>
+            <button id="activity-btn" class="btn btn-{% if section == 'activity' %}primary{% else %}default{% endif %} inline dashboard-button m-r-xs" type="button">Activity</button>
+            <button id="docs-btn" class="btn btn-{% if section == 'docs' %}primary{% else %}default{% endif %} inline dashboard-button m-r-xs" type="button">Documents</button>
+            {% if 'sundog.contact__view_saved_bank_account' in perms %}
+            <button id="bank-account-btn" class="btn btn-{% if section == 'bank-account' %}primary{% else %}default{% endif %} inline dashboard-button m-r-xs" type="button">Bank Account</button>
+            {% endif %}
+            <button id="debts-btn" class="btn btn-{% if section == 'debts' %}primary{% else %}default{% endif %} inline dashboard-button m-r-xs" type="button">Debts</button>
         </div>
         <div id="contents" class="col-xs-12 no-padding-sides border padding-for-footer">
             <div id="activity" style="display: none;">
                 {% include 'contact/partials/contact_dashboard/activity_list.html' %}
             </div>
+            {% if 'sundog.contact__view_saved_bank_account' in perms %}
             <div id="bank-account" style="display: none;">
                 {% include 'contact/partials/contact_dashboard/bank_account_form.html' %}
             </div>
+            {% endif %}
             <div id="docs" style="display: none;">
                 {% include 'contact/partials/contact_dashboard/documents_list.html' %}
             </div>
@@ -119,9 +126,15 @@
         </div>
     </div>
     <div id="modals">
+        {% if 'sundog.contact__create_notes' in perms %}
         {% include "contact/partials/contact_dashboard/add_note_modal.html" %}
+        {% endif %}
+        {% if 'sundog.contact__create_call_activity' in perms %}
         {% include "contact/partials/contact_dashboard/add_call_modal.html" %}
+        {% endif %}
+        {% if 'sundog.contact__send_emails' in perms %}
         {% include "contact/partials/contact_dashboard/add_email_modal.html" %}
+        {% endif %}
         {% include "contact/partials/contact_dashboard/upload_files_modal.html" %}
         {% include "contact/partials/contact_dashboard/debt_add_note_modal.html" %}
     </div>

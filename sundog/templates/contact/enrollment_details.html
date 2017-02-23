@@ -17,9 +17,11 @@
             </ol>
         </div>
     </div>
-    <div class="col-xs-12 m-t-md">
+    <div class="col-xs-12 m-t-md no-padding-sides">
         <button class="btn btn-primary" data-toggle="modal" data-target="#add-payment">Add Payment</button>
+        {% if 'sundog.enrollment__save_client_enrollments' in perms %}
         <a class="m-l-xs btn btn-primary" href="{% url "edit_contact_enrollment" contact_id=contact.contact_id %}">Edit Enrollment Plan</a>
+        {% endif %}
         <a class="m-l-xs btn btn-primary" href="{% url "adjust_payments" contact_id=contact.contact_id %}">Adjust Payments</a>
         <a class="m-l-xs btn btn-primary" href="{% url "contact_schedule_performance_fees" contact_id=contact.contact_id %}">Schedule Performance Fees</a>
     </div>

@@ -2,7 +2,13 @@
 
 
 <span class="text-nowrap">
+  {% if 'sundog.contact__change_contact_status' in perms %}
   {% action label="Edit Status" glyphicon="th" viewname="edit_contact_status" contact_id=instance.pk %}
+  {% endif %}
+  {% if 'sundog.contact__edit_contacts' in perms %}
   {% action label="Edit Info" glyphicon="edit" viewname="edit_contact" contact_id=instance.pk %}
+  {% endif %}
+  {% if 'sundog.contact__view_contact_details' in perms %}
   {% action label="Dashboard" glyphicon="arrow-right" viewname="contact_dashboard" contact_id=instance.pk %}
+  {% endif %}
 </span>

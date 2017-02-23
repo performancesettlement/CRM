@@ -8321,3 +8321,11 @@ textarea {
     padding-left: 5px !important;
     border: 1px solid #E5E6E7 !important;
 }
+
+.clickable {
+    cursor: pointer;
+}
+
+.clickable:hover {
+    color: #337ab7;
+}

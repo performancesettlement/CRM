@@ -1,5 +1,7 @@
 <span class="text-nowrap">
+{% if 'sundog.settlement__edit' in perms %}
   <a href="{% url "contact_settlement_offer" contact_id=contact_id %}?debt_id={{ debt_id }}">
       <span title="View" class="view-settlement glyphicon glyphicon-arrow-right"></span>
   </a>
+{% endif %}
 </span>

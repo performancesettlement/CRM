@@ -41,7 +41,7 @@ from sundog.utils import (
     get_or_404,
     get_payments_data,
     to_int,
-    get_forms, FOUR_PLACES, roundup_places, get_date_from_str)
+    get_forms, FOUR_PLACES, roundup_places, get_date_from_str, get_dti)
 from sundog.util.permission import get_permission_codename
 
 logger = logging.getLogger(__name__)
@@ -96,22 +96,17 @@ def login_user(request):
     return _render_response(request, {'form': form, 'form_errors': form_errors}, template_path)
 
 
+@login_required
 def logout_user(request):
     logout(request)
     return redirect('login')
 
 
-@login_required
+@permission_required(get_permission_codename(CONTACT_VIEW_CONTACT_DETAILS), 'forbidden')
+@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
 def contact_dashboard(request, contact_id):
     section = request.GET.get('section', 'activity')
-    contact = (
-        Contact
-        .objects
-        .prefetch_related('contact_debts')
-        .get(
-            contact_id=contact_id,
-        )
-    )
+    contact = Contact.objects.prefetch_related('contact_debts').get(contact_id=contact_id)
     form_bank_account = BankAccountForm(
         instance=(
             contact.get_bank_account()
@@ -158,7 +153,7 @@ def contact_dashboard(request, contact_id):
     return _render_response(request, context_info, template_path)
 
 
-@login_required
+@permission_required(get_permission_codename(ENROLLMENT_CREATE_INCOME_EXPENSE), 'forbidden')
 def budget_analysis(request, contact_id):
     contact = Contact.objects.get(contact_id=contact_id)
     try:
@@ -171,20 +166,30 @@ def budget_analysis(request, contact_id):
         expenses = None
     form_incomes = IncomesForm(contact, instance=incomes)
     form_expenses = ExpensesForm(contact, instance=expenses)
-
+    incomes_total = form_incomes.instance.total() if form_incomes.instance else Decimal('0.00')
+    expenses_total = form_expenses.instance.total() if form_incomes.instance else Decimal('0.00')
+    cash_flow = incomes_total - expenses_total
+    dti = get_dti(incomes_total, expenses_total)
+    assets = form_incomes.instance.assets()
     context_info = {
         'request': request,
         'user': request.user,
         'contact': contact,
         'form_incomes': form_incomes,
         'form_expenses': form_expenses,
+        'cash_flow': cash_flow,
+        'dti': dti,
+        'incomes_total': incomes_total,
+        'expenses_total': expenses_total,
+        'assets': assets,
         'menu_page': 'contacts',
     }
     template_path = 'contact/budget_analysis.html'
     return _render_response(request, context_info, template_path)
 
 
-@login_required
+@permission_required(get_permission_codename(ENROLLMENT_INCOME_REPORT), 'forbidden')
+@permission_required(get_permission_codename(ENROLLMENT_CREATE_INCOME_EXPENSE), 'forbidden')
 def budget_analysis_save(request, contact_id):
     if request.method == 'POST' and request.POST:
         contact = Contact.objects.get(contact_id=contact_id)
@@ -206,13 +211,22 @@ def budget_analysis_save(request, contact_id):
         if not form_errors:
             form_incomes.save()
             form_expenses.save()
-            response = {'result': 'Ok'}
+            incomes_total = form_incomes.instance.total() if form_incomes.instance else Decimal('0.00')
+            expenses_total = form_expenses.instance.total() if form_incomes.instance else Decimal('0.00')
+            cash_flow = incomes_total - expenses_total
+            dti = get_dti(incomes_total, expenses_total)
+            assets = form_incomes.instance.assets()
+            response = {
+                'result': 'Ok', 'cash_flow': currency(cash_flow), 'dti': percent(dti), 'assets': currency(assets),
+                'incomes_total': currency(incomes_total), 'expenses_total': currency(expenses_total),
+            }
         else:
             response = {'errors': form_errors}
         return JsonResponse(response)
 
 
-@login_required
+@permission_required(get_permission_codename(ENROLLMENT_DELETE_INCOME_REPORT), 'forbidden')
+@permission_required(get_permission_codename(ENROLLMENT_CREATE_INCOME_EXPENSE), 'forbidden')
 def delete_budget_analysis(request, contact_id):
     if request.method == 'DELETE':
         try:
@@ -228,7 +242,8 @@ def delete_budget_analysis(request, contact_id):
         return JsonResponse({'result': 'Ok'})
 
 
-@login_required
+@permission_required(get_permission_codename(CONTACT_CREATE_NOTES), 'forbidden')
+@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
 def add_note(request, contact_id):
     if request.method == 'POST' and request.POST:
         contact = Contact.objects.get(contact_id=contact_id)
@@ -242,7 +257,8 @@ def add_note(request, contact_id):
         return JsonResponse(response)
 
 
-@login_required
+@permission_required(get_permission_codename(CONTACT_SEND_EMAILS), 'forbidden')
+@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
 def add_email(request, contact_id):
     if request.method == 'POST' and request.POST:
         post_data = request.POST.copy()
@@ -298,7 +314,8 @@ def upload_file(request, contact_id):
         return JsonResponse(response)
 
 
-@login_required
+@permission_required(get_permission_codename(CONTACT_CREATE_CALL_ACTIVITY), 'forbidden')
+@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
 def add_call(request, contact_id):
     if request.method == 'POST' and request.POST:
         contact = Contact.objects.get(contact_id=contact_id)
@@ -335,7 +352,8 @@ def uploaded_file_delete(request, contact_id, uploaded_id):
         return JsonResponse({'result': 'Ok'})
 
 
-@login_required
+@permission_required(get_permission_codename(CONTACT_VIEW_WORKFLOW), 'forbidden')
+@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
 def workflows(request):
     if not request.GET or 'type' not in request.GET:
         type = STAGE_TYPE_CHOICES[0][0]
@@ -364,7 +382,9 @@ def workflows(request):
     return _render_response(request, context_info, template_path)
 
 
-@login_required
+@permission_required(get_permission_codename(CONTACT_CREATE_WORKFLOW), 'forbidden')
+@permission_required(get_permission_codename(CONTACT_VIEW_WORKFLOW), 'forbidden')
+@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
 def add_stage(request):
     if request.method == 'POST' and request.POST:
         post_data = request.POST.copy()
@@ -376,14 +396,15 @@ def add_stage(request):
             stage = form.save(commit=False)
             stage.order = previous_last_order + 1
             stage.save()
-            form.save_m2m()
             response = {'result': 'Ok'}
         else:
             response = {'errors': get_form_errors(form)}
         return JsonResponse(response)
 
 
-@login_required
+@permission_required(get_permission_codename(CONTACT_EDIT_WORKFLOW), 'forbidden')
+@permission_required(get_permission_codename(CONTACT_VIEW_WORKFLOW), 'forbidden')
+@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
 def edit_stage(request):
     if request.method == 'POST' and request.POST:
         post_data = request.POST.copy()
@@ -393,14 +414,15 @@ def edit_stage(request):
         form = StageForm(post_data, instance=instance)
         if form.is_valid():
             form.save()
-            form.save_m2m()
             response = {'result': 'Ok'}
         else:
             response = {'errors': get_form_errors(form)}
         return JsonResponse(response)
 
 
-@login_required
+@permission_required(get_permission_codename(CONTACT_DELETE_WORKFLOW), 'forbidden')
+@permission_required(get_permission_codename(CONTACT_VIEW_WORKFLOW), 'forbidden')
+@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
 def delete_stage(request, stage_id):
     try:
         stage = Stage.objects.get(stage_id=stage_id)
@@ -412,7 +434,9 @@ def delete_stage(request, stage_id):
     return JsonResponse({'result': 'Ok'})
 
 
-@login_required
+@permission_required(get_permission_codename(CONTACT_CREATE_WORKFLOW), 'forbidden')
+@permission_required(get_permission_codename(CONTACT_VIEW_WORKFLOW), 'forbidden')
+@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
 def add_status(request):
     if request.method == 'POST' and request.POST:
         post_data = request.POST.copy()
@@ -425,14 +449,15 @@ def add_status(request):
             status = form.save(commit=False)
             status.order = previous_last_order + 1
             status.save()
-            form.save_m2m()
             response = {'result': 'Ok'}
         else:
             response = {'errors': get_form_errors(form)}
         return JsonResponse(response)
 
 
-@login_required
+@permission_required(get_permission_codename(CONTACT_EDIT_WORKFLOW), 'forbidden')
+@permission_required(get_permission_codename(CONTACT_VIEW_WORKFLOW), 'forbidden')
+@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
 def edit_status(request):
     if request.method == 'POST' and request.POST:
         post_data = request.POST.copy()
@@ -442,14 +467,15 @@ def edit_status(request):
         form = StatusForm(type, post_data, instance=instance)
         if form.is_valid():
             form.save()
-            form.save_m2m()
             response = {'result': 'Ok'}
         else:
             response = {'errors': get_form_errors(form)}
         return JsonResponse(response)
 
 
-@login_required
+@permission_required(get_permission_codename(CONTACT_DELETE_WORKFLOW), 'forbidden')
+@permission_required(get_permission_codename(CONTACT_VIEW_WORKFLOW), 'forbidden')
+@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
 def delete_status(request, status_id):
     try:
         status_to_delete = Status.objects.get(status_id=status_id)
@@ -506,7 +532,8 @@ def update_status_order(request):
     return JsonResponse(response)
 
 
-@login_required
+@permission_required(get_permission_codename(CONTACT_MANAGE_CAMPAIGNS), 'forbidden')
+@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
 def campaigns(request):
     order_by_list = [
         'active',
@@ -553,7 +580,8 @@ def campaigns(request):
     return _render_response(request, context_info, template_path)
 
 
-@login_required
+@permission_required(get_permission_codename(CONTACT_MANAGE_CAMPAIGNS), 'forbidden')
+@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
 def add_campaign(request):
     if request.method == 'POST' and request.POST:
         form = CampaignForm(request.POST)
@@ -567,7 +595,8 @@ def add_campaign(request):
         return JsonResponse(response)
 
 
-@login_required
+@permission_required(get_permission_codename(CONTACT_MANAGE_CAMPAIGNS), 'forbidden')
+@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
 def edit_campaign(request):
     if request.method == 'POST' and request.POST:
         campaign_id = request.POST['campaign_id']
@@ -581,7 +610,8 @@ def edit_campaign(request):
         return JsonResponse(response)
 
 
-@login_required
+@permission_required(get_permission_codename(CONTACT_MANAGE_CAMPAIGNS), 'forbidden')
+@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
 def add_source(request):
     if request.method == 'POST' and request.POST:
         form = SourceForm(request.POST)
@@ -603,7 +633,8 @@ def _get_users_by_company():
     return users_by_company
 
 
-@login_required
+@permission_required(get_permission_codename(CONTACT_CREATE), 'forbidden')
+@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
 def add_contact(request):
     post_data = request.POST.copy()
     if post_data:
@@ -620,6 +651,7 @@ def add_contact(request):
         'form_errors': get_form_errors(form) or None,
         'templates': [('Add a Client', 'add_a_client')],
         'label': 'Add',
+        'public': True,
         'users_by_company': users_by_company,
         'menu_page': 'contacts',
     }
@@ -627,7 +659,8 @@ def add_contact(request):
     return _render_response(request, context_info, template_path)
 
 
-@login_required
+@permission_required(get_permission_codename(CONTACT_EDIT), 'forbidden')
+@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
 def edit_contact(request, contact_id):
     instance = Contact.objects.get(contact_id=contact_id)
     post_data = request.POST.copy()
@@ -636,8 +669,10 @@ def edit_contact(request, contact_id):
     form = ContactForm(post_data or None, instance=instance)
     if request.method == 'POST' and request.POST:
         if form.is_valid():
-            form.save()
-            response = {'result': 'Ok'}
+            contact = form.save()
+            remove_public = contact.public and not request.user.has_perm(get_permission_codename(CONTACT_MARK_PRIVATE))\
+                or not contact.public and not request.user.has_perm(get_permission_codename(CONTACT_MARK_PUBLIC))
+            response = {'result': 'Ok', 'remove_public': remove_public}
         else:
             response = {'errors': get_form_errors(form)}
         return JsonResponse(response)
@@ -650,6 +685,7 @@ def edit_contact(request, contact_id):
         'form_errors': get_form_errors(form) or None,
         'templates': [('Add a Client', 'add_a_client')],
         'label': 'Edit',
+        'public': instance.public,
         'users_by_company': users_by_company,
         'menu_page': 'contacts'
     }
@@ -679,7 +715,8 @@ def get_stage_statuses(request):
         return JsonResponse({'statuses': statuses})
 
 
-@login_required
+@permission_required(get_permission_codename(CONTACT_VIEW_SAVED_BANK_ACCOUNT), 'forbidden')
+@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
 def edit_bank_account(request, contact_id):
     if request.method == 'POST' and request.POST:
         contact = Contact.objects.get(contact_id=contact_id)
@@ -699,7 +736,8 @@ def edit_bank_account(request, contact_id):
         return JsonResponse(response)
 
 
-@login_required
+@permission_required(get_permission_codename(CONTACT_CHANGE_STATUS), 'forbidden')
+@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
 def edit_contact_status(request, contact_id):
     instance = Contact.objects.get(contact_id=contact_id)
     form = ContactStatusForm(request.POST or None, instance=instance)
@@ -818,7 +856,7 @@ def add_debt(request, contact_id):
         'form': form,
         'menu_page': 'contacts'
     }
-    template_path = 'contact/add_debts.html'
+    template_path = 'contact/add_debt.html'
     return _render_response(request, context_info, template_path)
 
 
@@ -876,7 +914,8 @@ def debt_add_note(request):
         return JsonResponse(response)
 
 
-@login_required
+@permission_required(get_permission_codename(ENROLLMENT_CREATE_PLAN), 'forbidden')
+@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
 def add_enrollment_plan(request):
     form_errors = None
     form_fee_1 = FeePlanForm(prefix='1')
@@ -888,15 +927,7 @@ def add_enrollment_plan(request):
         fee_data_2 = get_data('2', request.POST)
         if fee_data_2:
             form_fee_2 = FeePlanForm(request.POST, prefix='2')
-        if (
-                        form.is_valid() and
-                        form_fee_1.is_valid() and (
-                            not fee_data_2 or (
-                                    fee_data_2 and
-                                    form_fee_2.is_valid()
-                        )
-                )
-        ):
+        if form.is_valid() and form_fee_1.is_valid() and (not fee_data_2 or (fee_data_2 and form_fee_2.is_valid())):
             enrollment_plan = form.save()
             fee_1 = form_fee_1.save(commit=False)
             fee_1.enrollment_plan = enrollment_plan
@@ -939,7 +970,8 @@ def add_enrollment_plan(request):
     return _render_response(request, context_info, template_path)
 
 
-@login_required
+@permission_required(get_permission_codename(ENROLLMENT_EDIT_PLAN), 'forbidden')
+@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
 def edit_enrollment_plan(request, enrollment_plan_id):
     form_errors = None
     instance = EnrollmentPlan.objects.get(enrollment_plan_id=int(enrollment_plan_id))
@@ -987,7 +1019,7 @@ def edit_enrollment_plan(request, enrollment_plan_id):
     context_info = {
         'request': request,
         'user': request.user,
-        'enrollment_plan_id': int(enrollment_plan_id),
+        'enrollment_plan_id': str(enrollment_plan_id),
         'form': form,
         'form_fee_1': form_fee_1,
         'form_fee_2': form_fee_2,
@@ -1005,12 +1037,7 @@ def edit_enrollment_plan(request, enrollment_plan_id):
 def delete_enrollment_plan(request, enrollment_plan_id):
     if request.method == 'DELETE':
         try:
-            (
-                EnrollmentPlan
-                    .objects
-                    .get(enrollment_plan_id=enrollment_plan_id)
-                    .delete()
-            )
+            EnrollmentPlan.objects.get(enrollment_plan_id=enrollment_plan_id).delete()
         except EnrollmentPlan.DoesNotExist:
             pass
         except Exception:
@@ -1204,7 +1231,7 @@ def delete_fee_profile(request, fee_profile_id):
         return JsonResponse({'result': 'Ok'})
 
 
-@login_required
+@permission_required(get_permission_codename(ENROLLMENT_ACCESS_TAB), 'forbidden')
 def enrollments_list(request):
     order_by_list = [
         'full_name',
@@ -1223,19 +1250,10 @@ def enrollments_list(request):
 
     sort = {
         'name': order_by.replace('-', ''),
-        'class': (
-            'sorting_desc'
-            if order_by.find('-')
-            else 'sorting_asc'
-        ),
+        'class': ('sorting_desc' if order_by.find('-') else 'sorting_asc'),
     }
 
-    query = (
-        Enrollment
-            .objects
-            .prefetch_related('contact')
-            .prefetch_related('payments')
-    )
+    query = Enrollment.objects.prefetch_related('contact').prefetch_related('payments')
 
     if order_by.replace('-', '') == 'created_at':
         order_by = [order_by]
@@ -1287,7 +1305,8 @@ def enrollments_list(request):
     return _render_response(request, context_info, template_path)
 
 
-@login_required
+@permission_required(get_permission_codename(ENROLLMENT_CHANGE_SETTINGS), 'forbidden')
+@permission_required(get_permission_codename(ENROLLMENT_ACCESS_TAB), 'forbidden')
 def workflow_settings(request):
     workflow_type = request.GET.get('type', DEBT_SETTLEMENT)
     try:
@@ -1324,7 +1343,8 @@ def workflow_settings_save(request):
         return JsonResponse(response)
 
 
-@login_required
+@permission_required(get_permission_codename(ENROLLMENT_SAVE_CLIENT_ENROLLMENTS), 'forbidden')
+@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
 def add_contact_enrollment(request, contact_id):
     contact = Contact.objects.prefetch_related('contact_debts').prefetch_related('incomes').prefetch_related(
         'expenses').prefetch_related('bank_account').get(contact_id=contact_id)
@@ -2065,7 +2085,7 @@ def edit_compensation_template(request, company_id, compensation_template_id):
     return _render_response(request, context_info, template_path)
 
 
-@login_required
+@permission_required(get_permission_codename(SETTLEMENT_CREATE_OFFERS), 'forbidden')
 def contact_settlement_offer(request, contact_id):
     contact = Contact.objects.prefetch_related('enrollments').get(contact_id=contact_id)
     try:
@@ -2079,7 +2099,8 @@ def contact_settlement_offer(request, contact_id):
         instance = SettlementOffer.objects.get(settlement_offer_id=settlement_offer_id)
     else:
         instance = None
-    form = SettlementOfferForm(request.user, request.POST or None, instance=instance)
+    can_accept = request.user.has_perm(get_permission_codename(SETTLEMENT_ACCEPT_OFFERS))
+    form = SettlementOfferForm(request.user, request.POST or None, instance=instance, can_accept=can_accept)
     form_errors = []
     if request.method == 'POST' and request.POST:
         if form.is_valid():
@@ -2149,7 +2170,7 @@ def get_debt_offer(request, debt_id):
         return JsonResponse(response)
 
 
-@login_required
+@permission_required(get_permission_codename(SETTLEMENT_ACCEPT_OFFERS), 'forbidden')
 def contact_settlement(request, contact_id, settlement_offer_id):
     contact = Contact.objects.prefetch_related('bank_account').get(contact_id=contact_id)
     bank_account = contact.get_bank_account()

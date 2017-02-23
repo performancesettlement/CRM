@@ -17,6 +17,7 @@
             </ol>
         </div>
     </div>
+    {% if 'sundog.enrollment__edit_enrollment_plans' in perms %}
     <div class="m-t-md col-xs-12 no-padding-sides">
         <select id="plan-chooser" class="col-xs-2 no-padding-sides">
             {% for plan in plans %}
@@ -24,6 +25,7 @@
             {% endfor %}
         </select>
     </div>
+    {% endif %}
     <div id="add_enrollment_plan" class="form-template col-xs-12 no-padding-sides">
         <form id="enrollment-plan-form" action="{% url 'add_enrollment_plan' %}" method="post">
             <div class="col-xs-12 border-bottom m-b-md m-r-xs p-md no-padding-sides">

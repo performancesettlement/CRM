@@ -34,6 +34,9 @@ $(document).ready(function() {
                         showErrorPopup(response.errors);
                     }
                     if (response.result) {
+                        if (response.remove_public === true) {
+                            $('#id_public').parent().parent().remove();
+                        }
                         showSuccessPopup('Contact successfully updated!');
                     }
                 }

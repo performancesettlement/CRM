@@ -8,7 +8,7 @@
                     <a href="{% url 'list_contacts' %}">Contacts</a>
                 </li>
                 <li>
-                    {{ contact.full_name_straight }}
+                    <a href="{% url 'contact_dashboard' contact_id=contact.contact_id %}">{{ contact.full_name_straight }}</a>
                 </li>
                 <li class="active">
                     <strong>Edit Debt</strong>

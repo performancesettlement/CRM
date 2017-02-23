@@ -628,7 +628,7 @@ DISPLAYABLE_STATUSES_CHOICES = (
 ATTRS_CLASS_COL_XS_3 = {'attrs': {'class': 'col-xs-3 no-padding-sides'}}
 
 SETTLEMENT_DATE_INPUT_SETTINGS = copy.deepcopy(DATE_INPUT_SETTINGS)
-SETTLEMENT_DATE_INPUT_SETTINGS.update(ATTRS_CLASS_COL_XS_3)
+SETTLEMENT_DATE_INPUT_SETTINGS['attrs'].update(ATTRS_CLASS_COL_XS_3['attrs'])
 
 
 class SettlementOfferForm(forms.ModelForm):
@@ -649,10 +649,20 @@ class SettlementOfferForm(forms.ModelForm):
         exclude = ['enrollment']
 
     def __init__(self, user, *args, **kwargs):
+        can_accept = False
+        if 'can_accept' in kwargs:
+            can_accept = kwargs.pop('can_accept')
         super(SettlementOfferForm, self).__init__(*args, **kwargs)
         self.fields['status'].empty_label = None
         self.fields['negotiator'].empty_label = None
         self.fields['negotiator'].initial = user
+        if not can_accept:
+            i = 0
+            for choice in self.fields['status'].widget.choices:
+                if choice[0] == 'accepted':
+                    self.fields['status'].widget.choices.pop(i)
+                    break
+                i += 1
 
     def _are_dates_valid(self):
         date = self.cleaned_data.get('date')

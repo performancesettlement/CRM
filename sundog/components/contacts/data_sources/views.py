@@ -2,6 +2,7 @@ from codecs import iterdecode
 from csv import DictReader
 from datatableview import Datatable
 from datatableview.helpers import make_processor, through_filter
+from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.forms.models import ModelForm
@@ -14,7 +15,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.detail import SingleObjectMixin
 from settings import SHORT_DATETIME_FORMAT
 from sundog.components.contacts.data_sources.models import DataSource
+from sundog.constants import CONTACT_EDIT_DATA_SOURCES, CONTACT_CREATE_DATA_SOURCES, CONTACT_DELETE_DATA_SOURCES
 from sundog.routing import decorate_view, route
+from sundog.util.permission import get_permission_codename
 
 from sundog.util.views import (
     SundogAJAXAddView,
@@ -207,6 +210,7 @@ class DataSourcesList(
     ''',
     name='contacts.data_sources.edit',
 )
+@decorate_view(permission_required(get_permission_codename(CONTACT_EDIT_DATA_SOURCES), 'forbidden'))
 class DataSourcesEdit(
     DataSourcesCRUDViewMixin,
     SundogEditView,
@@ -253,6 +257,7 @@ class DataSourcesEdit(
     ''',
     name='contacts.data_sources.add.ajax',
 )
+@decorate_view(permission_required(get_permission_codename(CONTACT_CREATE_DATA_SOURCES), 'forbidden'))
 class DataSourcesAddAJAX(
     DataSourcesCRUDViewMixin,
     SundogAJAXAddView,
@@ -280,6 +285,7 @@ class DataSourcesAddAJAX(
     ''',
     name='contacts.data_sources.delete.ajax',
 )
+@decorate_view(permission_required(get_permission_codename(CONTACT_DELETE_DATA_SOURCES), 'forbidden'))
 class DataSourcesDeleteAJAX(
     DataSourcesCRUDViewMixin,
     SundogAJAXDeleteView,
@@ -298,6 +304,7 @@ class DataSourcesDeleteAJAX(
     ''',
     name='contacts.data_sources.edit.ajax',
 )
+@decorate_view(permission_required(get_permission_codename(CONTACT_EDIT_DATA_SOURCES), 'forbidden'))
 class DataSourcesEditAJAX(
     DataSourcesCRUDViewMixin,
     SundogAJAXEditView,

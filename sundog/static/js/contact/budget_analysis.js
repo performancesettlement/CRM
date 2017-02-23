@@ -1,19 +1,38 @@
-$(document).ready(function(){
-    $('input').change(function(event) {
-        if ($(this).val() == '') {
-            $(this).val(0)
+$(document).ready(function() {
+    var inputs = $('input');
+
+    function updateTotals(data) {
+        $('#incomes-total').html(data.incomes_total);
+        $('#expenses-total').html(data.expenses_total);
+        $('#dti').html(data.dti);
+        $('#cash-flow').html(data.cash_flow);
+        $('#assets-total').html(data.assets);
+    }
+
+    if (!editPermission) {
+        inputs.attr('disabled', 'disabled');
+    }
+    inputs.change(function(event) {
+        if (editPermission) {
+            if ($(this).val() == '') {
+                $(this).val(0)
+            }
+            else {
+                var form = $('#budget-form');
+                var formData = form.serializeArray();
+                $.post(form.attr('action'), formData, function(response) {
+                    if (response.errors) {
+                        showErrorPopup(response.errors);
+                    }
+                    if (response.result) {
+                        updateTotals(response);
+                        showSuccessToast('Budget info successfully updated!');
+                    }
+                });
+            }
         }
         else {
-            var form = $('#budget-form');
-            var formData = form.serializeArray();
-            $.post(form.attr('action'), formData, function(response) {
-                if (response.errors) {
-                    showErrorPopup(response.errors);
-                }
-                if (response.result) {
-                    showSuccessToast('Budget info successfully updated!');
-                }
-            });
+            showErrorToast("You don't have permission to edit this!");
         }
     });
 

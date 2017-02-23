@@ -1,0 +1,27 @@
+{% extends "sundog/base/table.html" %}
+
+{% load staticfiles %}
+{% load django_bootstrap_breadcrumbs %}
+
+{% block breadcrumbs %}
+    {{ block.super }}
+    {% breadcrumb "E-mail Marketing" "emarketing" %}
+    {% breadcrumb "Senders" "emarketing.senders" %}
+{% endblock %}
+
+{% block table_view_pre_content %}
+    <div class="col-xs-12 m-t-md m-b-md no-padding-sides">
+    {% if 'sundog.e_marketing__create_senders' in perms %}
+        <div class="inline">
+            <a class="fm-create btn btn-primary" data-fm-head="Add Sender" data-fm-callback="reload" href="{% url 'emarketing.senders.add.ajax' %}">Add Sender</a>
+        </div>
+    {% endif %}
+        <div class="inline">
+            <a class="btn btn-primary" href="{% url 'emarketing.templates.list' %}">Email Templates</a>
+        </div>
+    </div>
+{% endblock table_view_pre_content %}
+
+{% block table_view_post_content %}
+    <script src="{% static "js/datatables_style.js" %}"></script>
+{% endblock table_view_post_content %}

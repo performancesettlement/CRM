@@ -2,8 +2,16 @@
 
 
 <span class="text-nowrap">
+  {% if 'sundog.document__delete_document_templates' in perms %}
   {% action_delete viewname="documents.delete.ajax" pk=instance.pk %}
+  {% endif %}
+  {% if 'sundog.document__view_document_templates' in perms %}
   {% action label="Preview Document" glyphicon="eye-open" extra_attributes='target="_blank"' viewname="documents.preview.pdf" pk=instance.pk %}
+  {% endif %}
+  {% if 'sundog.document__edit_document_templates' in perms %}
   {% action_quick_edit viewname="documents.edit.ajax" pk=instance.pk %}
+  {% endif %}
+  {% if 'sundog.document__edit_document_templates' in perms %}
   {% action_edit viewname="documents.edit" pk=instance.pk %}
+  {% endif %}
 </span>

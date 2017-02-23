@@ -34,16 +34,16 @@
         <h3> Stages/Status </h3>
         {% for stage in stages %}
             <li id="stage-{{ stage.stage_id }}" class="col-xs-12 m-b-md m-l-md {{ stage.type }}" style="min-height: 30px;">
-                <a id="{{ stage.stage_id }}" href="" name="{{ stage.name }}" class="edit-stage">
+                <div id="{{ stage.stage_id }}" name="{{ stage.name }}" class="clickable {% if 'sundog.contact__edit_workflow' in perms %}edit-stage{% endif %}">
                     <span style="text-decoration: underline;">{{ stage.name }}</span>
-                </a>
+                </div>
                 <ul id="stage-{{ stage.stage_id }}-statuses" class="statuses col-xs-12 no-padding-sides">
                 {% for status in stage.statuses.all %}
                     <li id="status-{{ status.status_id }}" class="status-row col-xs-12 no-padding-sides">
                         <div class="col-xs-6 inline m-r-md">
-                            <a id="{{ status.status_id }}" name="{{ status.name }}" stage="{{ stage.stage_id }}" color="{{ status.color }}" class="edit-status" href="">
+                            <div id="{{ status.status_id }}" name="{{ status.name }}" stage="{{ stage.stage_id }}" color="{{ status.color }}" class="clickable {% if 'sundog.contact__edit_workflow' in perms %}edit-status{% endif %}">
                                 <span style="text-decoration: underline;">{{ status.name }}</span>
-                            </a>
+                            </div>
                         </div>
                         <div class="col-xs-6 inline m-r-md" style="background-color: {{ status.color }}; width: 200px; height:15px; border: 1px gray solid;"></div>
                     </li>
@@ -55,16 +55,22 @@
     <div id="actions" class="col-xs-12 col-lg-6 padding-for-footer">
         <div class="col-xs-12 m-t-md border-bottom" style="padding-bottom: 15px;">
             <h3> Actions </h3>
+            {% if 'sundog.contact__create_workflow' in perms %}
             <button id="add-stage-button" type="button" class="btn btn-primary">Add Stage</button>
             <button id="add-status-button" type="button" class="btn btn-primary" {% if not stages %} style="display: none;" {% endif %}>Add Status</button>
+            {% endif %}
         </div>
         <div class="col-xs-12 m-t-md">
             <h3>Current Action: </h3>
             <div id="forms" class="col-xs-12 no-padding-sides padding-for-footer">
+                {% if 'sundog.contact__create_workflow' in perms %}
                 {% include "contact/partials/workflows/add_status_form.html" %}
-                {% include "contact/partials/workflows/edit_status_form.html" %}
                 {% include "contact/partials/workflows/add_stage.form.html" %}
+                {% endif %}
+                {% if 'sundog.contact__edit_workflow' in perms %}
+                {% include "contact/partials/workflows/edit_status_form.html" %}
                 {% include "contact/partials/workflows/edit_stage.form.html" %}
+                {% endif %}
             </div>
         </div>
     </div>

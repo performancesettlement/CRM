@@ -1,17 +1,20 @@
 from datatableview import Datatable, DisplayColumn, DateColumn
 from datatableview.helpers import through_filter
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.context_processors import PermWrapper
+from django.contrib.auth.decorators import login_required, permission_required
 from django.template.defaultfilters import date
 from django.template.loader import render_to_string
 from settings import SHORT_DATETIME_FORMAT
+from sundog.constants import SETTLEMENT_ACCESS_TAB
 from sundog.models import SettlementOffer
 from sundog.routing import decorate_view, route
 from sundog.templatetags.my_filters import currency, percent
+from sundog.util.permission import get_permission_codename
 from sundog.util.views import SundogDatatableView
 
 
 @route(r'^settlements/?$', name='settlements_list')
-@decorate_view(login_required)
+@decorate_view(permission_required(get_permission_codename(SETTLEMENT_ACCESS_TAB), 'forbidden'))
 class SettlementsList(SundogDatatableView):
     template_name = 'settlement/settlements_list.html'
 
@@ -108,12 +111,13 @@ class SettlementsList(SundogDatatableView):
         actions = DisplayColumn(
             label='',
             processor=(
-                lambda instance, *_, **__:
+                lambda instance, *_, **kwargs:
                 render_to_string(
                     template_name='settlement/partials/settlement_actions_template.html',
                     context={
                         'debt_id': instance.debt.debt_id,
                         'contact_id': instance.enrollment.contact.contact_id,
+                        'perms': PermWrapper(kwargs['view'].request.user),
                     },
                 )
             ),

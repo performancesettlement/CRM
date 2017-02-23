@@ -1,6 +1,8 @@
 $(document).ready(function() {
-
-    var emailMessage = CKEDITOR.replace('message');
+    var emailMessage = null;
+    if ($('message').length) {
+        emailMessage = CKEDITOR.replace('message');
+    }
 
     var files = [];
 
@@ -18,6 +20,8 @@ $(document).ready(function() {
             }
         });
     }
+
+    showContents();
 
     function deactivateButtons() {
         $('.dashboard-button').each(function() {
@@ -148,7 +152,10 @@ $(document).ready(function() {
         event.preventDefault();
         var form = $('#add-email-form');
         var formBaseData = form.serializeArray();
-        var messageData = emailMessage.getData();
+        var messageData = '';
+        if (emailMessage) {
+            messageData = emailMessage.getData();
+        }
         var formData = new FormData();
         for (var dataIndex = 0; dataIndex < formBaseData.length; dataIndex++) {
             var elem = formBaseData[dataIndex];
@@ -304,6 +311,5 @@ $(document).ready(function() {
         $('#debt-add-note-form').find('#id_debt, #id_content').val('');
     });
 
-    showContents();
     switchRadiosData('local');
 });

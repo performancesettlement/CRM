@@ -2,7 +2,13 @@
 
 
 <span class="text-nowrap">
+  {% if 'sundog.e_marketing__delete_campaign_designs' in perms %}
   {% action_delete viewname="emarketing.templates.delete.ajax" pk=instance.pk %}
+  {% endif %}
+  {% if 'sundog.e_marketing__edit_campaign_designs' in perms %}
   {% action_quick_edit viewname="emarketing.templates.edit.ajax" pk=instance.pk %}
+  {% endif %}
+  {% if 'sundog.e_marketing__edit_campaign_designs' in perms %}
   {% action_edit viewname="emarketing.templates.edit" pk=instance.pk %}
+  {% endif %}
 </span>

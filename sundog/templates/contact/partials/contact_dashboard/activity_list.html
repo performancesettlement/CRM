@@ -1,9 +1,15 @@
 {% load staticfiles my_filters admin_urls %}
 <div class="col-xs-12 m-t-md" style="padding-bottom: 70px;">
     <div class="m-b-md">
+        {% if 'sundog.contact__create_notes' in perms %}
         <button id="add-note-btn" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#add-note">Add Note</button>
+        {% endif %}
+        {% if 'sundog.contact__create_call_activity' in perms %}
         <button id="add-call-btn" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#add-call">Log A Call</button>
+        {% endif %}
+        {% if 'sundog.contact__send_emails' in perms %}
         <button id="add-email-btn" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#add-email">Send An Email</button>
+        {% endif %}
     </div>
     <h3>Activity Feed</h3>
     <table class="col-xs-12 m-b-xs">

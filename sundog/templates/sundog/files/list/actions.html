@@ -2,8 +2,16 @@
 
 
 <span class="text-nowrap">
+  {% if 'sundog.file__delete_media' in perms %}
   {% action_delete viewname="files.delete.ajax" pk=instance.pk %}
+  {% endif %}
+  {% if 'sundog.file__view_media' in perms %}
   {% action label="View File" glyphicon="eye-open" extra_attributes='target="_blank"' viewname="files.view" pk=instance.pk %}
+  {% endif %}
+  {% if 'sundog.file__edit_media' in perms %}
   {% action_quick_edit viewname="files.edit.ajax" pk=instance.pk %}
+  {% endif %}
+  {% if 'sundog.file__edit_media' in perms %}
   {% action_edit viewname="files.edit" pk=instance.pk %}
+  {% endif %}
 </span>

@@ -4,14 +4,14 @@ from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.models import User
 from django.template.defaultfilters import date
 from django.template.loader import render_to_string
-from sundog.constants import ADMIN_ACCESS_TAB
+from sundog.constants import CONTACT_ACCESS_TAB
 from sundog.routing import route, decorate_view
 from sundog.util.permission import get_permission_codename
 from sundog.util.views import SundogDatatableView
 
 
 @route(r'^user/?$', name='users_list')
-@decorate_view(permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden'))
+@decorate_view(permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden'))
 class UsersList(SundogDatatableView):
     template_name = 'admin/users_list.html'
 

@@ -1,11 +1,16 @@
-from datatableview import Datatable
+from datatableview import Datatable, DisplayColumn
 from datatableview.helpers import through_filter
+from django.contrib.auth.context_processors import PermWrapper
+from django.contrib.auth.decorators import permission_required
 from django.forms.models import ModelForm
 from django.template.defaultfilters import date
-from django.urls import reverse
+from django.template.loader import render_to_string
 from settings import SHORT_DATETIME_FORMAT
 from sundog.components.emarketing.senders.models import Sender
-from sundog.routing import route
+from sundog.constants import E_MARKETING_ACCESS_TAB, E_MARKETING_EDIT_SENDER, E_MARKETING_DELETE_SENDER, \
+    E_MARKETING_CREATE_SENDER
+from sundog.routing import route, decorate_view
+from sundog.util.permission import get_permission_codename
 
 from sundog.util.views import (
     SundogAJAXAddView,
@@ -14,7 +19,6 @@ from sundog.util.views import (
     SundogDatatableView,
     SundogEditView,
     format_column,
-    template_column,
 )
 
 
@@ -23,14 +27,8 @@ class SendersCRUDViewMixin:
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        return {
-            **context,
-            'breadcrumbs': [
-                ('E-mail Marketing', reverse('emarketing')),
-                ('Senders', reverse('emarketing.senders')),
-            ],
-            'menu_page': 'emarketing',
-        }
+        context['menu_page'] = 'emarketing'
+        return context
 
     class form_class(ModelForm):
         class Meta:
@@ -63,26 +61,28 @@ class SendersCRUDViewMixin:
         emarketing.senders.list
     '''.split(),
 )
+@decorate_view(permission_required(get_permission_codename(E_MARKETING_ACCESS_TAB), 'forbidden'))
 class SendersList(
     SendersCRUDViewMixin,
     SundogDatatableView,
 ):
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return {
-            **context,
-            'add_url': reverse('emarketing.senders.add.ajax'),
-            'buttons': [
-                ('Templates', reverse('emarketing.templates')),
-            ],
-        }
+    template_name = 'sundog/emarketing/senders/list/list.html'
 
     class datatable_class(Datatable):
 
-        actions = template_column(
+        actions = DisplayColumn(
             label='Actions',
-            template_name='sundog/emarketing/senders/list/actions.html',
+            processor=(
+                lambda instance, *_, **kwargs:
+                render_to_string(
+                    template_name='sundog/emarketing/senders/list/actions.html',
+                    context={
+                        'instance': instance,
+                        'perms': PermWrapper(kwargs['view'].request.user),
+                    },
+                )
+            ),
         )
 
         created_by_full_name = format_column(
@@ -128,6 +128,8 @@ class SendersList(
     ''',
     name='emarketing.senders.edit',
 )
+@decorate_view(permission_required(get_permission_codename(E_MARKETING_EDIT_SENDER), 'forbidden'))
+@decorate_view(permission_required(get_permission_codename(E_MARKETING_ACCESS_TAB), 'forbidden'))
 class SendersEdit(
     SendersCRUDViewMixin,
     SundogEditView,
@@ -145,6 +147,8 @@ class SendersEdit(
     ''',
     name='emarketing.senders.add.ajax',
 )
+@decorate_view(permission_required(get_permission_codename(E_MARKETING_CREATE_SENDER), 'forbidden'))
+@decorate_view(permission_required(get_permission_codename(E_MARKETING_ACCESS_TAB), 'forbidden'))
 class SendersAddAJAX(
     SendersCRUDViewMixin,
     SundogAJAXAddView,
@@ -166,6 +170,8 @@ class SendersAddAJAX(
     ''',
     name='emarketing.senders.delete.ajax',
 )
+@decorate_view(permission_required(get_permission_codename(E_MARKETING_DELETE_SENDER), 'forbidden'))
+@decorate_view(permission_required(get_permission_codename(E_MARKETING_ACCESS_TAB), 'forbidden'))
 class SendersDeleteAJAX(
     SendersCRUDViewMixin,
     SundogAJAXDeleteView,
@@ -184,6 +190,8 @@ class SendersDeleteAJAX(
     ''',
     name='emarketing.senders.edit.ajax',
 )
+@decorate_view(permission_required(get_permission_codename(E_MARKETING_EDIT_SENDER), 'forbidden'))
+@decorate_view(permission_required(get_permission_codename(E_MARKETING_ACCESS_TAB), 'forbidden'))
 class SendersEditAJAX(
     SendersCRUDViewMixin,
     SundogAJAXEditView,
