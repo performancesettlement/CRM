@@ -1,15 +1,24 @@
-<div class="col-md-6">
-    <h3> Applicant </h3>
-    <div class="form-group">
-        <label> 3rd Party Speaker Full Name </label>
-        {{ form.third_party_speaker_full_name }}
+<div class="col-md-12">
+    <div class="m-b-md">
+        <h3> Applicant </h3>
+        <hr/>
     </div>
-    <div class="form-group">
-        <label> 3rd Party Speaker Last 4 of SSN </label>
-        {{ form.third_party_speaker_last_4_of_ssn }}
+    <div class="form-group row">
+        <div class="col-md-3">
+            <label> 3rd Party Speaker Full Name </label>
+        </div>
+        <div class="col-md-4">{{ form.third_party_speaker_full_name }}</div>
     </div>
-    <div class="form-group">
-        <label> Authorization Form On File </label>
-        {{ form.authorization_form_on_file }}
+    <div class="form-group row">
+        <div class="col-md-3">
+            <label> 3rd Party Speaker Last 4 of SSN </label>
+        </div>
+        <div class="col-md-4">{{ form.third_party_speaker_last_4_of_ssn }}</div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-3">
+            <label> Authorization Form On File </label>
+        </div>
+        <div class="col-md-4">{{ form.authorization_form_on_file }}</div>
     </div>
 </div>

@@ -354,7 +354,7 @@ class Contact(TrackedAbstractBase):
     status = models.ForeignKey(Status, related_name='contact', blank=True, null=True)
     last_status_change = models.DateTimeField(blank=True, null=True)
 
-    trust_account_provider = models.CharField(max_length=100, choices=TRUST_ACCOUNT_PROVIDERS, blank=True, null=True)
+    trust_account_provider = models.CharField(max_length=100, choices=TRUST_ACCOUNT_PROVIDERS, default="")
     first_payment_cleared_date = models.DateField(blank=True, null=True)
     client_had_delinquent_accounts = models.CharField(max_length=100, choices=YES_NO_CHOICES, blank=True, null=True)
     last_payment_cleared_date = models.DateField(blank=True, null=True)
@@ -595,7 +595,7 @@ def add_contact_permission(sender, instance, created, **kwargs):
 
 class SettlementTracked(TrackedAbstractBase):
     sett_tracker_id = models.AutoField(primary_key=True)
-    contact = models.ForeignKey(Contact, related_name='settlements_tracked', blank=True, null=True)
+    contact = models.ForeignKey(Contact, related_name='settlements_tracked', blank=True, null=True, on_delete=models.CASCADE)
     type = models.CharField(max_length=100, blank=True, null=True)
     original_creditor = models.CharField(max_length=100, blank=True, null=True)
     account_last_4_digits = models.CharField(max_length=4, blank=True, null=True)

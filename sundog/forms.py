@@ -15,7 +15,7 @@ from sundog.models import Contact, Stage, Status, Campaign, Source, BankAccount,
     FeeProfileRule, WorkflowSettings, Enrollment, AMOUNT_CHOICES, Payment, PAYMENT_TYPE_CHOICES, \
     CompensationTemplate, CompensationTemplatePayee, NONE_CHOICE_LABEL, Payee, COMPENSATION_TEMPLATE_PAYEE_TYPE_CHOICES, \
     AVAILABLE_FOR_CHOICES, COMPENSATION_TEMPLATE_TYPES_CHOICES, SettlementOffer, Settlement, Fee, Team, Company, \
-    YES_NO_CHOICES, TRUST_ACCOUNT_PROVIDERS, SettlementTracked
+    YES_NO_CHOICES, SettlementTracked, LeadSource, User
 
 from sundog.constants import (
     SHORT_DATE_FORMAT,
@@ -70,6 +70,11 @@ class LoginForm(forms.Form):
 class ContactForm(forms.ModelForm):
     company = forms.ModelChoiceField(empty_label=EMPTY_LABEL, queryset=Company.objects.filter(active=True),
                                      widget=forms.Select())
+    lead_source = forms.ModelChoiceField(required=False, empty_label=EMPTY_LABEL, queryset=LeadSource.objects.all(),
+                                     widget=forms.Select(attrs={'class': 'col-xs-6 no-padding-sides'}))
+    call_center_representative = forms.ModelChoiceField(required=False, empty_label=EMPTY_LABEL,
+                                    queryset=User.objects.filter(groups__name='Call Center Representative'),
+                                    widget=forms.Select(attrs={'class': 'col-xs-6 no-padding-sides'}))
 
     class Meta:
         widgets = {
@@ -94,6 +99,7 @@ class ContactForm(forms.ModelForm):
             'de_enrolled_date': forms.DateInput(**DATE_INPUT_SETTINGS),
             'last_sett_completed_date': forms.DateInput(**DATE_INPUT_SETTINGS),
             'last_letter_sent_date': forms.DateInput(**DATE_INPUT_SETTINGS),
+            'hardship_description': forms.Textarea(attrs={'class': 'col-xs-12 no-padding', 'rows': 6}),
         }
         model = Contact
         exclude = ['last_status_change', 'created_at', 'updated_at']

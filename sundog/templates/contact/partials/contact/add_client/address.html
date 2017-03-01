@@ -1,48 +1,78 @@
-<div class="col-md-6">
-    <h3> Applicant </h3>
-    <div class="form-group">
-        <label> Address 1 </label>
-        {{ form.address_1 }}
+<div class="col-md-4">
+    <div class="m-b-md">
+        <h3> Applicant </h3>
+        <hr />
     </div>
-    <div class="form-group">
-        <label> Address 2 </label>
-        {{ form.address_2 }}
+    <div class="form-group row">
+        <div class="col-md-6">
+            <label> Address 1 </label>
+        </div>
+        <div class="col-md-6">{{ form.address_1 }}</div>
     </div>
-    <div class="form-group">
-        <label> City </label>
-        {{ form.city }}
+    <div class="form-group row">
+        <div class="col-md-6">
+            <label> Address 2 </label>
+        </div>
+        <div class="col-md-6">{{ form.address_2 }}</div>
     </div>
-    <div class="form-group">
-        <label> State </label>
-        {{ form.state }}
+    <div class="form-group row">
+        <div class="col-md-6">
+            <label> City </label>
+        </div>
+        <div class="col-md-6">{{ form.city }}</div>
     </div>
-    <div class="form-group">
-        <label> Zip Code </label>
-        {{ form.zip_code }}
+    <div class="form-group row">
+        <div class="col-md-6">
+            <label> State </label>
+        </div>
+        <div class="col-md-6">{{ form.state }}</div>
     </div>
-    <div class="form-group">
-        <label> Residential Status </label>
-        {{ form.residential_status }}
+    <div class="form-group row">
+        <div class="col-md-6">
+            <label> Zip Code </label>
+        </div>
+        <div class="col-md-6">{{ form.zip_code }}</div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-6">
+            <label> Residential Status </label>
+        </div>
+        <div class="col-md-6">{{ form.residential_status }}</div>
     </div>
 </div>
 <div class="col-md-6">
-    <h3> Co-Applicant </h3>
-    <div class="form-group">
-        {{ form.co_applicant_address_1 }}
+    <div class="m-b-md">
+        <h3> Co-Applicant </h3>
+        <hr />
     </div>
-    <div class="form-group">
-        {{ form.co_applicant_address_2 }}
+    <div class="form-group row">
+        <div class="col-md-6">
+            {{ form.co_applicant_address_1 }}
+        </div>
     </div>
-    <div class="form-group">
-        {{ form.co_applicant_city }}
+    <div class="form-group row">
+        <div class="col-md-6">
+            {{ form.co_applicant_address_2 }}
+        </div>
     </div>
-    <div class="form-group">
-        {{ form.co_applicant_state }}
+    <div class="form-group row">
+        <div class="col-md-6">
+            {{ form.co_applicant_city }}
+       </div>
     </div>
-    <div class="form-group">
-        {{ form.co_applicant_zip_code }}
+    <div class="form-group row">
+        <div class="col-md-6">
+            {{ form.co_applicant_state }}
+        </div>
     </div>
-    <div class="form-group">
-        {{ form.co_applicant_residencial_status }}
+    <div class="form-group row">
+        <div class="col-md-6">
+            {{ form.co_applicant_zip_code }}
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-6">
+            {{ form.co_applicant_residencial_status }}
+        </div>
     </div>
 </div>

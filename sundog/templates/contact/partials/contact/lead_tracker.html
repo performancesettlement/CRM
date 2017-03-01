@@ -1,10 +1,12 @@
 <div class="tab-content col-xs-12 no-padding-sides">
     <div class="tab-pane active" id="transfer-tracker-section">
-        <div class="col-md-6">
-            <h3>Applicant</h3>
-
+        <div class="col-md-12">
+            <div class="m-b-md">
+                <h3> Applicant </h3>
+                <hr/>
+            </div>
             <div class="form-group row">
-                <div class="col-md-4">
+                <div class="col-md-2">
                     <label> Transferred? </label>
                 </div>
                 <div class="col-md-4">{{ form.lead_transferred }}</div>
@@ -12,62 +14,70 @@
         </div>
     </div>
     <div class="tab-pane" id="lead-tracker-sub-section">
-        <div class="col-md-6">
-            <h3>Applicant</h3>
-
-            <div class="form-group row">
-                <div class="col-md-6">
-                    <label> Appointment Date </label>
-                </div>
-                <div class="col-md-6">{{ form.appointment_date }}</div>
+        <div class="col-md-12">
+            <div class="m-b-md">
+                <h3> Applicant </h3>
+                <hr/>
             </div>
             <div class="form-group row">
-                <div class="col-md-6">
+                <div class="col-md-2">
+                    <label> Appointment Date </label>
+                </div>
+                <div class="col-md-4">{{ form.appointment_date }}</div>
+            </div>
+            <div class="form-group row">
+                <div class="col-md-2">
                     <label> Appointment Time </label>
                 </div>
-                <div class="col-md-6">{{ form.appointment_time }}</div>
+                <div class="col-md-4">{{ form.appointment_time }}</div>
             </div>
         </div>
     </div>
     <div class="tab-pane" id="kill-tracker-section">
-        <div class="col-md-6">
-            <h3>Applicant</h3>
-
-            <div class="form-group row">
-                <div class="col-md-6">
-                    <label> Kill Date </label>
-                </div>
-                <div class="col-md-6">{{ form.kill_date }}</div>
+        <div class="col-md-12">
+            <div class="m-b-md">
+                <h3> Applicant </h3>
+                <hr/>
             </div>
             <div class="form-group row">
-                <div class="col-md-6">
+                <div class="col-md-2">
+                    <label> Kill Date </label>
+                </div>
+                <div class="col-md-4">{{ form.kill_date }}</div>
+            </div>
+            <div class="form-group row">
+                <div class="col-md-2">
                     <label> Kill Reason </label>
                 </div>
-                <div class="col-md-6">{{ form.kill_reason }}</div>
+                <div class="col-md-4">{{ form.kill_reason }}</div>
             </div>
         </div>
     </div>
     <div class="tab-pane" id="debt-tracker-section">
-        <div class="col-md-6">
-            <h3>Applicant</h3>
-
+        <div class="col-md-12">
+            <div class="m-b-md">
+                <h3> Applicant </h3>
+                <hr/>
+            </div>
             <div class="form-group row">
-                <div class="col-md-6">
+                <div class="col-md-2">
                     <label> Total Debt Amount </label>
                 </div>
-                <div class="col-md-6">{{ form.total_debt_amount }}</div>
+                <div class="col-md-4">{{ form.total_debt_amount }}</div>
             </div>
         </div>
     </div>
     <div class="tab-pane" id="notes-section">
-        <div class="col-md-6">
-            <h3>Applicant</h3>
-
+        <div class="col-md-12">
+            <div class="m-b-md">
+                <h3> Applicant </h3>
+                <hr/>
+            </div>
             <div class="form-group row">
-                <div class="col-md-6">
+                <div class="col-md-2">
                     <label> De-Enrolled Date </label>
                 </div>
-                <div class="col-md-6">{{ form.de_enrolled_date }}</div>
+                <div class="col-md-4">{{ form.de_enrolled_date }}</div>
             </div>
         </div>
     </div>
