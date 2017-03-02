@@ -1,18 +1,37 @@
 #!/bin/bash
 set -e
 
+
 touch sundog/migrations/__init__.py
-python manage.py makemigrations
-yes yes | python manage.py migrate
+
+
+if [[ "${1}" == 'production' ]]
+then
+  export DEBUG="${DEBUG:-False}"
+else
+  export DEBUG="${DEBUG:-True}"
+fi
+
 
 case "${1}" in
-  ('development')
-    # Development profile setup goes here:
-    true
-  ;;
-  ('production')
-    python manage.py collectstatic --noinput || true
-  ;;
-esac
 
-exec gunicorn --config='conf/gunicorn.py' sundog.wsgi
+  ('bash')
+    exec "$@"
+  ;;
+
+  ('sync')
+    ./manage.py makemigrations
+    ./manage.py migrate
+  ;;
+
+  ('production')
+    ./manage.py collectstatic --noinput || true
+  ;& ('development')
+    exec gunicorn --config='conf/gunicorn.py' sundog.wsgi
+  ;;
+
+  (*)
+    exec ./manage.py "$@"
+  ;;
+
+esac
