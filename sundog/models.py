@@ -12,7 +12,7 @@ from localflavor.us.us_states import US_STATES
 from numpy import arange
 from settings import MEDIA_PRIVATE
 from simple_history.models import HistoricalRecords
-from sundog.constants import SHORT_DATE_FORMAT
+from sundog.constants import SHORT_DATE_FORMAT, CONTACT_DEFAULT_STAGE, CONTACT_DEFAULT_STATUS
 from sundog.media import S3PrivateFileField
 from sundog.routing import package_models
 from sundog.templatetags.my_filters import currency
@@ -522,6 +522,14 @@ def add_contact_permission(sender, instance, created, **kwargs):
         permission.save()
         if instance.created_by:
             instance.created_by.user_permissions.add(permission)
+
+
+@receiver(post_save, sender=Contact)
+def set_contact_default_stage_status(sender, instance, created, **kwargs):
+    if created:
+        instance.stage = instance.stage or Stage.objects.get(name=CONTACT_DEFAULT_STAGE)
+        instance.status = instance.status or Status.objects.get(name=CONTACT_DEFAULT_STATUS)
+        instance.save()
 
 
 class FeeProfile(TrackedAbstractBase):
