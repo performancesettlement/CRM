@@ -1,154 +1,168 @@
-from datatableview import Datatable, DisplayColumn, DateColumn
-from datatableview.helpers import through_filter
+from datatableview import Datatable
+from datatableview.columns import DisplayColumn, DateColumn, TextColumn
+from datatableview.helpers import format_date, make_processor, through_filter
 from django.contrib.auth.context_processors import PermWrapper
-from django.contrib.auth.decorators import login_required, permission_required
 from django.template.defaultfilters import date
-from django.template.loader import render_to_string
+from django.urls import reverse
 from settings import SHORT_DATETIME_FORMAT
 from sundog.constants import SETTLEMENT_ACCESS_TAB
 from sundog.models import SettlementOffer
-from sundog.routing import decorate_view, route
+from sundog.routing import route
 from sundog.templatetags.my_filters import currency, percent
-from sundog.util.permission import get_permission_codename
-from sundog.util.views import SundogDatatableView
+from sundog.util.permission import require_permission
+
+from sundog.util.views import (
+    SundogDatatableView,
+    format_column,
+    template_column,
+)
 
 
-@route(r'^settlements/?$', name='settlements_list')
-@decorate_view(permission_required(get_permission_codename(SETTLEMENT_ACCESS_TAB), 'forbidden'))
+@route(
+    regex=r'^settlements/?$',
+    name='settlements_list',
+)
+@require_permission(SETTLEMENT_ACCESS_TAB)
 class SettlementsList(SundogDatatableView):
-    template_name = 'settlement/settlements_list.html'
-
     model = SettlementOffer
 
-    searchable_columns = [
-        'contact_name',
-    ]
+    searchable_columns = '''
+        contact_name
+    '''.split()
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['menu_page'] = 'settlements'
-        return context
+        return {
+            **context,
+            'breadcrumbs': [
+                ('Settlements', reverse('settlements_list')),
+            ],
+            'menu_page': 'settlements',
+        }
 
     def get_queryset(self):
-        return SettlementOffer.objects.prefetch_related('enrollment') \
-            .prefetch_related('enrollment__contact').prefetch_related('debt').prefetch_related('negotiator').all()
+        return (
+            SettlementOffer
+            .objects
+            .prefetch_related('enrollment')
+            .prefetch_related('enrollment__contact')
+            .prefetch_related('debt')
+            .prefetch_related('negotiator')
+            .all()
+        )
 
     class datatable_class(Datatable):
-        contact_name = DisplayColumn(
-            label='Contact Name',
-            processor=lambda instance, *_, **__: instance.enrollment.contact.full_name_straight,
+
+        actions = template_column(
+            label='Actions',
+            template_name='settlement/list/actions.html',
+            context_builder=lambda instance, **kwargs: {
+                'contact_id': instance.enrollment.contact.contact_id,
+                'debt_id': instance.debt.debt_id,
+                'perms': PermWrapper(kwargs['view'].request.user),
+            },
+        )
+
+        amount_at_settlement = TextColumn(
+            label='Amount at settlement',
+            source='debt__current_debt_amount',
+        )
+
+        client_balance = TextColumn(
+            label='Client balance',
+            processor=make_processor(currency),
+            source='enrollment__contact__client_balance',
+        )
+
+        # FIXME: Same as next column Negotiator?
+        created_by = DisplayColumn(
+            label='Created by',
+            processor=lambda instance, *_, **__: (
+                instance.negotiator.get_full_name()
+            ),
+        )
+
+        contact_name = TextColumn(
+            label='Contact name',
+            source='enrollment__contact__full_name_straight',
         )
 
         creditor = DisplayColumn(
             label='Creditor',
-            processor=lambda instance, *_, **__: instance.debt.owed_to().name,
+            processor=lambda instance, *_, **__: (
+                instance.debt.owed_to().name
+            ),
         )
 
-        created_by = DisplayColumn(
-            label='Created By',
-            processor=lambda instance, *_, **__: instance.negotiator.get_full_name(),
+        gateway = TextColumn(
+            label='Gateway',
+            source='enrollment__custodial_account_label',
         )
 
-        negotiator = DisplayColumn(
-            label='Negotiator',
-            processor=lambda instance, *_, **__: instance.negotiator.get_full_name() if instance.negotiator else '',
+        offer_made_by = TextColumn(
+            label='Offer made by',
+            source='made_by_label',
         )
 
-        offer_made_by = DisplayColumn(
-            label='Offer Made By',
-            processor=lambda instance, *_, **__: instance.made_by_label,
-        )
-
-        offer_status = DisplayColumn(
-            label='Offer Status',
-            processor=lambda instance, *_, **__: instance.status_label,
+        offer_status = TextColumn(
+            label='Offer status',
+            source='status_label',
         )
 
         offer_valid_until = DateColumn(
-            label='Offer Valid Until',
-            source=None,
-            processor=lambda instance, *_, **__: (
-                date(instance.valid_until, arg=SHORT_DATETIME_FORMAT), ''
-                if getattr(instance, 'settlement_offer', None) and instance.valid_until else '', '',
-            )
+            label='Offer valid until',
+            source='valid_until',
+            processor=format_date(SHORT_DATETIME_FORMAT),
         )
 
-        amt_at_settlement = DisplayColumn(
-            label='Amt At Settlement',
-            processor=lambda instance, *_, **__: currency(instance.debt.current_debt_amount),
+        settlement_amount = TextColumn(
+            label='Settlement amount',
+            source='offer_amount',
         )
 
-        settlement_ant = DisplayColumn(
-            label='Settlement Amt',
-            processor=lambda instance, *_, **__: currency(instance.offer_amount),
-        )
-
-        gateway = DisplayColumn(
-            label='Gateway',
-            processor=lambda instance, *_, **__: instance.enrollment.custodial_account_label,
-        )
-
-        third_party = DisplayColumn(
-            label='Third Party',
-            processor=lambda instance, *_, **__: instance.debt.debt_buyer.name if instance.debt.debt_buyer else '',
-        )
-
-        settlement_percent = DisplayColumn(
+        settlement_percent = TextColumn(
             label='Settlement %',
-            processor=lambda instance, *_, **__: percent(instance.get_offer_percentage()),
+            processor=make_processor(percent),
+            source='get_offer_percentage',
         )
 
-        client_balance = DisplayColumn(
-            label='Client Balance',
-            processor=lambda instance, *_, **__: currency(instance.enrollment.contact.client_balance()),
+        third_party = TextColumn(
+            label='Third party',
+            source='debt__debt_buyer__name',
         )
 
-        original_debt_amt = DisplayColumn(
-            label='Original Debt Amt',
-            processor=lambda instance, *_, **__: currency(instance.debt_amount),
-        )
-
-        actions = DisplayColumn(
-            label='',
-            processor=(
-                lambda instance, *_, **kwargs:
-                render_to_string(
-                    template_name='settlement/partials/settlement_actions_template.html',
-                    context={
-                        'debt_id': instance.debt.debt_id,
-                        'contact_id': instance.enrollment.contact.contact_id,
-                        'perms': PermWrapper(kwargs['view'].request.user),
-                    },
-                )
-            ),
+        original_debt_amount = TextColumn(
+            label='Original debt amount',
+            processor=make_processor(currency),
+            source='debt_amount',
         )
 
         class Meta:
             structure_template = 'datatableview/bootstrap_structure.html'
 
-            columns = [
-                'contact_name',
-                'creditor',
-                'created_at',
-                'created_by',
-                'updated_at',
-                'negotiator',
-                'offer_made_by',
-                'offer_status',
-                'offer_valid_until',
-                'amt_at_settlement',
-                'settlement_ant',
-                'gateway',
-                'third_party',
-                'settlement_percent',
-                'client_balance',
-                'original_debt_amt',
-                'actions'
-            ]
+            columns = '''
+                contact_name
+                creditor
+                created_at
+                created_by
+                updated_at
+                negotiator
+                offer_made_by
+                offer_status
+                offer_valid_until
+                amount_at_settlement
+                settlement_amount
+                gateway
+                third_party
+                settlement_percent
+                client_balance
+                original_debt_amount
+                actions
+            '''.split()
 
-            ordering = [
-                '-created_at',
-            ]
+            ordering = '''
+                -created_at
+            '''.split()
 
             processors = {
                 'created_at': through_filter(date, arg=SHORT_DATETIME_FORMAT),
@@ -156,16 +170,18 @@ class SettlementsList(SundogDatatableView):
             }
 
 
-@route(r'^settlements/readyToSettle?$', name='ready_to_settle')
-@decorate_view(login_required)
+@route(
+    regex=r'^settlements/readyToSettle?$',
+    name='ready_to_settle',
+)
 class ReadyToSettleList(SundogDatatableView):
     template_name = 'settlement/ready_to_settle.html'
 
     model = SettlementOffer
 
-    searchable_columns = [
-        'contact_name',
-    ]
+    searchable_columns = '''
+        contact_name
+    '''.split()
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -173,57 +189,42 @@ class ReadyToSettleList(SundogDatatableView):
         return context
 
     def get_queryset(self):
-        return SettlementOffer.objects.prefetch_related('enrollment') \
-            .prefetch_related('enrollment__contact').prefetch_related('debt').prefetch_related('negotiator').all()
+        return (
+            SettlementOffer
+            .objects
+            .prefetch_related('enrollment')
+            .prefetch_related('enrollment__contact')
+            .prefetch_related('debt')
+            .prefetch_related('negotiator')
+            .all()
+        )
 
     class datatable_class(Datatable):
-        settlement_commitment = DisplayColumn(
-            label='Settlement Commitment',
-            processor=lambda instance, *_, **__: '',
-        )
-        applicant_name = DisplayColumn(
-            label='Applicant Name',
-            processor=lambda instance, *_, **__: '',
-        )
-        current_amount = DisplayColumn(
-            label='Current Amount',
-            processor=lambda instance, *_, **__: '',
-        )
-        balance = DisplayColumn(
-            label='Balance',
-            processor=lambda instance, *_, **__: '',
-        )
-        pending_balance = DisplayColumn(
-            label='Pending Balance',
-            processor=lambda instance, *_, **__: '',
-        )
 
-        actions = DisplayColumn(
-            label='',
-            processor=(
-                lambda instance, *_, **__:
-                render_to_string(
-                    template_name='settlement/partials/settlement_actions_template.html',
-                    context={
-                        'debt_id': instance.debt.debt_id,
-                        'contact_id': instance.enrollment.contact.contact_id,
-                    },
-                )
-            ),
+        # TODO: Implement these columns.
+        settlement_commitment = format_column('Settlement Commitment')
+        applicant_name = format_column('Applicant Name')
+        current_amount = format_column('Current Amount')
+        balance = format_column('Balance')
+        pending_balance = format_column('Pending Balance')
+
+        actions = template_column(
+            label='Actions',
+            template_name='settlement/list/actions.html',
+            context_builder=lambda instance, **kwargs: {
+                'contact_id': instance.enrollment.contact.contact_id,
+                'debt_id': instance.debt.debt_id,
+            },
         )
 
         class Meta:
             structure_template = 'datatableview/bootstrap_structure.html'
 
-            columns = [
-                'settlement_commitment',
-                'applicant_name',
-                'current_amount',
-                'balance',
-                'pending_balance',
-                'actions',
-            ]
-
-            ordering = []
-
-            processors = {}
+            columns = '''
+                settlement_commitment
+                applicant_name
+                current_amount
+                balance
+                pending_balance
+                actions
+            '''.split()

@@ -1,18 +1,22 @@
-from datatableview import Datatable, DisplayColumn
+from datatableview import Datatable
 from datatableview.helpers import make_processor, through_filter
 from django.contrib.auth.context_processors import PermWrapper
-from django.contrib.auth.decorators import permission_required
 from django.forms.models import ModelForm
 from django.forms.widgets import Select
 from django.template.defaultfilters import date
-from django.template.loader import render_to_string
 from django.urls import reverse
 from settings import SHORT_DATETIME_FORMAT
 from sundog.components.emarketing.templates.models import EmailTemplate
-from sundog.constants import E_MARKETING_ACCESS_TAB, E_MARKETING_EDIT_CAMPAIGN_DESIGN, \
-    E_MARKETING_CREATE_CAMPAIGN_DESIGN, E_MARKETING_DELETE_CAMPAIGN_DESIGN
-from sundog.routing import route, decorate_view
-from sundog.util.permission import get_permission_codename
+
+from sundog.constants import (
+    E_MARKETING_ACCESS_TAB,
+    E_MARKETING_EDIT_CAMPAIGN_DESIGN,
+    E_MARKETING_CREATE_CAMPAIGN_DESIGN,
+    E_MARKETING_DELETE_CAMPAIGN_DESIGN,
+)
+
+from sundog.routing import route
+from sundog.util.permission import require_permission
 
 from sundog.util.views import (
     SundogAJAXAddView,
@@ -32,6 +36,10 @@ class EmailTemplatesCRUDViewMixin:
         context = super().get_context_data(**kwargs)
         return {
             **context,
+            'breadcrumbs': [
+                ('E-mail Marketing', reverse('emarketing')),
+                ('Templates', reverse('emarketing.templates')),
+            ],
             'menu_page': 'emarketing',
         }
 
@@ -71,28 +79,36 @@ class EmailTemplatesCRUDViewMixin:
         emarketing.templates.list
     '''.split(),
 )
-@decorate_view(permission_required(get_permission_codename(E_MARKETING_ACCESS_TAB), 'forbidden'))
+@require_permission(E_MARKETING_ACCESS_TAB)
 class EmailTemplatesList(
     EmailTemplatesCRUDViewMixin,
     SundogDatatableView,
 ):
 
-    template_name = 'sundog/emarketing/templates/list/list.html'
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return {
+            **context,
+            'add_url': (
+                reverse('emarketing.templates.add.ajax')
+                if self.request.user.has_perm(
+                    'sundog.e_marketing__create_campaign_designs',
+                )
+                else None
+            ),
+            'buttons': [
+                ('Senders', reverse('emarketing.senders')),
+            ],
+        }
 
     class datatable_class(Datatable):
 
-        actions = DisplayColumn(
+        actions = template_column(
             label='Actions',
-            processor=(
-                lambda instance, *_, **kwargs:
-                render_to_string(
-                    template_name='sundog/emarketing/templates/list/actions.html',
-                    context={
-                        'instance': instance,
-                        'perms': PermWrapper(kwargs['view'].request.user),
-                    },
-                )
-            ),
+            template_name='sundog/emarketing/templates/list/actions.html',
+            context_builder=lambda **kwargs: {
+                'perms': PermWrapper(kwargs['view'].request.user),
+            },
         )
 
         created_by_full_name = format_column(
@@ -143,8 +159,8 @@ class EmailTemplatesList(
     ''',
     name='emarketing.templates.edit',
 )
-@decorate_view(permission_required(get_permission_codename(E_MARKETING_EDIT_CAMPAIGN_DESIGN), 'forbidden'))
-@decorate_view(permission_required(get_permission_codename(E_MARKETING_ACCESS_TAB), 'forbidden'))
+@require_permission(E_MARKETING_EDIT_CAMPAIGN_DESIGN)
+@require_permission(E_MARKETING_ACCESS_TAB)
 class EmailTemplatesEdit(
     EmailTemplatesCRUDViewMixin,
     SundogEditView,
@@ -162,8 +178,8 @@ class EmailTemplatesEdit(
     ''',
     name='emarketing.templates.add.ajax',
 )
-@decorate_view(permission_required(get_permission_codename(E_MARKETING_CREATE_CAMPAIGN_DESIGN), 'forbidden'))
-@decorate_view(permission_required(get_permission_codename(E_MARKETING_ACCESS_TAB), 'forbidden'))
+@require_permission(E_MARKETING_CREATE_CAMPAIGN_DESIGN)
+@require_permission(E_MARKETING_ACCESS_TAB)
 class EmailTemplatesAddAJAX(
     EmailTemplatesCRUDViewMixin,
     SundogAJAXAddView,
@@ -185,8 +201,8 @@ class EmailTemplatesAddAJAX(
     ''',
     name='emarketing.templates.delete.ajax',
 )
-@decorate_view(permission_required(get_permission_codename(E_MARKETING_DELETE_CAMPAIGN_DESIGN), 'forbidden'))
-@decorate_view(permission_required(get_permission_codename(E_MARKETING_ACCESS_TAB), 'forbidden'))
+@require_permission(E_MARKETING_DELETE_CAMPAIGN_DESIGN)
+@require_permission(E_MARKETING_ACCESS_TAB)
 class EmailTemplatesDeleteAJAX(
     EmailTemplatesCRUDViewMixin,
     SundogAJAXDeleteView,
@@ -205,8 +221,8 @@ class EmailTemplatesDeleteAJAX(
     ''',
     name='emarketing.templates.edit.ajax',
 )
-@decorate_view(permission_required(get_permission_codename(E_MARKETING_EDIT_CAMPAIGN_DESIGN), 'forbidden'))
-@decorate_view(permission_required(get_permission_codename(E_MARKETING_ACCESS_TAB), 'forbidden'))
+@require_permission(E_MARKETING_EDIT_CAMPAIGN_DESIGN)
+@require_permission(E_MARKETING_ACCESS_TAB)
 class EmailTemplatesEditAJAX(
     EmailTemplatesCRUDViewMixin,
     SundogAJAXEditView,

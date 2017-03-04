@@ -1,15 +1,13 @@
 from argparse import Namespace
-from datatableview import Datatable, DisplayColumn
+from datatableview import Datatable
 from datatableview.helpers import make_processor, through_filter
 from datetime import date, timedelta
 from django.apps.registry import Apps
 from django.contrib.auth.context_processors import PermWrapper
-from django.contrib.auth.decorators import permission_required
 from django.forms.models import ModelForm
 from django.forms.widgets import Select, SelectMultiple
 from django.http import HttpResponse
 from django.template.defaultfilters import date as date_filter
-from django.template.loader import render_to_string
 from django.urls import reverse
 from django.views.generic.detail import BaseDetailView
 from settings import SHORT_DATETIME_FORMAT
@@ -36,8 +34,8 @@ from sundog.models import (
     Status,
 )
 
-from sundog.routing import route, decorate_view
-from sundog.util.permission import get_permission_codename
+from sundog.routing import route
+from sundog.util.permission import require_permission
 
 from sundog.util.views import (
     SundogAJAXAddView,
@@ -46,6 +44,7 @@ from sundog.util.views import (
     SundogDatatableView,
     SundogEditView,
     format_column,
+    template_column,
 )
 
 
@@ -103,12 +102,7 @@ class DocumentsCRUDViewMixin:
         documents.list
     '''.split(),
 )
-@decorate_view(
-    permission_required(
-        get_permission_codename(DOCS_ACCESS_TAB),
-        'forbidden',
-    ),
-)
+@require_permission(DOCS_ACCESS_TAB)
 class DocumentsList(
     DocumentsCRUDViewMixin,
     SundogDatatableView,
@@ -129,18 +123,12 @@ class DocumentsList(
 
     class datatable_class(Datatable):
 
-        actions = DisplayColumn(
+        actions = template_column(
             label='Actions',
-            processor=(
-                lambda instance, *_, **kwargs:
-                render_to_string(
-                    template_name='sundog/documents/list/actions.html',
-                    context={
-                        'instance': instance,
-                        'perms': PermWrapper(kwargs['view'].request.user),
-                    },
-                )
-            ),
+            template_name='sundog/documents/list/actions.html',
+            context_builder=lambda **kwargs: {
+                'perms': PermWrapper(kwargs['view'].request.user),
+            },
         )
 
         created_by_full_name = format_column(
@@ -188,18 +176,8 @@ class DocumentsList(
     ''',
     name='documents.edit',
 )
-@decorate_view(
-    permission_required(
-        get_permission_codename(DOCS_EDIT_DOCUMENT_TEMPLATE),
-        'forbidden',
-    ),
-)
-@decorate_view(
-    permission_required(
-        get_permission_codename(DOCS_ACCESS_TAB),
-        'forbidden',
-    ),
-)
+@require_permission(DOCS_EDIT_DOCUMENT_TEMPLATE)
+@require_permission(DOCS_ACCESS_TAB)
 class DocumentsEdit(
     DocumentsCRUDViewMixin,
     SundogEditView,
@@ -216,18 +194,8 @@ class DocumentsEdit(
     ''',
     name='documents.add.ajax',
 )
-@decorate_view(
-    permission_required(
-        get_permission_codename(DOCS_CREATE_DOCUMENT_TEMPLATE),
-        'forbidden',
-    ),
-)
-@decorate_view(
-    permission_required(
-        get_permission_codename(DOCS_ACCESS_TAB),
-        'forbidden',
-    ),
-)
+@require_permission(DOCS_CREATE_DOCUMENT_TEMPLATE)
+@require_permission(DOCS_ACCESS_TAB)
 class DocumentsAddAJAX(
     DocumentsCRUDViewMixin,
     SundogAJAXAddView,
@@ -248,18 +216,8 @@ class DocumentsAddAJAX(
     ''',
     name='documents.delete.ajax',
 )
-@decorate_view(
-    permission_required(
-        get_permission_codename(DOCS_DELETE_DOCUMENT_TEMPLATE),
-        'forbidden',
-    ),
-)
-@decorate_view(
-    permission_required(
-        get_permission_codename(DOCS_ACCESS_TAB),
-        'forbidden',
-    ),
-)
+@require_permission(DOCS_DELETE_DOCUMENT_TEMPLATE)
+@require_permission(DOCS_ACCESS_TAB)
 class DocumentsDeleteAJAX(
     DocumentsCRUDViewMixin,
     SundogAJAXDeleteView,
@@ -277,18 +235,8 @@ class DocumentsDeleteAJAX(
     ''',
     name='documents.edit.ajax',
 )
-@decorate_view(
-    permission_required(
-        get_permission_codename(DOCS_EDIT_DOCUMENT_TEMPLATE),
-        'forbidden',
-    ),
-)
-@decorate_view(
-    permission_required(
-        get_permission_codename(DOCS_ACCESS_TAB),
-        'forbidden',
-    ),
-)
+@require_permission(DOCS_EDIT_DOCUMENT_TEMPLATE)
+@require_permission(DOCS_ACCESS_TAB)
 class DocumentsEditAJAX(
     DocumentsCRUDViewMixin,
     SundogAJAXEditView,
@@ -306,18 +254,8 @@ class DocumentsEditAJAX(
     ''',
     name='documents.preview.pdf',
 )
-@decorate_view(
-    permission_required(
-        get_permission_codename(DOCS_VIEW_DOCUMENT_TEMPLATE),
-        'forbidden',
-    ),
-)
-@decorate_view(
-    permission_required(
-        get_permission_codename(DOCS_ACCESS_TAB),
-        'forbidden',
-    ),
-)
+@require_permission(DOCS_VIEW_DOCUMENT_TEMPLATE)
+@require_permission(DOCS_ACCESS_TAB)
 class DocumentsPreviewPDF(
     DocumentsCRUDViewMixin,
     BaseDetailView,

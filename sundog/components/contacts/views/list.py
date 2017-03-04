@@ -2,19 +2,17 @@ from datatableview import Datatable
 from datatableview.columns import DateColumn, DisplayColumn, TextColumn
 from datatableview.helpers import through_filter
 from django.contrib.auth.context_processors import PermWrapper
-from django.contrib.auth.decorators import permission_required
 from django.http import Http404
 from django.shortcuts import redirect
 from django.template.defaultfilters import date, timesince
-from django.template.loader import render_to_string
 from furl import furl
 from settings import SHORT_DATETIME_FORMAT
 from sundog.constants import CONTACT_ACCESS_TAB
 from sundog.middleware import Responder
 from sundog.models import Contact
-from sundog.routing import route, decorate_view
+from sundog.routing import route
 from sundog.util.functional import const
-from sundog.util.permission import get_permission_codename
+from sundog.util.permission import require_permission
 
 from sundog.util.views import (
     SundogDatatableView,
@@ -36,15 +34,15 @@ from sundog.util.views import (
     '''.split(),
 )
 @route(r'^contacts/lists/$', name='new_list')  # FIXME: Create proper view
-@decorate_view(permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden'))
+@require_permission(CONTACT_ACCESS_TAB)
 class ContactsList(SundogDatatableView):
     template_name = 'sundog/contacts/list.html'
 
     model = Contact
 
     list_labels = {
-        'my_contacts': 'My contacts',
         'all_contacts': 'All contacts',
+        'my_contacts': 'My contacts',
     }
 
     default_list = 'my_contacts'
@@ -66,10 +64,12 @@ class ContactsList(SundogDatatableView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['menu_page'] = 'contacts'
-        context['list_labels'] = self.list_labels.items()
-        context['selected_list'] = self.selected_list
-        return context
+        return {
+            **context,
+            'list_labels': self.list_labels.items(),
+            'menu_page': 'contacts',
+            'selected_list': self.selected_list,
+        }
 
     def get_datatable(self):
         datatable = super().get_datatable()
@@ -153,18 +153,12 @@ class ContactsList(SundogDatatableView):
             ),
         )
 
-        actions = DisplayColumn(
-            label='',
-            processor=(
-                lambda instance, *_, **kwargs:
-                render_to_string(
-                    template_name='sundog/contacts/list/actions.html',
-                    context={
-                        'instance': instance,
-                        'perms': PermWrapper(kwargs['view'].request.user),
-                    },
-                )
-            ),
+        actions = template_column(
+            label='Actions',
+            template_name='sundog/contacts/list/actions.html',
+            context_builder=lambda **kwargs: {
+                'perms': PermWrapper(kwargs['view'].request.user),
+            },
         )
 
         class Meta:

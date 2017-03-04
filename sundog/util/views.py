@@ -6,7 +6,11 @@ from fm.views import AjaxCreateView, AjaxDeleteView, AjaxUpdateView
 from sundog.util.functional import const
 
 
-def format_column(label, template, fields):
+def format_column(
+    label,
+    template='',
+    fields=[],
+):
     return CompoundColumn(
         label,
         sources=[
@@ -32,6 +36,40 @@ def format_column(label, template, fields):
     )
 
 
+def template_column(
+    label,
+    template_name,
+    context={},
+    context_builder=const({}),
+    column_class=DisplayColumn,
+    **kwargs
+):
+    return DisplayColumn(
+        label=label,
+        processor=(
+            lambda instance, *args, **kwargs:
+            render_to_string(
+                template_name=template_name,
+                context={
+                    'instance': instance,
+                    'args': args,
+                    'kwargs': kwargs,
+                    **context,
+                    **context_builder(
+                        instance=instance,
+                        context=context,
+                        label=label,
+                        template_name=template_name,
+                        *args,
+                        **kwargs,
+                    ),
+                },
+            )
+        ),
+        **kwargs
+    )
+
+
 class SundogDatatableView(XEditableDatatableView):
     template_name = 'sundog/base/list.html'
 
@@ -43,6 +81,18 @@ class SundogDatatableView(XEditableDatatableView):
     # This enables the table footer, which is actually displayed just below the
     # table header and includes all of the per-column search input fields.
     footer = True
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return {
+            **context,
+
+            # Include no extra buttons by default.  This avoids an exception
+            # during table rendering if no extra buttons were defined in
+            # subclasses.
+            'buttons': [],
+
+        }
 
     def get_datatable(self):
         datatable = super().get_datatable()
@@ -59,6 +109,7 @@ class SundogDatatableView(XEditableDatatableView):
                 attributes_ = column.attributes
 
                 base = type(column)
+
                 class SearchColumn(base):
                     attributes = attributes_ + ' data-config-searchable="true"'
 
@@ -112,34 +163,3 @@ class SundogAJAXEditView(
     AjaxUpdateView,
 ):
     pass
-
-
-def template_column(
-        label,
-        template_name,
-        context={},
-        context_builder=const({}),
-):
-    return DisplayColumn(
-        label=label,
-        processor=(
-            lambda instance, *args, **kwargs:
-            render_to_string(
-                template_name=template_name,
-                context={
-                    'instance': instance,
-                    'args': args,
-                    'kwargs': kwargs,
-                    **context,
-                    **context_builder(
-                        instance=instance,
-                        context=context,
-                        label=label,
-                        template_name=template_name,
-                        *args,
-                        **kwargs,
-                    ),
-                },
-            )
-        ),
-    )

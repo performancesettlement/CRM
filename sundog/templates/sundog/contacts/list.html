@@ -3,18 +3,23 @@
 {% load staticfiles %}
 {% load django_bootstrap_breadcrumbs %}
 
+
 {% block breadcrumbs %}
   {{ block.super }}
   {% breadcrumb "Contacts" "contacts" %}
 {% endblock %}
+
 
 {% block title %}
   {{ block.super }}
   - Contacts
 {% endblock title %}
 
+
 {% block table_view_pre_content %}
+
   <div class="col-xs-12 m-t-md m-b-md no-padding-sides">
+
     <div class="inline m-r-lg">
       <select id="list-chooser" style="width: 200px;">
         {% for list, label in list_labels %}
@@ -29,24 +34,70 @@
         {% endfor %}
       </select>
     </div>
-    <div class="inline"><a class="btn btn-primary m-r-xs" href="{% url 'new_list' %}">New List</a></div>
+
+    <div class="inline">
+      <a
+        class="btn btn-primary m-r-xs"
+        href="{% url 'new_list' %}"
+      >
+        New List
+      </a>
+    </div>
+
     {% if 'sundog.contact__create_contacts' in perms %}
-    <div class="inline"><a class="btn btn-primary m-r-xs" href="{% url 'add_contact' %}">Add a Contact</a></div>
+      <div class="inline">
+        <a
+          class="btn btn-primary m-r-xs"
+          href="{% url 'add_contact' %}"
+        >
+          Add a Contact
+        </a>
+      </div>
     {% endif %}
+
     {% if 'sundog.contact__view_workflow' in perms %}
-    <div class="inline"><a class="btn btn-primary m-r-xs" href="{% url 'workflows' %}">Workflow</a></div>
+      <div class="inline">
+        <a
+          class="btn btn-primary m-r-xs"
+          href="{% url 'workflows' %}"
+        >
+          Workflow
+        </a>
+      </div>
     {% endif %}
+
     {% if 'sundog.contact__manage_campaigns' in perms %}
-    <div class="inline"><a class="btn btn-primary m-r-xs" href="{% url 'campaigns' %}">Campaigns</a></div>
+      <div class="inline">
+        <a
+          class="btn btn-primary m-r-xs"
+          href="{% url 'campaigns' %}"
+        >
+          Campaigns
+        </a>
+      </div>
     {% endif %}
-    <div class="inline"><a class="btn btn-primary m-r-xs" href="{% url 'contacts.data_sources' %}">Data Sources</a></div>
+
+    <div class="inline">
+      <a
+        class="btn btn-primary m-r-xs"
+        href="{% url 'contacts.data_sources' %}"
+      >
+        Data Sources
+      </a>
+    </div>
+
   </div>
+
 {% endblock table_view_pre_content %}
 
+
 {% block table_view_post_content %}
+
   <script type="text/javascript">
     var contacts_list_url = '{% url 'contacts' %}';
   </script>
+
   <script src="{% static "js/datatables_style.js" %}"></script>
   <script src="{% static "js/contact/contact_list.js" %}"></script>
+
 {% endblock table_view_post_content %}

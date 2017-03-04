@@ -1,23 +1,28 @@
-from datatableview import Datatable, DisplayColumn
+from datatableview import Datatable
 from datatableview.helpers import make_processor, through_filter
 from django.contrib.auth.context_processors import PermWrapper
-from django.contrib.auth.decorators import permission_required
 from django.forms import ClearableFileInput
 from django.forms.models import ModelForm
 from django.forms.widgets import Select
 from django.shortcuts import redirect
 from django.template.defaultfilters import date as date_filter
-from django.template.loader import render_to_string
 from django.urls import reverse
 from django.views.generic.detail import BaseDetailView
 from os.path import basename
 from settings import SHORT_DATETIME_FORMAT
 from sundog.components.files.models import File
-from sundog.constants import FILES_ACCESS_TAB, FILES_UPLOAD_MEDIA, FILES_VIEW_MEDIA, FILES_EDIT_MEDIA, \
-    FILES_DELETE_MEDIA
-from sundog.routing import route, decorate_view
+
+from sundog.constants import (
+    FILES_ACCESS_TAB,
+    FILES_UPLOAD_MEDIA,
+    FILES_VIEW_MEDIA,
+    FILES_EDIT_MEDIA,
+    FILES_DELETE_MEDIA,
+)
+
+from sundog.routing import route
 from sundog.util.functional import modify_dict
-from sundog.util.permission import get_permission_codename
+from sundog.util.permission import require_permission
 
 from sundog.util.views import (
     SundogAJAXAddView,
@@ -95,30 +100,34 @@ class FilesCRUDViewMixin:
         files.list
     '''.split()
 )
-@decorate_view(permission_required(get_permission_codename(FILES_ACCESS_TAB), 'forbidden'))
+@require_permission(FILES_ACCESS_TAB)
 class FilesList(
     FilesCRUDViewMixin,
     SundogDatatableView,
 ):
 
-    template_name = 'sundog/files/list/list.html'
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return {
+            **context,
+            'add_url': (
+                reverse('files.add.ajax')
+                if self.request.user.has_perm(
+                    'sundog.file__upload_media',
+                )
+                else None
+            ),
+        }
 
     class datatable_class(Datatable):
 
-        actions = DisplayColumn(
+        actions = template_column(
             label='Actions',
-            processor=(
-                lambda instance, *_, **kwargs:
-                render_to_string(
-                    template_name='sundog/files/list/actions.html',
-                    context={
-                        'instance': instance,
-                        'perms': PermWrapper(kwargs['view'].request.user),
-                    },
-                )
-            ),
+            template_name='sundog/files/list/actions.html',
+            context_builder=lambda **kwargs: {
+                'perms': PermWrapper(kwargs['view'].request.user),
+            },
         )
-
 
         created_by_full_name = format_column(
             label='Created by',
@@ -165,8 +174,8 @@ class FilesList(
     ''',
     name='files.view',
 )
-@decorate_view(permission_required(get_permission_codename(FILES_VIEW_MEDIA), 'forbidden'))
-@decorate_view(permission_required(get_permission_codename(FILES_ACCESS_TAB), 'forbidden'))
+@require_permission(FILES_VIEW_MEDIA)
+@require_permission(FILES_ACCESS_TAB)
 class FilesView(
     FilesCRUDViewMixin,
     BaseDetailView,
@@ -190,8 +199,8 @@ class FilesView(
     ''',
     name='files.edit',
 )
-@decorate_view(permission_required(get_permission_codename(FILES_EDIT_MEDIA), 'forbidden'))
-@decorate_view(permission_required(get_permission_codename(FILES_ACCESS_TAB), 'forbidden'))
+@require_permission(FILES_EDIT_MEDIA)
+@require_permission(FILES_ACCESS_TAB)
 class FilesEdit(
     FilesCRUDViewMixin,
     SundogEditView,
@@ -208,8 +217,8 @@ class FilesEdit(
     ''',
     name='files.add.ajax',
 )
-@decorate_view(permission_required(get_permission_codename(FILES_UPLOAD_MEDIA), 'forbidden'))
-@decorate_view(permission_required(get_permission_codename(FILES_ACCESS_TAB), 'forbidden'))
+@require_permission(FILES_UPLOAD_MEDIA)
+@require_permission(FILES_ACCESS_TAB)
 class FilesAddAJAX(
     FilesCRUDViewMixin,
     SundogAJAXAddView,
@@ -231,8 +240,8 @@ class FilesAddAJAX(
     ''',
     name='files.delete.ajax',
 )
-@decorate_view(permission_required(get_permission_codename(FILES_DELETE_MEDIA), 'forbidden'))
-@decorate_view(permission_required(get_permission_codename(FILES_ACCESS_TAB), 'forbidden'))
+@require_permission(FILES_DELETE_MEDIA)
+@require_permission(FILES_ACCESS_TAB)
 class FilesDeleteAJAX(
     FilesCRUDViewMixin,
     SundogAJAXDeleteView,
@@ -250,8 +259,8 @@ class FilesDeleteAJAX(
     ''',
     name='files.edit.ajax',
 )
-@decorate_view(permission_required(get_permission_codename(FILES_EDIT_MEDIA), 'forbidden'))
-@decorate_view(permission_required(get_permission_codename(FILES_ACCESS_TAB), 'forbidden'))
+@require_permission(FILES_EDIT_MEDIA)
+@require_permission(FILES_ACCESS_TAB)
 class FilesEditAJAX(
     FilesCRUDViewMixin,
     SundogAJAXEditView,
