@@ -12,7 +12,13 @@ from django.core import mail
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.http import Http404
-from django.http.response import HttpResponseRedirect, HttpResponsePermanentRedirect, JsonResponse
+
+from django.http.response import (
+    HttpResponseRedirect,
+    HttpResponsePermanentRedirect,
+    JsonResponse,
+)
+
 from django.shortcuts import render, redirect
 from django.urls import reverse
 
@@ -22,27 +28,70 @@ from django.utils.timezone import now
 from sundog.constants import *
 from sundog.decorators import bypass_impersonation_login_required
 from sundog.forms import *
-from sundog.management.commands.generate_base_permissions import CONTACT_BASE_CODENAME, CREDITOR_BASE_CODENAME, \
-    ENROLLMENT_BASE_CODENAME, SETTLEMENT_BASE_CODENAME, DOCS_BASE_CODENAME, FILES_BASE_CODENAME, \
-    E_MARKETING_BASE_CODENAME, ADMIN_BASE_CODENAME
-from sundog.models import CAMPAIGN_SOURCES_CHOICES, Contact, Stage, STAGE_TYPE_CHOICES, Status, \
-    Campaign, Activity, Uploaded, Expenses, Incomes, Creditor, Debt, DebtNote, Enrollment, EnrollmentPlan, \
-    FeeProfile, FeeProfileRule, WorkflowSettings, DEBT_SETTLEMENT, Payment, Company, CompensationTemplate, \
-    SettlementOffer, SETTLEMENT_SUB_TYPE_CHOICES, Settlement, Team, Payee
+
+from sundog.management.commands.generate_base_permissions import (
+    CONTACT_BASE_CODENAME,
+    CREDITOR_BASE_CODENAME,
+    ENROLLMENT_BASE_CODENAME,
+    SETTLEMENT_BASE_CODENAME,
+    DOCS_BASE_CODENAME,
+    FILES_BASE_CODENAME,
+    E_MARKETING_BASE_CODENAME,
+    ADMIN_BASE_CODENAME,
+)
+
+from sundog.models import (
+    Activity,
+    CAMPAIGN_SOURCES_CHOICES,
+    Campaign,
+    Company,
+    CompensationTemplate,
+    Contact,
+    Creditor,
+    DEBT_SETTLEMENT,
+    Debt,
+    DebtNote,
+    Enrollment,
+    EnrollmentPlan,
+    Expenses,
+    FeeProfile,
+    FeeProfileRule,
+    Incomes,
+    Payee,
+    Payment,
+    SETTLEMENT_SUB_TYPE_CHOICES,
+    STAGE_TYPE_CHOICES,
+    Settlement,
+    SettlementOffer,
+    Stage,
+    Status,
+    Team,
+    Uploaded,
+    WorkflowSettings,
+)
+
 from sundog.services import reorder_stages, reorder_status
 from sundog.templatetags.my_filters import currency, percent
+
 from sundog.utils import (
+    FOUR_PLACES,
     add_months,
     get_data,
+    get_date_from_str,
     get_debts_ids,
+    get_dti,
     get_fees_values,
     get_form_errors,
+    get_forms,
     get_next_work_date,
     get_or_404,
     get_payments_data,
+    roundup_places,
     to_int,
-    get_forms, FOUR_PLACES, roundup_places, get_date_from_str, get_dti)
-from sundog.util.permission import get_permission_codename
+)
+
+from sundog.util.permission import get_permission_codename, require_permission
+
 
 logger = logging.getLogger(__name__)
 
@@ -107,8 +156,8 @@ def logout_user(request):
     return redirect('login')
 
 
-@permission_required(get_permission_codename(CONTACT_VIEW_CONTACT_DETAILS), 'forbidden')
-@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
+@require_permission(CONTACT_VIEW_CONTACT_DETAILS)
+@require_permission(CONTACT_ACCESS_TAB)
 def contact_dashboard(request, contact_id):
     section = request.GET.get('section', 'activity')
     contact = Contact.objects.prefetch_related('contact_debts').get(contact_id=contact_id)
@@ -158,7 +207,7 @@ def contact_dashboard(request, contact_id):
     return _render_response(request, context_info, template_path)
 
 
-@permission_required(get_permission_codename(ENROLLMENT_CREATE_INCOME_EXPENSE), 'forbidden')
+@require_permission(ENROLLMENT_CREATE_INCOME_EXPENSE)
 def budget_analysis(request, contact_id):
     contact = Contact.objects.get(contact_id=contact_id)
     try:
@@ -193,8 +242,8 @@ def budget_analysis(request, contact_id):
     return _render_response(request, context_info, template_path)
 
 
-@permission_required(get_permission_codename(ENROLLMENT_INCOME_REPORT), 'forbidden')
-@permission_required(get_permission_codename(ENROLLMENT_CREATE_INCOME_EXPENSE), 'forbidden')
+@require_permission(ENROLLMENT_INCOME_REPORT)
+@require_permission(ENROLLMENT_CREATE_INCOME_EXPENSE)
 def budget_analysis_save(request, contact_id):
     if request.method == 'POST' and request.POST:
         contact = Contact.objects.get(contact_id=contact_id)
@@ -230,8 +279,8 @@ def budget_analysis_save(request, contact_id):
         return JsonResponse(response)
 
 
-@permission_required(get_permission_codename(ENROLLMENT_DELETE_INCOME_REPORT), 'forbidden')
-@permission_required(get_permission_codename(ENROLLMENT_CREATE_INCOME_EXPENSE), 'forbidden')
+@require_permission(ENROLLMENT_DELETE_INCOME_REPORT)
+@require_permission(ENROLLMENT_CREATE_INCOME_EXPENSE)
 def delete_budget_analysis(request, contact_id):
     if request.method == 'DELETE':
         try:
@@ -247,8 +296,8 @@ def delete_budget_analysis(request, contact_id):
         return JsonResponse({'result': 'Ok'})
 
 
-@permission_required(get_permission_codename(CONTACT_CREATE_NOTES), 'forbidden')
-@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
+@require_permission(CONTACT_CREATE_NOTES)
+@require_permission(CONTACT_ACCESS_TAB)
 def add_note(request, contact_id):
     if request.method == 'POST' and request.POST:
         contact = Contact.objects.get(contact_id=contact_id)
@@ -262,8 +311,8 @@ def add_note(request, contact_id):
         return JsonResponse(response)
 
 
-@permission_required(get_permission_codename(CONTACT_SEND_EMAILS), 'forbidden')
-@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
+@require_permission(CONTACT_SEND_EMAILS)
+@require_permission(CONTACT_ACCESS_TAB)
 def add_email(request, contact_id):
     if request.method == 'POST' and request.POST:
         post_data = request.POST.copy()
@@ -319,8 +368,8 @@ def upload_file(request, contact_id):
         return JsonResponse(response)
 
 
-@permission_required(get_permission_codename(CONTACT_CREATE_CALL_ACTIVITY), 'forbidden')
-@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
+@require_permission(CONTACT_CREATE_CALL_ACTIVITY)
+@require_permission(CONTACT_ACCESS_TAB)
 def add_call(request, contact_id):
     if request.method == 'POST' and request.POST:
         contact = Contact.objects.get(contact_id=contact_id)
@@ -357,8 +406,8 @@ def uploaded_file_delete(request, contact_id, uploaded_id):
         return JsonResponse({'result': 'Ok'})
 
 
-@permission_required(get_permission_codename(CONTACT_VIEW_WORKFLOW), 'forbidden')
-@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
+@require_permission(CONTACT_VIEW_WORKFLOW)
+@require_permission(CONTACT_ACCESS_TAB)
 def workflows(request):
     if not request.GET or 'type' not in request.GET:
         type = STAGE_TYPE_CHOICES[0][0]
@@ -387,9 +436,9 @@ def workflows(request):
     return _render_response(request, context_info, template_path)
 
 
-@permission_required(get_permission_codename(CONTACT_CREATE_WORKFLOW), 'forbidden')
-@permission_required(get_permission_codename(CONTACT_VIEW_WORKFLOW), 'forbidden')
-@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
+@require_permission(CONTACT_CREATE_WORKFLOW)
+@require_permission(CONTACT_VIEW_WORKFLOW)
+@require_permission(CONTACT_ACCESS_TAB)
 def add_stage(request):
     if request.method == 'POST' and request.POST:
         post_data = request.POST.copy()
@@ -407,9 +456,9 @@ def add_stage(request):
         return JsonResponse(response)
 
 
-@permission_required(get_permission_codename(CONTACT_EDIT_WORKFLOW), 'forbidden')
-@permission_required(get_permission_codename(CONTACT_VIEW_WORKFLOW), 'forbidden')
-@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
+@require_permission(CONTACT_EDIT_WORKFLOW)
+@require_permission(CONTACT_VIEW_WORKFLOW)
+@require_permission(CONTACT_ACCESS_TAB)
 def edit_stage(request):
     if request.method == 'POST' and request.POST:
         post_data = request.POST.copy()
@@ -425,9 +474,9 @@ def edit_stage(request):
         return JsonResponse(response)
 
 
-@permission_required(get_permission_codename(CONTACT_DELETE_WORKFLOW), 'forbidden')
-@permission_required(get_permission_codename(CONTACT_VIEW_WORKFLOW), 'forbidden')
-@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
+@require_permission(CONTACT_DELETE_WORKFLOW)
+@require_permission(CONTACT_VIEW_WORKFLOW)
+@require_permission(CONTACT_ACCESS_TAB)
 def delete_stage(request, stage_id):
     try:
         stage = Stage.objects.get(stage_id=stage_id)
@@ -439,9 +488,9 @@ def delete_stage(request, stage_id):
     return JsonResponse({'result': 'Ok'})
 
 
-@permission_required(get_permission_codename(CONTACT_CREATE_WORKFLOW), 'forbidden')
-@permission_required(get_permission_codename(CONTACT_VIEW_WORKFLOW), 'forbidden')
-@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
+@require_permission(CONTACT_CREATE_WORKFLOW)
+@require_permission(CONTACT_VIEW_WORKFLOW)
+@require_permission(CONTACT_ACCESS_TAB)
 def add_status(request):
     if request.method == 'POST' and request.POST:
         post_data = request.POST.copy()
@@ -460,9 +509,9 @@ def add_status(request):
         return JsonResponse(response)
 
 
-@permission_required(get_permission_codename(CONTACT_EDIT_WORKFLOW), 'forbidden')
-@permission_required(get_permission_codename(CONTACT_VIEW_WORKFLOW), 'forbidden')
-@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
+@require_permission(CONTACT_EDIT_WORKFLOW)
+@require_permission(CONTACT_VIEW_WORKFLOW)
+@require_permission(CONTACT_ACCESS_TAB)
 def edit_status(request):
     if request.method == 'POST' and request.POST:
         post_data = request.POST.copy()
@@ -478,9 +527,9 @@ def edit_status(request):
         return JsonResponse(response)
 
 
-@permission_required(get_permission_codename(CONTACT_DELETE_WORKFLOW), 'forbidden')
-@permission_required(get_permission_codename(CONTACT_VIEW_WORKFLOW), 'forbidden')
-@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
+@require_permission(CONTACT_DELETE_WORKFLOW)
+@require_permission(CONTACT_VIEW_WORKFLOW)
+@require_permission(CONTACT_ACCESS_TAB)
 def delete_status(request, status_id):
     try:
         status_to_delete = Status.objects.get(status_id=status_id)
@@ -537,8 +586,8 @@ def update_status_order(request):
     return JsonResponse(response)
 
 
-@permission_required(get_permission_codename(CONTACT_MANAGE_CAMPAIGNS), 'forbidden')
-@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
+@require_permission(CONTACT_MANAGE_CAMPAIGNS)
+@require_permission(CONTACT_ACCESS_TAB)
 def campaigns(request):
     order_by_list = [
         'active',
@@ -585,8 +634,8 @@ def campaigns(request):
     return _render_response(request, context_info, template_path)
 
 
-@permission_required(get_permission_codename(CONTACT_MANAGE_CAMPAIGNS), 'forbidden')
-@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
+@require_permission(CONTACT_MANAGE_CAMPAIGNS)
+@require_permission(CONTACT_ACCESS_TAB)
 def add_campaign(request):
     if request.method == 'POST' and request.POST:
         form = CampaignForm(request.POST)
@@ -600,8 +649,8 @@ def add_campaign(request):
         return JsonResponse(response)
 
 
-@permission_required(get_permission_codename(CONTACT_MANAGE_CAMPAIGNS), 'forbidden')
-@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
+@require_permission(CONTACT_MANAGE_CAMPAIGNS)
+@require_permission(CONTACT_ACCESS_TAB)
 def edit_campaign(request):
     if request.method == 'POST' and request.POST:
         campaign_id = request.POST['campaign_id']
@@ -615,8 +664,8 @@ def edit_campaign(request):
         return JsonResponse(response)
 
 
-@permission_required(get_permission_codename(CONTACT_MANAGE_CAMPAIGNS), 'forbidden')
-@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
+@require_permission(CONTACT_MANAGE_CAMPAIGNS)
+@require_permission(CONTACT_ACCESS_TAB)
 def add_source(request):
     if request.method == 'POST' and request.POST:
         form = SourceForm(request.POST)
@@ -638,8 +687,8 @@ def _get_users_by_company():
     return users_by_company
 
 
-@permission_required(get_permission_codename(CONTACT_CREATE), 'forbidden')
-@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
+@require_permission(CONTACT_CREATE)
+@require_permission(CONTACT_ACCESS_TAB)
 def add_contact(request):
     sett_tracked_forms = get_sett_tracked_forms(REGULAR_SETTLEMENT_RANGE, REGULAR_SETTLEMENT_TYPE, request)
     cfln_tracked_forms = get_sett_tracked_forms(CFLN_SETTLEMENT_RANGE, CFLN_SETTLEMENT_TYPE, request)
@@ -700,8 +749,8 @@ def get_sett_tracked_forms(range, type, request):
     return sett_tracked_forms
 
 
-@permission_required(get_permission_codename(CONTACT_EDIT), 'forbidden')
-@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
+@require_permission(CONTACT_EDIT)
+@require_permission(CONTACT_ACCESS_TAB)
 def edit_contact(request, contact_id):
     instance = (
         Contact
@@ -844,8 +893,8 @@ def get_stage_statuses(request):
         return JsonResponse({'statuses': statuses})
 
 
-@permission_required(get_permission_codename(CONTACT_VIEW_SAVED_BANK_ACCOUNT), 'forbidden')
-@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
+@require_permission(CONTACT_VIEW_SAVED_BANK_ACCOUNT)
+@require_permission(CONTACT_ACCESS_TAB)
 def edit_bank_account(request, contact_id):
     if request.method == 'POST' and request.POST:
         contact = Contact.objects.get(contact_id=contact_id)
@@ -865,8 +914,8 @@ def edit_bank_account(request, contact_id):
         return JsonResponse(response)
 
 
-@permission_required(get_permission_codename(CONTACT_CHANGE_STATUS), 'forbidden')
-@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
+@require_permission(CONTACT_CHANGE_STATUS)
+@require_permission(CONTACT_ACCESS_TAB)
 def edit_contact_status(request, contact_id):
     instance = Contact.objects.get(contact_id=contact_id)
     form = ContactStatusForm(request.POST or None, instance=instance)
@@ -904,7 +953,7 @@ def add_lead_source(request):
     return _render_response(request, context_info, template_path)
 
 
-@permission_required(get_permission_codename(CREDITOR_ACCESS_TAB), 'forbidden')
+@require_permission(CREDITOR_ACCESS_TAB)
 def creditors_list(request):
     order_by_list = ['name', 'address_1', 'city', 'state', 'zip_code', 'debtors', 'total_debts', 'avg']
     page = int(request.GET.get('page', '1'))
@@ -947,8 +996,8 @@ def creditors_list(request):
     return _render_response(request, context_info, template_path)
 
 
-@permission_required(get_permission_codename(CREDITOR_CREATE), 'forbidden')
-@permission_required(get_permission_codename(CREDITOR_ACCESS_TAB), 'forbidden')
+@require_permission(CREDITOR_CREATE)
+@require_permission(CREDITOR_ACCESS_TAB)
 def add_creditor(request):
     form = CreditorForm(request.POST or None)
     if request.method == 'POST' and request.POST and form.is_valid():
@@ -1043,8 +1092,8 @@ def debt_add_note(request):
         return JsonResponse(response)
 
 
-@permission_required(get_permission_codename(ENROLLMENT_CREATE_PLAN), 'forbidden')
-@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
+@require_permission(ENROLLMENT_CREATE_PLAN)
+@require_permission(CONTACT_ACCESS_TAB)
 def add_enrollment_plan(request):
     form_errors = None
     form_fee_1 = FeePlanForm(prefix='1')
@@ -1099,8 +1148,8 @@ def add_enrollment_plan(request):
     return _render_response(request, context_info, template_path)
 
 
-@permission_required(get_permission_codename(ENROLLMENT_EDIT_PLAN), 'forbidden')
-@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
+@require_permission(ENROLLMENT_EDIT_PLAN)
+@require_permission(CONTACT_ACCESS_TAB)
 def edit_enrollment_plan(request, enrollment_plan_id):
     form_errors = None
     instance = EnrollmentPlan.objects.get(enrollment_plan_id=int(enrollment_plan_id))
@@ -1360,7 +1409,7 @@ def delete_fee_profile(request, fee_profile_id):
         return JsonResponse({'result': 'Ok'})
 
 
-@permission_required(get_permission_codename(ENROLLMENT_ACCESS_TAB), 'forbidden')
+@require_permission(ENROLLMENT_ACCESS_TAB)
 def enrollments_list(request):
     order_by_list = [
         'full_name',
@@ -1434,8 +1483,8 @@ def enrollments_list(request):
     return _render_response(request, context_info, template_path)
 
 
-@permission_required(get_permission_codename(ENROLLMENT_CHANGE_SETTINGS), 'forbidden')
-@permission_required(get_permission_codename(ENROLLMENT_ACCESS_TAB), 'forbidden')
+@require_permission(ENROLLMENT_CHANGE_SETTINGS)
+@require_permission(ENROLLMENT_ACCESS_TAB)
 def workflow_settings(request):
     workflow_type = request.GET.get('type', DEBT_SETTLEMENT)
     try:
@@ -1472,8 +1521,8 @@ def workflow_settings_save(request):
         return JsonResponse(response)
 
 
-@permission_required(get_permission_codename(ENROLLMENT_SAVE_CLIENT_ENROLLMENTS), 'forbidden')
-@permission_required(get_permission_codename(CONTACT_ACCESS_TAB), 'forbidden')
+@require_permission(ENROLLMENT_SAVE_CLIENT_ENROLLMENTS)
+@require_permission(CONTACT_ACCESS_TAB)
 def add_contact_enrollment(request, contact_id):
     contact = Contact.objects.prefetch_related('contact_debts').prefetch_related('incomes').prefetch_related(
         'expenses').prefetch_related('bank_account').get(contact_id=contact_id)
@@ -2111,8 +2160,8 @@ def edit_payment(request, contact_id):
     return JsonResponse(response)
 
 
-@permission_required(get_permission_codename(ADMIN_CREATE_COMPENSATION_TEMPLATES), 'forbidden')
-@permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden')
+@require_permission(ADMIN_CREATE_COMPENSATION_TEMPLATES)
+@require_permission(ADMIN_ACCESS_TAB)
 def add_compensation_template(request, company_id):
     compensation_templates = CompensationTemplate.objects.filter(company__company_id=company_id)
     form = CompensationTemplateForm(request.POST or None)
@@ -2158,8 +2207,8 @@ def add_compensation_template(request, company_id):
     return _render_response(request, context_info, template_path)
 
 
-@permission_required(get_permission_codename(ADMIN_EDIT_COMPENSATION_TEMPLATES), 'forbidden')
-@permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden')
+@require_permission(ADMIN_EDIT_COMPENSATION_TEMPLATES)
+@require_permission(ADMIN_ACCESS_TAB)
 def edit_compensation_template(request, company_id, compensation_template_id):
     compensation_templates = CompensationTemplate.objects.filter(company__company_id=company_id)
     instance = CompensationTemplate.objects.get(compensation_template_id=compensation_template_id)
@@ -2214,7 +2263,7 @@ def edit_compensation_template(request, company_id, compensation_template_id):
     return _render_response(request, context_info, template_path)
 
 
-@permission_required(get_permission_codename(SETTLEMENT_CREATE_OFFERS), 'forbidden')
+@require_permission(SETTLEMENT_CREATE_OFFERS)
 def contact_settlement_offer(request, contact_id):
     contact = Contact.objects.prefetch_related('enrollments').get(contact_id=contact_id)
     try:
@@ -2299,7 +2348,7 @@ def get_debt_offer(request, debt_id):
         return JsonResponse(response)
 
 
-@permission_required(get_permission_codename(SETTLEMENT_ACCEPT_OFFERS), 'forbidden')
+@require_permission(SETTLEMENT_ACCEPT_OFFERS)
 def contact_settlement(request, contact_id, settlement_offer_id):
     contact = Contact.objects.prefetch_related('bank_account').get(contact_id=contact_id)
     bank_account = contact.get_bank_account()
@@ -2433,8 +2482,8 @@ def _generate_permission_sections(checked_permissions=[]):
     return permission_sections
 
 
-@permission_required(get_permission_codename(ADMIN_CREATE_COMPANIES), 'forbidden')
-@permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden')
+@require_permission(ADMIN_CREATE_COMPANIES)
+@require_permission(ADMIN_ACCESS_TAB)
 def add_company(request):
     form = CompanyForm(request.POST or None)
     errors = []
@@ -2455,8 +2504,8 @@ def add_company(request):
     return _render_response(request, context_info, template_path)
 
 
-@permission_required(get_permission_codename(ADMIN_EDIT_COMPANIES), 'forbidden')
-@permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden')
+@require_permission(ADMIN_EDIT_COMPANIES)
+@require_permission(ADMIN_ACCESS_TAB)
 def edit_company(request, company_id):
     instance = Company.objects.prefetch_related('users').prefetch_related('users__related_user') \
         .prefetch_related('users__related_user__groups').prefetch_related('children').get(company_id=company_id)
@@ -2480,8 +2529,8 @@ def edit_company(request, company_id):
     return _render_response(request, context_info, template_path)
 
 
-@permission_required(get_permission_codename(ADMIN_CREATE_ROLES), 'forbidden')
-@permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden')
+@require_permission(ADMIN_CREATE_ROLES)
+@require_permission(ADMIN_ACCESS_TAB)
 def add_user_role(request):
     form = GroupForm(request.POST or None)
     if request.method == 'POST' and request.POST:
@@ -2514,8 +2563,8 @@ def add_user_role(request):
     return _render_response(request, context_info, template_path)
 
 
-@permission_required(get_permission_codename(ADMIN_EDIT_ROLES), 'forbidden')
-@permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden')
+@require_permission(ADMIN_EDIT_ROLES)
+@require_permission(ADMIN_ACCESS_TAB)
 def edit_user_role(request, role_id):
     instance = Group.objects.prefetch_related('permissions').get(pk=role_id)
     form = GroupForm(request.POST or None, instance=instance)
@@ -2552,8 +2601,8 @@ def edit_user_role(request, role_id):
     return _render_response(request, context_info, template_path)
 
 
-@permission_required(get_permission_codename(ADMIN_DELETE_ROLES), 'forbidden')
-@permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden')
+@require_permission(ADMIN_DELETE_ROLES)
+@require_permission(ADMIN_ACCESS_TAB)
 def delete_user_role(request, role_id):
     if request.method == 'DELETE' and request.is_ajax():
         try:
@@ -2564,8 +2613,8 @@ def delete_user_role(request, role_id):
         return JsonResponse(response)
 
 
-@permission_required(get_permission_codename(ADMIN_CREATE_TEAMS), 'forbidden')
-@permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden')
+@require_permission(ADMIN_CREATE_TEAMS)
+@require_permission(ADMIN_ACCESS_TAB)
 def add_team(request):
     form = TeamForm(request.POST or None)
     if request.method == 'POST' and request.POST:
@@ -2587,8 +2636,8 @@ def add_team(request):
     return _render_response(request, context_info, template_path)
 
 
-@permission_required(get_permission_codename(ADMIN_EDIT_TEAMS), 'forbidden')
-@permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden')
+@require_permission(ADMIN_EDIT_TEAMS)
+@require_permission(ADMIN_ACCESS_TAB)
 def edit_team(request, team_id):
     instance = Team.objects.get(team_id=team_id)
     form = TeamForm(request.POST or None, instance=instance)
@@ -2612,8 +2661,8 @@ def edit_team(request, team_id):
     return _render_response(request, context_info, template_path)
 
 
-@permission_required(get_permission_codename(ADMIN_DELETE_TEAMS), 'forbidden')
-@permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden')
+@require_permission(ADMIN_DELETE_TEAMS)
+@require_permission(ADMIN_ACCESS_TAB)
 def delete_team(request, team_id):
     if request.method == 'DELETE' and request.is_ajax():
         try:
@@ -2624,8 +2673,8 @@ def delete_team(request, team_id):
         return JsonResponse(response)
 
 
-@permission_required(get_permission_codename(ADMIN_CREATE_PAYEES), 'forbidden')
-@permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden')
+@require_permission(ADMIN_CREATE_PAYEES)
+@require_permission(ADMIN_ACCESS_TAB)
 def add_payee(request, company_id):
     company = Company.objects.prefetch_related('payees').get(company_id=company_id)
     form = PayeeForm(request.POST or None)
@@ -2652,8 +2701,8 @@ def add_payee(request, company_id):
     return _render_response(request, context_info, template_path)
 
 
-@permission_required(get_permission_codename(ADMIN_EDIT_PAYEES), 'forbidden')
-@permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden')
+@require_permission(ADMIN_EDIT_PAYEES)
+@require_permission(ADMIN_ACCESS_TAB)
 def edit_payee(request, company_id, payee_id):
     company = Company.objects.prefetch_related('payees').get(company_id=company_id)
     instance = Payee.objects.get(payee_id=payee_id)
@@ -2682,8 +2731,8 @@ def edit_payee(request, company_id, payee_id):
     return _render_response(request, context_info, template_path)
 
 
-@permission_required(get_permission_codename(ADMIN_CREATE_USERS), 'forbidden')
-@permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden')
+@require_permission(ADMIN_CREATE_USERS)
+@require_permission(ADMIN_ACCESS_TAB)
 def add_user(request):
     form = CreateUserForm(request.POST or None)
     errors = []
@@ -2704,8 +2753,8 @@ def add_user(request):
     return _render_response(request, context_info, template_path)
 
 
-@permission_required(get_permission_codename(ADMIN_EDIT_USERS), 'forbidden')
-@permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden')
+@require_permission(ADMIN_EDIT_USERS)
+@require_permission(ADMIN_ACCESS_TAB)
 def edit_user(request, user_id):
     instance = User.objects.prefetch_related('groups').get(id=user_id)
     post_data = request.POST.copy()
@@ -2734,16 +2783,16 @@ def edit_user(request, user_id):
     return _render_response(request, context_info, template_path)
 
 
-@permission_required(get_permission_codename(ADMIN_DELETE_USERS), 'forbidden')
-@permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden')
+@require_permission(ADMIN_DELETE_USERS)
+@require_permission(ADMIN_ACCESS_TAB)
 def suspend_user(request, user_id):
     if request.is_ajax() and request.method == 'POST':
         User.objects.filter(id=user_id).update(is_active=False)
         return JsonResponse({'result': 'Ok'})
 
 
-@permission_required(get_permission_codename(ADMIN_DELETE_USERS), 'forbidden')
-@permission_required(get_permission_codename(ADMIN_ACCESS_TAB), 'forbidden')
+@require_permission(ADMIN_DELETE_USERS)
+@require_permission(ADMIN_ACCESS_TAB)
 def activate_user(request, user_id):
     if request.is_ajax() and request.method == 'POST':
         User.objects.filter(id=user_id).update(is_active=True)

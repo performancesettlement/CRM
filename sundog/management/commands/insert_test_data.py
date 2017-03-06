@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from sundog.models import Contact, LeadSource, User
+from sundog.models import Contact, User
 
 
 class Command(BaseCommand):

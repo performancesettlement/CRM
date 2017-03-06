@@ -59,16 +59,18 @@
 
   <div class="col-xs-12 m-t-md m-b-md">
 
-    <div class="inline">
-      <a
-        href="{{ add_url|safe }}"
-        class="fm-create btn btn-primary"
-        data-fm-head="Add {% model_verbose_name view.model %}"
-        data-fm-callback="reload"
-      >
-        Add {% model_verbose_name view.model %}
-      </a>
-    </div>
+    {% if add_url %}
+      <div class="inline">
+        <a
+          href="{{ add_url|safe }}"
+          class="fm-create btn btn-primary"
+          data-fm-head="Add {% model_verbose_name view.model %}"
+          data-fm-callback="reload"
+        >
+          Add {% model_verbose_name view.model %}
+        </a>
+      </div>
+    {% endif %}
 
     {% for label, url in buttons %}
       <div class="inline">
@@ -93,5 +95,10 @@
 
   {% block list_view_post_content %}
   {% endblock list_view_post_content %}
+
+  <script src="{% static "js/datatables_style.js" %}"></script>
+
+  {% block list_view_post_script %}
+  {% endblock list_view_post_script %}
 
 {% endblock table_view_post_content %}

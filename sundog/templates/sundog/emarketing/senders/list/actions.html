@@ -2,13 +2,17 @@
 
 
 <span class="text-nowrap">
+
   {% if 'sundog.e_marketing__delete_senders' in perms %}
-  {% action_delete viewname="emarketing.senders.delete.ajax" pk=instance.pk %}
+    {% action_delete viewname="emarketing.senders.delete.ajax" pk=instance.pk %}
   {% endif %}
+
   {% if 'sundog.e_marketing__edit_senders' in perms %}
-  {% action_quick_edit viewname="emarketing.senders.edit.ajax" pk=instance.pk %}
+    {% action_quick_edit viewname="emarketing.senders.edit.ajax" pk=instance.pk %}
   {% endif %}
+
   {% if 'sundog.e_marketing__edit_senders' in perms %}
-  {% action_edit viewname="emarketing.senders.edit" pk=instance.pk %}
+    {% action_edit viewname="emarketing.senders.edit" pk=instance.pk %}
   {% endif %}
+
 </span>
