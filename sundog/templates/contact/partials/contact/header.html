@@ -1,0 +1,19 @@
+<div class="col-md-12 m-t-md m-b-md">
+    {{ form.contact_id }}
+    {% if 'sundog.contact__mark_contact_public' in perms and not public or 'sundog.contact__mark_contacts_private' in perms and public %}
+    <div class="m-r-md inline">
+        <label class="reset-min-width">Public:</label>
+        <div class="inline vertical-align no-margins">
+            {{ form.public }}
+        </div>
+    </div>
+    {% endif %}
+    <div class="m-r-md inline">
+        <label class="reset-min-width">Company:</label>
+        <div class="inline vertical-align no-margins">{{ form.company }}</div>
+    </div>
+    <div class="m-r-md inline">
+        <label class="reset-min-width">Assigned To:</label>
+        <div class="inline vertical-align no-margins">{{ form.assigned_to }}</div>
+    </div>
+</div>
