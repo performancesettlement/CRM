@@ -4,7 +4,7 @@ $(document).ready(function() {
     $('#template-chooser').change(function(){
         var value = $('#template-chooser').val();
         $('.form-template').hide();
-        $('#' + value).show();
+        $('.' + value).show();
     });
 
     $('#id_company').change(function() {
@@ -20,27 +20,47 @@ $(document).ready(function() {
         }
     });
 
-    $('#contact-form').submit(function(event) {
-        if (isEdit) {
-            event.preventDefault();
-            var form = $(this);
-            var formData = form.serializeArray();
-            $.ajax({
-                url: form.attr('action'),
-                data: formData,
-                type: 'POST',
-                success: function(response){
-                    if (response.errors) {
-                        showErrorPopup(response.errors);
+    $('#save-contact-form').click(function () {
+        // Find form's invalid fields
+        invalid_field = $('#contact-form').find(':invalid').first();
+        closestTemplate = invalid_field.closest('.form-template');
+        templateClasses = closestTemplate.attr("class").toString().split(' ');
+        // Display invalid field's template
+        $('#template-chooser').val(templateClasses[0]);
+        $('.form-template').hide();
+        $('.' + templateClasses[0]).show();
+        // Display invalid field's tab
+        $('.tab-pane').removeClass('active');
+        closestTabPane = invalid_field.closest('.tab-pane');
+        closestTabPane.addClass('active');
+        tabPaneName = closestTabPane.attr("id");
+        $('#' + tabPaneName.substr(0, tabPaneName.length - 7) + 'tab').click();
+    });
+
+    $('#contact-form').submit(function (event) {
+        event.preventDefault();
+        var form = $(this);
+        var formData = form.serializeArray();
+        $.ajax({
+            url: form.attr('action'),
+            data: formData,
+            type: 'POST',
+            success: function (response) {
+                if (response.errors) {
+                    showErrorPopup(response.errors);
+                }
+                if (response.result) {
+                    if (response.remove_public === true) {
+                        $('#id_public').parent().parent().remove();
                     }
-                    if (response.result) {
-                        if (response.remove_public === true) {
-                            $('#id_public').parent().parent().remove();
-                        }
+                    if (isEdit) {
                         showSuccessPopup('Contact successfully updated!');
+                    } else {
+                        showSuccessPopup('Contact successfully created!');
                     }
                 }
-            });
-        }
+            }
+        });
     });
+
 });

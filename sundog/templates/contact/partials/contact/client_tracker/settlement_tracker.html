@@ -1,0 +1,73 @@
+<div class="col-md-12">
+    <div class="m-b-md">
+        <h3> Applicant </h3>
+        <hr/>
+    </div>
+    <div class="form-group">
+        {% for sett in sett_tracked_forms %}
+            <div class="row">
+                <div class="col-md-2">
+                    <label>Settlement {{ forloop.counter }} </label>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        {{ sett.original_creditor }}
+                    </div>
+                </div>
+                 <div class="col-md-2">
+                    <div class="form-group">
+                        {{ sett.account_last_4_digits }}
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        {{ sett.revenue_earned }}
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        {{ sett.date_completed }}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    <hr />
+    <div class="form-group">
+        {% for sett in cfln_tracked_forms %}
+            <div class="row">
+                <div class="col-md-2">
+                    <label>CFLN Settlement {{ forloop.counter }} </label>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        {{ sett.original_creditor }}
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        {{ sett.account_last_4_digits }}
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        {{ sett.date_completed }}
+                    </div>
+                </div>
+                </div>
+        {% endfor %}
+    </div>
+    <hr />
+    <div class="form-group row">
+        <div class="col-md-2">
+            <label> Last Settlement Completed </label>
+        </div>
+        <div class="col-md-4">{{ form.last_sett_completed_date }}</div>
+    </div>
+    <div class="form-group row">
+        <div class="col-md-2">
+            <label> Last Congratulations Letter Sent </label>
+        </div>
+        <div class="col-md-4">{{ form.last_letter_sent_date }}</div>
+    </div>
+</div>
