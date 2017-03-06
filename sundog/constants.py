@@ -18,6 +18,9 @@ FIXED_VALUES = [
     'fixedamort'
 ]
 
+CONTACT_DEFAULT_STAGE = 'Contact'
+CONTACT_DEFAULT_STATUS = 'Prospect'
+
 #  PERMISSION CONSTANTS
 
 CONTACT_BASE_CODENAME = 'contact'
