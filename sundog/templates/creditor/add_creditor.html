@@ -17,63 +17,75 @@
             </ol>
         </div>
     </div>
-    <div class="col-xs-12 no-padding-sides m-t-md">
-        <h3>Add a Creditor</h3>
+    <div class="well m-t-md">
+        <div class="m-b-md">
+           <h3>Add a Creditor</h3>
+        </div>
         <form id="add-creditor-form" action="{% url 'add_creditor' %}" method="post">
             {% csrf_token %}
-            <div class="col-xs-12 m-b-xs">
-                <label>Creditor Name</label>
-                {{ form.name }}
+            <div class="form-group row">
+                <div class="col-md-3">
+                    <label>Creditor Name</label>
+                    {{ form.name }}
+                </div>
+                <div class="col-md-3">
+                    <label>First Name</label>
+                    {{ form.first_name }}
+                </div>
+                <div class="col-md-4">
+                    <label>Last Name</label>
+                    {{ form.last_name }}
+                </div>
             </div>
-            <div class="col-xs-12 m-b-xs">
-                <label>First Name</label>
-                {{ form.first_name }}
+            <div class="form-group row">
+                <div class="col-md-3">
+                    <label>Address 1</label>
+                    {{ form.address_1 }}
+                </div>
+                <div class="col-md-3">
+                    <label>Address 2</label>
+                    {{ form.address_2 }}
+                </div>
             </div>
-            <div class="col-xs-12 m-b-xs">
-                <label>Last Name</label>
-                {{ form.last_name }}
+            <div class="form-group row">
+                <div class="col-md-3">
+                    <label>City</label>
+                    {{ form.city }}
+                </div>
+                <div class="col-md-3">
+                    <label>State</label>
+                    {{ form.state }}
+                </div>
+                <div class="col-md-3">
+                    <label>Zip Code</label>
+                    {{ form.zip_code }}
+                </div>
             </div>
-            <div class="col-xs-12 m-b-xs">
-                <label>Address 1</label>
-                {{ form.address_1 }}
+            <div class="form-group row">
+                <div class="col-md-3">
+                    <label>Phone</label>
+                    {{ form.phone_1 }}
+                </div>
+                <div class="col-md-3">
+                    <label>Phone 2</label>
+                    {{ form.phone_2 }}
+                </div>
+                <div class="col-md-3">
+                    <label>Fax</label>
+                    {{ form.fax }}
+                </div>
             </div>
-            <div class="col-xs-12 m-b-xs">
-                <label>Address 2</label>
-                {{ form.address_2 }}
+            <div class="form-group row">
+                <div class="col-md-3">
+                    <label>Email</label>
+                    {{ form.email }}
+                </div>
+                <div class="col-md-3">
+                    <label>Url</label>
+                    {{ form.url }}
+                </div>
             </div>
-            <div class="col-xs-12 m-b-xs">
-                <label>City</label>
-                {{ form.city }}
-            </div>
-            <div class="col-xs-12 m-b-xs">
-                <label>State</label>
-                {{ form.state }}
-            </div>
-            <div class="col-xs-12 m-b-xs">
-                <label>Zip</label>
-                {{ form.zip_code }}
-            </div>
-            <div class="col-xs-12 m-b-xs">
-                <label>Phone</label>
-                {{ form.phone_1 }}
-            </div>
-            <div class="col-xs-12 m-b-xs">
-                <label>Phone 2</label>
-                {{ form.phone_2 }}
-            </div>
-            <div class="col-xs-12 m-b-xs">
-                <label>Fax</label>
-                {{ form.fax }}
-            </div>
-            <div class="col-xs-12 m-b-xs">
-                <label>Email</label>
-                {{ form.email }}
-            </div>
-            <div class="col-xs-12 m-b-xs">
-                <label>Url</label>
-                {{ form.url }}
-            </div>
-            <div class="col-xs-12 m-t-md padding-for-footer">
+            <div class="no-padding-sides">
                 <button class="btn btn-primary" type="submit">Save Creditor</button>
             </div>
         </form>
