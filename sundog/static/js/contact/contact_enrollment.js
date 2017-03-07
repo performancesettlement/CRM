@@ -30,9 +30,9 @@ $(document).ready(function() {
             '<input type="hidden" name="' + i + '-fee_plan" value="' + fee.fee_plan_id + '">' +
             '<input type="hidden" name="' + i + '-type" value="' + fee.type + '">' +
             '<select id="id_' + i + '-amount" name="' + i + '-amount" class="fee-select">' +
-            options +
+                options +
             '</select>' +
-            '</div>';
+        '</div>';
         return feeHtml;
     }
 
@@ -182,7 +182,7 @@ $(document).ready(function() {
         var table = $('#payments-table');
         var programLengthContainer = $('#edit-program-length-container');
         if (planId !== '') {
-            var url = getEnrollmentPlanInfoUrl.replace('0', planId);
+            var url = getEnrollmentPlanInfoUrl.replace('/0', '/' + planId);
             var debtsIds = getDebtIds();
             var recurringDate = $('#id_start_date').val();
             url += '?start_date=' + recurringDate + '&debt_ids=' + debtsIds;
@@ -255,16 +255,12 @@ $(document).ready(function() {
         }
     });
 
-    $('#id_first_date').change(function(e) {
-        if (e.originalEvent) {
-            requestEnrollmentPlanInfo(true, false);
-        }
+    $('#id_first_date').on('changeDate', function() {
+        requestEnrollmentPlanInfo(true, false);
     });
 
-    $('#id_start_date').change(function(e) {
-        if (e.originalEvent) {
-            requestEnrollmentPlanInfo(true, false);
-        }
+    $('#id_start_date').on('changeDate', function() {
+        requestEnrollmentPlanInfo(true, false);
     });
 
     $('#fees').on('change', '.fee-select', function(e) {
@@ -337,5 +333,7 @@ $(document).ready(function() {
         }
     });
 
-    requestEnrollmentPlanInfo(false, true);
+    if (isEdit) {
+        requestEnrollmentPlanInfo(false, true);
+    }
 });
