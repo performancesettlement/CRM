@@ -1,5 +1,6 @@
 import os
 import local_config as local_config
+from os import environ
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -252,15 +253,15 @@ LOGIN_REDIRECT_URL = '/home/'
 
 # email
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = 'sparkpost.django.email_backend.SparkPostEmailBackend'
 NO_REPLY_EMAIL_ADDRESS = "info@performancesettlement.com"
 # INFO_EMAIL_ADDRESS = "careers@mahisoft.com"
 # TO_CONTACT_INFO_EMAIL_ADDRESS = "careers@mahisoft.com"
 
-EMAIL_HOST = 'smtp.coxmail.com'
+EMAIL_HOST = 'smtp.sparkpostmail.com'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = 'psettelment@printer.occoxmail.com'
-EMAIL_HOST_PASSWORD = 'summer2016'
+EMAIL_HOST_USER = 'SMTP_Injection'
+EMAIL_HOST_PASSWORD = environ.get('SPARKPOST_API_KEY')
 EMAIL_USE_TLS = True
 
 ACCESS_TOKEN_EXPIRE_SECONDS = 360000

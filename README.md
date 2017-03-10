@@ -14,6 +14,7 @@ Obtain the appropriate credentials for the Amazon S3 bucket and place them in th
 AWS_ACCESS_KEY_ID=ASDFGHJKLASDFGHJKLAS
 AWS_SECRET_ACCESS_KEY=ASDFGHJKL1234567890asdfghjkl1234567890as
 AWS_DEFAULT_REGION=us-west-2
+SPARKPOST_API_KEY=6e30ddf88144e09e3c49212bea4a3efda84d0654
 ```
 
 If deploying for production, run `scripts/setup_production.sh`.
