@@ -24,17 +24,20 @@ $(document).ready(function() {
         // Find form's invalid fields
         invalid_field = $('#contact-form').find(':invalid').first();
         closestTemplate = invalid_field.closest('.form-template');
-        templateClasses = closestTemplate.attr("class").toString().split(' ');
-        // Display invalid field's template
-        $('#template-chooser').val(templateClasses[0]);
-        $('.form-template').hide();
-        $('.' + templateClasses[0]).show();
-        // Display invalid field's tab
-        $('.tab-pane').removeClass('active');
-        closestTabPane = invalid_field.closest('.tab-pane');
-        closestTabPane.addClass('active');
-        tabPaneName = closestTabPane.attr("id");
-        $('#' + tabPaneName.substr(0, tabPaneName.length - 7) + 'tab').click();
+        templateClasses = closestTemplate.attr("class");
+        if (templateClasses) {
+            templateClasses = templateClasses.toString().split(' ');
+            // Display invalid field's template
+            $('#template-chooser').val(templateClasses[0]);
+            $('.form-template').hide();
+            $('.' + templateClasses[0]).show();
+            // Display invalid field's tab
+            $('.tab-pane').removeClass('active');
+            closestTabPane = invalid_field.closest('.tab-pane');
+            closestTabPane.addClass('active');
+            tabPaneName = closestTabPane.attr("id");
+            $('#' + tabPaneName.substr(0, tabPaneName.length - 7) + 'tab').click();
+        }
     });
 
     $('#contact-form').submit(function (event) {
@@ -53,6 +56,7 @@ $(document).ready(function() {
                     if (response.remove_public === true) {
                         $('#id_public').parent().parent().remove();
                     }
+                    redirect(contactsListUrl);
                     if (isEdit) {
                         showSuccessPopup('Contact successfully updated!');
                     } else {
